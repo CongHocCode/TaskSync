@@ -1,0 +1,14 @@
+# Các file rác của hệ điều hành
+Thumbs.db
+.DS_Store
+
+# Các file rác của trình soạn thảo (VS Code)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+
+# File log và cache của PHP
+*.log
+/vendor/
