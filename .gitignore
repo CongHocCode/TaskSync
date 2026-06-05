@@ -12,3 +12,5 @@ Thumbs.db
 # File log và cache của PHP
 *.log
 /vendor/
+
+README.local.md
