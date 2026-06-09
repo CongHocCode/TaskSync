@@ -1,6 +1,6 @@
 <?php
 class App {
-    protected $controller = "Home"; // Mặc định mở Home
+    protected $controller = "Auth"; //Mặc định mở trang Auth
     protected $method = "index";    // Mặc định gọi hàm index
     protected $params = [];
 
