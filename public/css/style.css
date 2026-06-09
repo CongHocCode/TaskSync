@@ -1,0 +1,564 @@
+:root {
+    --bg: #081b34;
+    --surface: #0f294b;
+    --surface-alt: #142f56;
+    --surface-soft: rgba(255, 255, 255, 0.05);
+    --text: #eef6ff;
+    --muted: #9bb5d6;
+    --primary: #3a72cc;
+    --primary-strong: #2559a8;
+    --accent: #4db5ff;
+    --success: #39c08d;
+    --danger: #f16565;
+    --border: rgba(255, 255, 255, 0.12);
+    --shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    background: radial-gradient(circle at top, rgba(77, 181, 255, 0.12), transparent 28%), var(--bg);
+    font-family: Inter, Arial, sans-serif;
+    color: var(--text);
+}
+
+body {
+    line-height: 1.6;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+img, button, input, select, textarea {
+    max-width: 100%;
+}
+
+button, input, select, textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: linear-gradient(180deg, #0d213d 0%, #0f284f 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.sidebar-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: rgba(77, 181, 255, 0.15);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.sidebar-brand h1 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.sidebar-brand p {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    color: var(--text);
+    transition: transform 0.2s ease, background 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(2px);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.brand-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+}
+
+.app-input {
+    min-width: 220px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 0.72rem 0.7rem;
+    outline: none;
+}
+
+.app-input::placeholder {
+    color: var(--muted);
+}
+
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.app-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.75rem 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    background: var(--primary);
+    color: #fff;
+}
+
+.app-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+}
+
+.app-btn-sm {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.95rem;
+}
+
+.app-btn-ghost {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.app-content {
+    flex: 1;
+    padding: 30px 32px 36px;
+}
+
+.content-wrapper {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.app-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.app-card h2,
+.app-card h3,
+.app-card h4 {
+    color: #f7fbff;
+}
+
+.app-alert {
+    padding: 1.05rem 1.3rem;
+    border-radius: 18px;
+    border: 1px solid rgba(77, 181, 255, 0.22);
+    background: rgba(58, 114, 204, 0.18);
+    color: var(--text);
+    margin-bottom: 1.2rem;
+}
+
+.app-alert.success {
+    border-color: rgba(57, 192, 141, 0.25);
+    background: rgba(57, 192, 141, 0.16);
+}
+
+.app-alert.danger {
+    border-color: rgba(241, 101, 101, 0.25);
+    background: rgba(241, 101, 101, 0.16);
+}
+
+.app-footer {
+    padding: 18px 32px;
+    text-align: center;
+    color: var(--muted);
+    background: var(--surface-alt);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+}
+
+label {
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select,
+.app-input {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    padding: 0.95rem 1rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus,
+.app-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(77, 181, 255, 0.12);
+}
+
+textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.app-card,
+.app-alert,
+.app-header,
+.app-footer,
+.app-sidebar {
+    backdrop-filter: blur(10px);
+}
+
+@media screen and (max-width: 992px) {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .app-sidebar {
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .app-header,
+    .app-footer {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .app-content {
+        padding: 24px 22px 30px;
+    }
+}
+
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+    width: 100%;
+}
+
+.kanban-column {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 1.2rem;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.kanban-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.kanban-column-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+}
+
+.kanban-column-header span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(77, 181, 255, 0.15);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.kanban-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.kanban-card:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.kanban-card h3 {
+    margin: 0 0 0.45rem;
+    font-size: 1rem;
+}
+
+.kanban-card p {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.kanban-card-meta {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.66);
+}
+
+.task-details-panel .offcanvas-header {
+    background: var(--surface);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.task-details-panel .offcanvas-body {
+    padding: 1.4rem;
+    background: var(--bg);
+}
+
+.task-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.task-detail-head h3 {
+    margin: 0.4rem 0 0;
+}
+
+.task-detail-head p {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+}
+
+.task-detail-section {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.task-detail-section h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.task-textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 100px;
+    padding: 0.95rem 1rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text);
+}
+
+.checklist-item {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    color: var(--text);
+}
+
+.checklist-item label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    cursor: pointer;
+}
+
+.checklist-item input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--accent);
+}
+
+@media (max-width: 1024px) {
+    .app-sidebar {
+        min-width: 220px;
+        max-width: 220px;
+        padding: 20px 18px;
+    }
+
+    .kanban-board {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 860px) {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .app-sidebar {
+        width: 100%;
+        max-width: 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+    }
+
+    .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding-top: 0.75rem;
+    }
+
+    .sidebar-link {
+        width: calc(50% - 0.5rem);
+    }
+
+    .app-header {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .app-content {
+        padding: 22px 20px 28px;
+    }
+
+    .kanban-board {
+        grid-template-columns: 1fr;
+    }
+
+    .kanban-column {
+        min-height: unset;
+    }
+}
+
+@media (max-width: 640px) {
+    .app-sidebar {
+        display: none;
+    }
+
+    .page-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .task-details-panel {
+        width: 100%;
+    }
+}

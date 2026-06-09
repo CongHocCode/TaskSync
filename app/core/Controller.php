@@ -9,7 +9,7 @@ class Controller {
 
     // Hàm gọi View (Tự động bọc giao diện vào layout.php)
     public function view($view, $data = []) {
-        // Nạp file layout tổng
-        require_once '../app/views/layout.php';
+        // Biến $view và $data sẽ được layout sử dụng
+        require_once __DIR__ . '/../views/layout.php';
     }
 }
