@@ -983,3 +983,53 @@ textarea {
 .user-menu-btn:hover {
     color: var(--accent);
 }
+/* ==========================================================================
+   CẤU HÌNH LIÊN QUAN ĐẾN BẢNG KANBAN & DI ĐỘNG RESPONSIVE
+   ========================================================================== */
+
+/* Chiều cao tối thiểu cho vùng chứa thẻ bên trong cột để dễ rê thả sau này */
+.sub-kanban-column {
+    min-height: 250px;
+    max-height: calc(100vh - 220px);
+}
+
+/* Hiệu ứng di chuột vào thẻ công việc */
+.kanban-item-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.kanban-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+/* 📱 Điểm bẻ Responsive: Thiết bị di động nhỏ hơn 768px (Mobile) */
+@media (max-width: 767.98px) {
+    /* Ép các cột Kanban xếp dọc gọn gàng */
+    .kanban-board-wrapper {
+        flex-direction: column;
+    }
+    
+    .sub-kanban-column {
+        max-height: 350px; /* Khống chế chiều cao cột di động tránh quá dài */
+    }
+
+    /* Thu nhỏ chữ tiêu đề chính để không chiếm diện tích */
+    .kanban-page h1 {
+        font-size: 1.5rem !important;
+    }
+
+    /* Ẩn bớt sidebar gốc hoặc ép bo thu gọn khi lướt trên điện thoại */
+    .sidebar-wrapper {
+        width: 0;
+        display: none;
+    }
+}
+
+/* 📟 Điểm bẻ Responsive: Máy tính bảng từ 768px đến 1199px (Tablet) */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    /* Cho phép hiển thị dạng lưới 2 cột trên một hàng thay vì tràn màn hình */
+    .kanban-board-wrapper > div {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}

@@ -1,82 +1,100 @@
-<section class="kanban-page">
-    <div class="page-heading">
+<section class="kanban-page container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <h1 style="color: #1a1632 !important; font-weight: bold !important;">Bảng Kanban</h1>
-            <p style="color: #4b5563 !important;">Quản lý trạng thái công việc theo 4 cột: To Do, In Progress, In Review, Done.</p>
+            <h1 class="h3 mb-1 text-dark fw-bold">Bảng Kanban</h1>
+            <p class="text-muted mb-0">Quản lý trạng thái công việc theo 4 cột quy trình tiêu chuẩn.</p>
         </div>
-        <button class="app-btn app-btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#taskDetailCanvas" aria-controls="taskDetailCanvas">
-            Xem chi tiết công việc
+        <button class="btn btn-primary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#taskDetailCanvas">
+            <i class="bi bi-layout-sidebar-reversed"></i> Mở Chi Tiết
         </button>
     </div>
 
-    <div class="kanban-board">
-        <div class="kanban-column">
-            <div class="kanban-column-header">
-                <h2 style="color: #1a1632 !important; font-weight: bold !important;">To Do</h2>
-                <span>4</span>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Thiết kế UI trang đăng nhập</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Hoàn thiện mẫu giao diện và gửi review cho team.</p>
-                <div class="kanban-card-meta" style="color: #a0aec0 !important; font-size: 0.85rem;">Hạn: 05/06</div>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Lập kế hoạch sprint mới</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Chuẩn bị backlog và phân công nhiệm vụ.</p>
-                <div class="kanban-card-meta" style="color: #a0aec0 !important; font-size: 0.85rem;">Hạn: 06/06</div>
-            </div>
-        </div>
-
-        <div class="kanban-column">
-            <div class="kanban-column-header">
-                <h2 style="color: #1a1632 !important; font-weight: bold !important;">In Progress</h2>
-                <span>3</span>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Phát triển API đăng nhập</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Hoàn tất xác thực và trả về token.</p>
-                <div class="kanban-card-meta" style="color: #a0aec0 !important; font-size: 0.85rem;">Hạn: 07/06</div>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Kiểm thử chức năng tìm kiếm</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Test các kịch bản tìm kiếm theo từ khóa.</p>
-                <div class="kanban-card-meta" style="color: #a0aec0 !important; font-size: 0.85rem;">Hạn: 08/06</div>
+    <div class="row g-3 kanban-board-wrapper">
+        
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card bg-light border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-2">
+                    <h5 class="card-title text-dark fw-bold mb-0">To Do</h5>
+                    <span class="badge bg-secondary rounded-pill">2</span>
+                </div>
+                <div class="card-body d-flex flex-column gap-2 overflow-auto sub-kanban-column">
+                    <div class="card border-0 shadow-sm p-3 kanban-item-card" data-bs-toggle="offcanvas" data-bs-target="#taskDetailCanvas" role="button">
+                        <h6 class="text-dark fw-bold mb-1">Thiết kế UI trang đăng nhập</h6>
+                        <p class="text-muted small mb-3">Hoàn thiện mẫu giao diện và gửi review cho team.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="badge bg-light text-dark border text-uppercase small">WEB-1</span>
+                            <small class="text-danger fw-semibold"><i class="bi bi-clock"></i> 05/06</small>
+                        </div>
+                    </div>
+                    <div class="card border-0 shadow-sm p-3 kanban-item-card" data-bs-toggle="offcanvas" data-bs-target="#taskDetailCanvas" role="button">
+                        <h6 class="text-dark fw-bold mb-1">Lập kế hoạch sprint mới</h6>
+                        <p class="text-muted small mb-3">Chuẩn bị backlog và phân công nhiệm vụ.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="badge bg-light text-dark border text-uppercase small">WEB-2</span>
+                            <small class="text-secondary"><i class="bi bi-clock"></i> 06/06</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="kanban-column">
-            <div class="kanban-column-header">
-                <h2 style="color: #1a1632 !important; font-weight: bold !important;">In Review</h2>
-                <span>2</span>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Đánh giá UX flow</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Nhận phản hồi từ nhóm thiết kế và cập nhật.</p>
-                <div class="kanban-card-meta" style="color: #a0aec0 !important; font-size: 0.85rem;">Hạn: 09/06</div>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Xem lại báo cáo lỗi</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Kiểm tra lại các báo cáo từ QA.</p>
-                <div class="kanban-card-meta" style="color: #a0aec0 !important; font-size: 0.85rem;">Hạn: 10/06</div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card bg-light border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-2">
+                    <h5 class="card-title text-dark fw-bold mb-0">In Progress</h5>
+                    <span class="badge bg-primary rounded-pill">1</span>
+                </div>
+                <div class="card-body d-flex flex-column gap-2 overflow-auto sub-kanban-column">
+                    <div class="card border-0 shadow-sm p-3 kanban-item-card" data-bs-toggle="offcanvas" data-bs-target="#taskDetailCanvas" role="button">
+                        <h6 class="text-dark fw-bold mb-1">Phát triển API đăng nhập</h6>
+                        <p class="text-muted small mb-3">Hoàn tất xác thực và trả về token bảo mật JWT.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="badge bg-light text-dark border text-uppercase small">AUTH-1</span>
+                            <small class="text-warning fw-semibold"><i class="bi bi-clock"></i> 07/06</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="kanban-column">
-            <div class="kanban-column-header">
-                <h2 style="color: #1a1632 !important; font-weight: bold !important;">Done</h2>
-                <span>5</span>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Cài đặt môi trường dev</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Đã hoàn thành cấu hình server và database.</p>
-                <div class="kanban-card-meta" style="color: #28a745 !important; font-weight: bold; font-size: 0.85rem;">✔ Hoàn tất</div>
-            </div>
-            <div class="kanban-card">
-                <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 6px;">Thiết lập CI/CD</h3>
-                <p style="color: #4b5563 !important; margin-bottom: 8px;">Pipeline đã sẵn sàng và chạy tự động.</p>
-                <div class="kanban-card-meta" style="color: #28a745 !important; font-weight: bold; font-size: 0.85rem;">✔ Hoàn tất</div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card bg-light border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-2">
+                    <h5 class="card-title text-dark fw-bold mb-0">In Review</h5>
+                    <span class="badge bg-warning text-dark rounded-pill">1</span>
+                </div>
+                <div class="card-body d-flex flex-column gap-2 overflow-auto sub-kanban-column">
+                    <div class="card border-0 shadow-sm p-3 kanban-item-card" data-bs-toggle="offcanvas" data-bs-target="#taskDetailCanvas" role="button">
+                        <h6 class="text-dark fw-bold mb-1">Đánh giá UX flow trang chủ</h6>
+                        <p class="text-muted small mb-3">Nhận phản hồi từ nhóm thiết kế để tối ưu hóa trải nghiệm.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="badge bg-light text-dark border text-uppercase small">UX-3</span>
+                            <small class="text-secondary"><i class="bi bi-clock"></i> 09/06</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card bg-light border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-2">
+                    <h5 class="card-title text-dark fw-bold mb-0">Done</h5>
+                    <span class="badge bg-success rounded-pill">1</span>
+                </div>
+                <div class="card-body d-flex flex-column gap-2 overflow-auto sub-kanban-column">
+                    <div class="card bg-white border-0 shadow-sm p-3 opacity-75 kanban-item-card" data-bs-toggle="offcanvas" data-bs-target="#taskDetailCanvas" role="button">
+                        <h6 class="text-decoration-line-through text-secondary fw-bold mb-1">Cài đặt môi trường Dev</h6>
+                        <p class="text-muted small mb-3">Đã hoàn thành cấu hình Docker container và Mysql Database.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="badge bg-light text-muted border text-uppercase small">SYS-1</span>
+                            <small class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Hoàn tất</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <?php require_once __DIR__ . '/../../partials/task_modal_right.php'; ?>
