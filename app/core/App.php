@@ -1,11 +1,11 @@
 <?php
 // Dev toggle: set to false to disable automatic dev login
 if (!defined('DEV_BYPASS_AUTH')) {
-    define('DEV_BYPASS_AUTH', true);
+    define('DEV_BYPASS_AUTH', false); //TODO đang tắt để test login
 }
 
 class App {
-    protected $controller = "Workspace"; //Mặc định mở trang Workspace (bypass login for dev)
+    protected $controller = "Auth"; //Mặc định mở trang Workspace (bypass login for dev) //TODO
     protected $method = "index";    // Mặc định gọi hàm index
     protected $params = [];
 
