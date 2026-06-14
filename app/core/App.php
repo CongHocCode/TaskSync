@@ -1,10 +1,30 @@
 <?php
+// Dev toggle: set to false to disable automatic dev login
+if (!defined('DEV_BYPASS_AUTH')) {
+    define('DEV_BYPASS_AUTH', true);
+}
+
 class App {
-    protected $controller = "Auth"; //Mặc định mở trang Auth
+    protected $controller = "Workspace"; //Mặc định mở trang Workspace (bypass login for dev)
     protected $method = "index";    // Mặc định gọi hàm index
     protected $params = [];
 
     public function __construct() {
+        // DEV: Nếu bật DEV_BYPASS_AUTH thì tạo 1 user mẫu để bỏ qua bước login
+        if (defined('DEV_BYPASS_AUTH') && DEV_BYPASS_AUTH) {
+            if (session_status() === PHP_SESSION_NONE) {
+                @session_start();
+            }
+            if (!isset($_SESSION['user'])) {
+                $_SESSION['user'] = [
+                    'id' => 1,
+                    'name' => 'Quyen Gia',
+                    'role' => 'ADMIN',
+                    'email' => 'dev@local'
+                ];
+            }
+        }
+
         $url = $this->parseUrl();
 
         // 1. Tìm Controller

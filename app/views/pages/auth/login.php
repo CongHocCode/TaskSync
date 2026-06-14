@@ -16,6 +16,9 @@
                         <?php if (isset($data['error'])): ?>
                             <div class="alert alert-danger"><?= $data['error'] ?></div>
                         <?php endif; ?>
+                        <div class="alert alert-info">
+                            Tài khoản demo: <strong>admin</strong> / <strong>admin123</strong>
+                        </div>
                         <form method="POST">
                             <div class="mb-3">
                                 <label>Username</label>
