@@ -105,8 +105,7 @@ VALUES
   (
     'admin',
     'admin@tasksync.vn',
-    '$2y$10$F3oF9BQkQhKrshFXx2F8uu/ZqLgtCJ.zRn8q3t0OdVd8aG1fL0J9i
-',
+    '$2y$10$F3oF9BQkQhKrshFXx2F8uu/ZqLgtCJ.zRn8q3t0OdVd8aG1fL0J9i',
     'admin',
     'Nguyễn',
     'Át Min'
