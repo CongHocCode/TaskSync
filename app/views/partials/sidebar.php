@@ -162,9 +162,10 @@
             <div class="user-name">Quyen Gia</div>
             <div class="user-role">ADMIN</div>
         </div>
-        <button class="user-menu-btn" type="button" aria-label="Menu người dùng">
-            <i class="bi bi-arrow-repeat"></i>
-        </button>
+        
+        <a href="/TaskSync/auth/logout" class="user-menu-btn text-decoration-none d-flex align-items-center justify-content-center" title="Đăng xuất" style="color: #ff4d4f !important;">
+            <i class="bi bi-box-arrow-right" style="font-size: 1.2rem;"></i>
+        </a>
     </div>
 </aside>
 
