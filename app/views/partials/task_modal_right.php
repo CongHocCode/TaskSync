@@ -64,3 +64,45 @@
 
     </div>
 </div>
+
+
+
+<div class="offcanvas offcanvas-end border-0 shadow-lg text-dark" tabindex="-1" id="taskDetailCanvas" aria-labelledby="taskDetailCanvasLabel" style="width: 550px; background-color: #ffffff;">
+    <div class="offcanvas-header border-bottom py-3 px-4 bg-light d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-layout-sidebar text-primary fs-5"></i>
+            <span class="fw-bold text-muted text-uppercase" id="taskDetailCanvasLabel" style="font-size: 1rem;">WEB-1</span>
+        </div>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-4 d-flex flex-column gap-4 style-scrollbar" style="overflow-y: auto;">
+        <div>
+            <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 0.7rem;">Tiêu đề Issue</label>
+            <h5 class="fw-bold text-dark lh-base" style="font-size: 1.15rem;">Migrate active layouts to Tailwind v4 production framework</h5>
+        </div>
+        <div>
+            <label class="form-label text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.7rem;">Mô tả chi tiết</label>
+            <div class="bg-light rounded p-3 border border-secondary-subtle">
+                <textarea class="form-control border-0 bg-transparent p-0 shadow-none text-dark style-scrollbar" rows="3" style="resize: none; font-size: 0.88rem;">Yêu cầu chuyển dịch sang tiện ích Tailwind v4 production framework.</textarea>
+                <div class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top border-secondary-subtle">
+                    <button class="btn btn-sm btn-outline-secondary px-3 py-1">Hủy</button>
+                    <button class="btn btn-sm btn-primary px-3 py-1 border-0" style="background-color: #4f46e5;">Lưu lại</button>
+                </div>
+            </div>
+        </div>
+        <div>
+            <label class="form-label text-muted small fw-bold text-uppercase m-0 mb-2" style="font-size: 0.7rem;">Checklist</label>
+            <div class="progress mb-3" style="height: 6px;"><div class="progress-bar bg-success rounded" style="width: 50%;"></div></div>
+            <div class="d-flex flex-column gap-2">
+                <div class="form-check d-flex align-items-center gap-1 bg-light p-2 rounded border border-start border-3 border-start-success m-0">
+                    <input class="form-check-input ms-1 mt-0 shadow-none" type="checkbox" id="chkItem1" checked>
+                    <label class="form-check-label text-secondary small text-decoration-line-through ps-1" for="chkItem1">Kiểm tra tương thích</label>
+                </div>
+                <div class="form-check d-flex align-items-center gap-1 bg-light p-2 rounded border border-start border-3 border-start-warning m-0">
+                    <input class="form-check-input ms-1 mt-0 shadow-none" type="checkbox" id="chkItem2">
+                    <label class="form-check-label text-dark small ps-1" for="chkItem2">Viết file build cấu hình</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
