@@ -1,7 +1,9 @@
 <?php
+define('BASE_URL', 'http://localhost/TaskSync/public');
 session_start();
 
-function redirect($path) {
+function redirect($path)
+{
     $path = '/' . ltrim($path, '/');
     $base = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
     $target = ($base === '/' ? '' : $base) . $path;
