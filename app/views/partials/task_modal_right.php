@@ -1,106 +1,82 @@
-<div class="offcanvas offcanvas-end" style="width: 500px; max-width: 100%;" tabindex="-1" id="taskDetailCanvas" aria-labelledby="taskDetailCanvasLabel">
-    <div class="offcanvas-header border-bottom py-3">
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-primary text-uppercase fs-6">WEB-3</span>
-            <h5 class="offcanvas-title text-dark fw-bold mb-0" id="taskDetailCanvasLabel">Chi tiết công việc</h5>
-        </div>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-
-    <div class="offcanvas-body d-flex flex-column gap-4">
-        
-        <div>
-            <h4 class="text-dark fw-bold mb-2">Establish responsive user dashboard statistics cards</h4>
-            <label class="form-label text-muted fw-bold small text-uppercase">Mô tả công việc</label>
-            <textarea class="form-content form-control border bg-light text-dark" rows="3" placeholder="Nhập mô tả chi tiết hoặc ghi chú nhanh về công việc tại đây..."></textarea>
-        </div>
-
-        <div class="card border bg-light p-3">
-            <div class="row g-2 text-dark small">
-                <div class="col-4 text-muted">Người thực hiện:</div>
-                <div class="col-8 fw-bold">ADMIN (Bạn)</div>
-                <div class="col-4 text-muted">Trạng thái:</div>
-                <div class="col-8"><span class="badge bg-primary">In Progress</span></div>
-                <div class="col-4 text-muted">Độ ưu tiên:</div>
-                <div class="col-8"><span class="badge bg-danger">Highest</span></div>
+<div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pt-4 px-4 pb-2">
+                <div class="text-muted fw-medium small">DỰ ÁN / <span class="text-dark fw-bold">WEB-V2</span></div>
+                <button type="button" class="btn text-secondary fw-semibold seamless-input w-auto" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Close
+                </button>
             </div>
-        </div>
+            <div class="modal-body p-4 pt-2">
+                <div class="row g-5">
+                    
+                    <div class="col-lg-8">
+                        <div class="mb-4">
+                            <textarea id="modalTaskTitle" class="form-control fw-bold text-dark seamless-input" rows="2" style="font-size: 1.4rem; resize: none;" placeholder="Nhập tên công việc..."></textarea>
+                        </div>
 
-        <div>
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <label class="form-label text-muted fw-bold small text-uppercase mb-0">Danh sách kiểm tra (Checklist)</label>
-                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0">+ Thêm việc</button>
-            </div>
-            <div class="d-flex flex-column gap-2 text-dark">
-                <div class="form-check d-flex align-items-center border p-2 rounded bg-white shadow-xs">
-                    <input class="form-check-input ms-1 me-2" type="checkbox" id="check1" checked>
-                    <label class="form-check-label small text-decoration-line-through text-muted" for="check1">Thiết kế cấu trúc HTML tĩnh cho Dashboard</label>
-                </div>
-                <div class="form-check d-flex align-items-center border p-2 rounded bg-white shadow-xs">
-                    <input class="form-check-input ms-1 me-2" type="checkbox" id="check2">
-                    <label class="form-check-label small" for="check2">Tối ưu hóa Responsive Media Queries màn hình Mobile</label>
-                </div>
-            </div>
-        </div>
+                        <div class="mb-4">
+                            <label class="text-muted fw-bold small mb-2 ps-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">MÔ TẢ CÔNG VIỆC</label>
+                            <div class="border border-secondary-subtle rounded-3 bg-white">
+                                <div class="bg-light border-bottom border-secondary-subtle px-2 py-1 d-flex gap-1 editor-toolbar">
+                                    <span class="tool-btn fw-bold">B</span><span class="tool-btn fst-italic">I</span><span class="tool-btn text-decoration-underline">U</span>
+                                </div>
+                                <textarea class="form-control border-0 shadow-none p-3" rows="4" placeholder="Thêm mô tả chi tiết công việc ở đây..."></textarea>
+                            </div>
+                        </div>
 
-        <div class="mt-auto border-top pt-3">
-            <label class="form-label text-muted fw-bold small text-uppercase">Bình luận trao đổi</label>
-            
-            <div class="comment-list d-flex flex-column gap-2 mb-3 max-vh-25 overflow-auto">
-                <div class="bg-light p-2 rounded">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <strong class="small text-dark">Văn Quyết</strong>
-                        <small class="text-muted" style="font-size: 0.75rem;">14:34</small>
+                        <div class="mb-4" id="subtaskSection">
+                            <div class="d-flex align-items-center mb-2 gap-3 ps-1">
+                                <label class="text-muted fw-bold small mb-0" style="font-size: 0.65rem; letter-spacing: 0.5px;">SUB-TASKS CHECKLIST</label>
+                                <span class="badge rounded-pill text-secondary border bg-white" id="subtaskBadgeCount">0 / 0</span>
+                            </div>
+                            <div class="progress mb-3 rounded-pill" style="height: 6px; background-color: #e2e8f0;">
+                                <div class="progress-bar rounded-pill bg-primary transition-all" id="subtaskProgressBar" style="width: 0%;"></div>
+                            </div>
+                            
+                            <div class="subtask-list"></div>
+
+                            <div class="mt-2 input-group">
+                                <input type="text" id="newSubtaskInput" class="form-control seamless-input py-2" style="border: 1px solid #cbd5e1 !important;" placeholder="Thêm sub-task mới và bấm Enter...">
+                                <button id="addSubtaskBtn" class="btn btn-light border text-secondary fw-semibold px-3">+ Thêm</button>
+                            </div>
+                        </div>
                     </div>
-                    <p class="mb-0 text-secondary small">Bảng kanban ông xong luôn chưa hay mới chỉnh vậy? 🤔</p>
-                </div>
-            </div>
 
-            <div class="input-group">
-                <input type="text" class="form-control text-dark border" placeholder="Viết bình luận của bạn...">
-                <button class="btn btn-outline-primary" type="button"><i class="bi bi-send-fill"></i> Gửi</button>
-            </div>
-        </div>
+                    <div class="col-lg-4">
+                        <div class="bg-light rounded-4 p-4 border border-secondary-subtle h-100">
+                            <div class="mb-4">
+                                <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">TRẠNG THÁI (STATUS)</label>
+                                <select id="modalStatusSelect" class="form-select seamless-input text-dark fw-semibold" style="background-color: #fff; border: 1px solid #cbd5e1 !important;">
+                                    <option value="todo">To Do</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="in_review">In Review</option>
+                                    <option value="done">Done</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">NGƯỜI XỬ LÝ (ASSIGNEE)</label>
+                                <select class="form-select seamless-input text-dark fw-medium" style="background-color: #fff; border: 1px solid #cbd5e1 !important;">
+                                    <option>Alex (AL)</option>
+                                    <option>Sarah (SA)</option>
+                                    <option>Quyen (QU)</option>
+                                    <option>Marcus (MA)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">GITHUB BRANCH / URL</label>
+                                <input type="text" class="form-control seamless-input font-monospace text-dark" style="background-color: #fff; border: 1px solid #cbd5e1 !important;" placeholder="https://github.com/.../pull/1">
+                            </div>
+                            
+                            <hr class="border-secondary-subtle my-4 opacity-50">
+                            <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" style="background-color: #fff1f2; color: #e11d48; border-radius: 8px;">
+                                <i class="bi bi-trash3"></i> XÓA CÔNG VIỆC
+                            </button>
+                        </div>
+                    </div>
 
-    </div>
-</div>
-
-
-
-<div class="offcanvas offcanvas-end border-0 shadow-lg text-dark" tabindex="-1" id="taskDetailCanvas" aria-labelledby="taskDetailCanvasLabel" style="width: 550px; background-color: #ffffff;">
-    <div class="offcanvas-header border-bottom py-3 px-4 bg-light d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-layout-sidebar text-primary fs-5"></i>
-            <span class="fw-bold text-muted text-uppercase" id="taskDetailCanvasLabel" style="font-size: 1rem;">WEB-1</span>
-        </div>
-        <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body p-4 d-flex flex-column gap-4 style-scrollbar" style="overflow-y: auto;">
-        <div>
-            <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 0.7rem;">Tiêu đề Issue</label>
-            <h5 class="fw-bold text-dark lh-base" style="font-size: 1.15rem;">Migrate active layouts to Tailwind v4 production framework</h5>
-        </div>
-        <div>
-            <label class="form-label text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.7rem;">Mô tả chi tiết</label>
-            <div class="bg-light rounded p-3 border border-secondary-subtle">
-                <textarea class="form-control border-0 bg-transparent p-0 shadow-none text-dark style-scrollbar" rows="3" style="resize: none; font-size: 0.88rem;">Yêu cầu chuyển dịch sang tiện ích Tailwind v4 production framework.</textarea>
-                <div class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top border-secondary-subtle">
-                    <button class="btn btn-sm btn-outline-secondary px-3 py-1">Hủy</button>
-                    <button class="btn btn-sm btn-primary px-3 py-1 border-0" style="background-color: #4f46e5;">Lưu lại</button>
-                </div>
-            </div>
-        </div>
-        <div>
-            <label class="form-label text-muted small fw-bold text-uppercase m-0 mb-2" style="font-size: 0.7rem;">Checklist</label>
-            <div class="progress mb-3" style="height: 6px;"><div class="progress-bar bg-success rounded" style="width: 50%;"></div></div>
-            <div class="d-flex flex-column gap-2">
-                <div class="form-check d-flex align-items-center gap-1 bg-light p-2 rounded border border-start border-3 border-start-success m-0">
-                    <input class="form-check-input ms-1 mt-0 shadow-none" type="checkbox" id="chkItem1" checked>
-                    <label class="form-check-label text-secondary small text-decoration-line-through ps-1" for="chkItem1">Kiểm tra tương thích</label>
-                </div>
-                <div class="form-check d-flex align-items-center gap-1 bg-light p-2 rounded border border-start border-3 border-start-warning m-0">
-                    <input class="form-check-input ms-1 mt-0 shadow-none" type="checkbox" id="chkItem2">
-                    <label class="form-check-label text-dark small ps-1" for="chkItem2">Viết file build cấu hình</label>
                 </div>
             </div>
         </div>
