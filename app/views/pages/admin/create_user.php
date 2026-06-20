@@ -8,21 +8,26 @@
 
     /* Chỉnh lại màu ô nhập liệu cho nổi hơn */
     .app-card .app-input {
-        background-color: #f9fafb !important; /* Đổi sang nền xám nhạt cực sạch */
-        border: 1px solid #d1d5db !important; /* Hiện rõ viền màu xám */
-        color: #0b1220 !important;             /* Chữ gõ vào màu đen đậm */
+        background-color: #f9fafb !important;
+        /* Đổi sang nền xám nhạt cực sạch */
+        border: 1px solid #d1d5db !important;
+        /* Hiện rõ viền màu xám */
+        color: #0b1220 !important;
+        /* Chữ gõ vào màu đen đậm */
         transition: all 0.2s ease;
     }
 
     .app-card .app-input::placeholder {
-        color: #9ca3af !important; /* Màu xám vừa phải, dễ đọc */
+        color: #9ca3af !important;
+        /* Màu xám vừa phải, dễ đọc */
         opacity: 1;
     }
 
     .app-card .app-input:focus {
         border-color: var(--primary) !important;
         background-color: #ffffff !important;
-        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1) !important; /* Hào quang tím nhạt chuẩn SaaS */
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1) !important;
+        /* Hào quang tím nhạt chuẩn SaaS */
     }
 </style>
 <div class="page-content">
@@ -33,7 +38,7 @@
 
     <!-- Khung Card bọc Form của T2 -->
     <div class="app-card" style="max-width: 600px; margin: 0 auto;">
-        
+
         <!-- HIỂN THỊ THÔNG BÁO LỖI NẾU CÓ -->
         <?php if (isset($data['error'])): ?>
             <div class="app-alert danger" style="margin-bottom: 20px;">
@@ -52,7 +57,7 @@
                 </div>
                 <div class="app-form-group" style="flex: 1;">
                     <label for="first_name">TÊN</label>
-                    <input type="text" id="first_name" name="first_name" class="app-input" placeholder="E.g., Quyết" required>
+                    <input type="text" id="first_name" name="first_name" class="app-input" placeholder="E.g., Văn A" required>
                 </div>
             </div>
 
@@ -63,7 +68,7 @@
 
             <div class="app-form-group">
                 <label for="username">TÊN ĐĂNG NHẬP (USERNAME)</label>
-                <input type="text" id="username" name="username" class="app-input" placeholder="E.g., quyengia" required>
+                <input type="text" id="username" name="username" class="app-input" placeholder="E.g., user123" required>
             </div>
 
             <div class="app-form-group">

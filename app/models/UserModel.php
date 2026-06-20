@@ -15,7 +15,23 @@ class UserModel
         return $stmt->fetch();
     }
 
-    public function updateStatus($id, $status) {
+    public function update($id, $data)
+    {
+        $sql = "UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ?, role = ? WHERE id = ?";
+        $stmt = $this->db->pdo->prepare($sql);
+        return $stmt->execute([
+            $data['username'],
+            $data['email'],
+            $data['first_name'],
+            $data['last_name'],
+            $data['role'],
+            $id
+        ]);
+    }
+
+
+    public function updateStatus($id, $status)
+    {
         $stmt = $this->db->pdo->prepare("UPDATE users SET status = ? WHERE id = ?");
         return $stmt->execute([$status, $id]);
     }

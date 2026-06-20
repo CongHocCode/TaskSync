@@ -26,46 +26,51 @@
             </thead>
             <tbody>
                 <?php if (empty($data['users'])): ?>
-                <tr>
-                    <td colspan="6" style="padding: 32px; text-align: center; color: #5b6573;">Chưa có nhân sự nào trên hệ thống.</td>
-                </tr>
+                    <tr>
+                        <td colspan="6" style="padding: 32px; text-align: center; color: #5b6573;">Chưa có nhân sự nào trên hệ thống.</td>
+                    </tr>
                 <?php else: ?>
                     <?php foreach ($data['users'] as $u): ?>
-                    <tr style="border-bottom: 1px solid rgba(11,18,32,0.04); transition: background 0.2s;" onmouseover="this.style.background='rgba(11,18,32,0.01)'" onmouseout="this.style.background='transparent'">
-                        <td style="padding: 16px 24px; color: #5b6573;"><?= $u['id'] ?></td>
-                        <td style="padding: 16px 24px;">
-                            <div style="font-weight: 600; color: #0b1220;"><?= $u['first_name'] . ' ' . $u['last_name'] ?></div>
-                            <div style="font-size: 0.82rem; color: #5b6573;">@<?= $u['username'] ?></div>
-                        </td>
-                        <td style="padding: 16px 24px; color: #5b6573;"><?= $u['email'] ?></td>
-                        <td style="padding: 16px 24px;">
-                            <!-- Sử dụng badge vai trò của T2 -->
-                            <span class="priority-badge <?= $u['role'] === 'admin' ? 'high' : 'medium' ?>">
-                                <?= strtoupper($u['role']) ?>
-                            </span>
-                        </td>
-                        <td style="padding: 16px 24px;">
-                            <!-- Trạng thái hoạt động dạng Pill mềm mại -->
-                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; 
+                        <tr style="border-bottom: 1px solid rgba(11,18,32,0.04); transition: background 0.2s;" onmouseover="this.style.background='rgba(11,18,32,0.01)'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 16px 24px; color: #5b6573;"><?= $u['id'] ?></td>
+                            <td style="padding: 16px 24px;">
+                                <div style="font-weight: 600; color: #0b1220;"><?= $u['first_name'] . ' ' . $u['last_name'] ?></div>
+                                <div style="font-size: 0.82rem; color: #5b6573;">@<?= $u['username'] ?></div>
+                            </td>
+                            <td style="padding: 16px 24px; color: #5b6573;"><?= $u['email'] ?></td>
+                            <td style="padding: 16px 24px;">
+                                <span class="priority-badge <?= $u['role'] === 'admin' ? 'high' : 'medium' ?>">
+                                    <?= strtoupper($u['role']) ?>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 24px;">
+                                <!-- Trạng thái hoạt động -->
+                                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; 
                                          background: <?= $u['status'] === 'active' ? 'rgba(57,192,141,0.12)' : 'rgba(241,101,101,0.12)' ?>;
                                          color: <?= $u['status'] === 'active' ? 'var(--success)' : 'var(--danger)' ?>;">
-                                <span style="width: 6px; height: 6px; border-radius: 50%; background: currentcolor;"></span>
-                                <?= $u['status'] === 'active' ? 'Hoạt động' : 'Bị khóa' ?>
-                            </span>
-                        </td>
-                        <td style="padding: 16px 24px; text-align: right;">
-                            <div style="display: inline-flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                                <!-- Nút thay đổi trạng thái (Bật/Tắt khóa) -->
-                                <a href="<?= BASE_URL ?>/admin/toggleUserStatus/<?= $u['id'] ?>" 
-                                   class="app-btn app-btn-sm" 
-                                   style="background: <?= $u['status'] === 'active' ? 'var(--danger)' : 'var(--success)' ?>; border-radius: 12px; padding: 6px 12px;"
-                                   onclick="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của nhân sự này?')">
-                                    <i class="bi <?= $u['status'] === 'active' ? 'bi-lock-fill' : 'bi-unlock-fill' ?>"></i>
-                                    <span><?= $u['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></span>
+                                    <span style="width: 6px; height: 6px; border-radius: 50%; background: currentcolor;"></span>
+                                    <?= $u['status'] === 'active' ? 'Hoạt động' : 'Bị khóa' ?>
+                                </span>
+                            </td>
+                            <td style="padding: 16px 24px; text-align: right;">
+                                <div style="display: inline-flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                                    <!-- Nút thay đổi trạng thái (Bật/Tắt khóa) -->
+                                    <a href="<?= BASE_URL ?>/admin/toggleUserStatus/<?= $u['id'] ?>"
+                                        class="app-btn app-btn-sm"
+                                        style="background: <?= $u['status'] === 'active' ? 'var(--danger)' : 'var(--success)' ?>; border-radius: 12px; padding: 6px 12px;"
+                                        onclick="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của nhân sự này?')">
+                                        <i class="bi <?= $u['status'] === 'active' ? 'bi-lock-fill' : 'bi-unlock-fill' ?>"></i>
+                                        <span><?= $u['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></span>
+                                    </a>
+                                </div>
+                            </td>
+                            <td style="padding: 16px 24px; text-align: right; display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                                <!--  NÚT SỬA -->
+                                <a href="<?= BASE_URL ?>/admin/editUser/<?= $u['id'] ?>" class="app-btn app-btn-sm app-btn-ghost" title="Sửa thông tin">
+                                    <i class="bi bi-pencil-square" style="color: var(--primary);"></i>
                                 </a>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
