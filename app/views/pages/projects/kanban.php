@@ -238,11 +238,14 @@
     <div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
-                </div>
+            </div>
         </div>
     </div>
 
     <script>
+    // Định nghĩa biến toàn cục lưu thẻ Card đang được chỉnh sửa
+    window.targetKanbanCard = null;
+
     // Hàm click chuyển cột nhanh
     function moveTask(buttonElement, targetStatus) {
         const card = buttonElement.closest('.kanban-item-card');
@@ -252,6 +255,9 @@
             targetColumn.appendChild(card);
             updateQuickActionsMenu(card, targetStatus);
             updateColumnCounts();
+            
+            // Cập nhật lại hiệu ứng gạch ngang / mờ của Done column
+            toggleDoneStyles(card, targetStatus);
         }
     }
 
@@ -274,6 +280,31 @@
             }
         }
         container.innerHTML = newHtml;
+    }
+
+    // Hàm bật/tắt CSS cho cột DONE
+    function toggleDoneStyles(card, status) {
+        const titleEl = card.querySelector('.task-title');
+        const codeEl = card.querySelector('.task-code');
+        const assigneeEl = card.querySelector('.task-assignee');
+
+        if (status === 'done') {
+            card.classList.add('opacity-75');
+            if (titleEl) {
+                titleEl.classList.add('text-secondary', 'text-decoration-line-through');
+                titleEl.classList.remove('text-dark');
+            }
+            if (codeEl) codeEl.classList.add('text-decoration-line-through');
+            if (assigneeEl) assigneeEl.classList.add('text-decoration-line-through');
+        } else {
+            card.classList.remove('opacity-75');
+            if (titleEl) {
+                titleEl.classList.remove('text-secondary', 'text-decoration-line-through');
+                titleEl.classList.add('text-dark');
+            }
+            if (codeEl) codeEl.classList.remove('text-decoration-line-through');
+            if (assigneeEl) assigneeEl.classList.remove('text-decoration-line-through');
+        }
     }
 
     // Hàm đếm số lượng thẻ 
@@ -323,6 +354,9 @@
 
         filterAssignee.addEventListener('change', applyFilters);
         filterPriority.addEventListener('change', applyFilters);
+        
+        // Gán hàm filter vào window để gọi từ các sự kiện bên ngoài
+        window.applyFilters = applyFilters;
 
 
         // ==============================================================
@@ -330,10 +364,12 @@
         // ==============================================================
         const modalElement = document.getElementById('taskDetailModal');
         if(modalElement) {
-            // Thay đổi sự kiện lắng nghe từ show.bs.offcanvas sang show.bs.modal
             modalElement.addEventListener('show.bs.modal', function (event) {
                 const card = event.relatedTarget;
                 if (!card) return;
+
+                // Khóa mục tiêu card đang chỉnh sửa
+                window.targetKanbanCard = card;
 
                 // 1. Lấy dữ liệu từ thẻ card
                 const taskCode = card.querySelector('.task-code').innerText.trim();
@@ -417,7 +453,7 @@
                                     
                                     <div class="mb-3">
                                         <label class="text-muted fw-bold small mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">TRẠNG THÁI (STATUS)</label>
-                                        <select class="form-select fw-medium shadow-none border-secondary-subtle rounded-2 py-2">
+                                        <select class="form-select fw-medium shadow-none border-secondary-subtle rounded-2 py-2" id="modalStatusSelect">
                                             <option value="todo" ${taskStatus === 'todo' ? 'selected' : ''}>To Do</option>
                                             <option value="in_progress" ${taskStatus === 'in_progress' ? 'selected' : ''}>In Progress</option>
                                             <option value="in_review" ${taskStatus === 'in_review' ? 'selected' : ''}>In Review</option>
@@ -427,12 +463,11 @@
 
                                     <div class="mb-3">
                                         <label class="text-muted fw-bold small mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">NGƯỜI XỬ LÝ (ASSIGNEE)</label>
-                                        <select class="form-select fw-medium shadow-none border-secondary-subtle rounded-2 py-2">
-                                            <option selected>${taskAssignee}</option>
-                                            <option>Alex</option>
-                                            <option>Sarah</option>
-                                            <option>Quyen</option>
-                                            <option>Marcus</option>
+                                        <select class="form-select fw-medium shadow-none border-secondary-subtle rounded-2 py-2" id="modalAssigneeSelect">
+                                            <option value="Alex" ${taskAssignee === 'Alex' ? 'selected' : ''}>Alex</option>
+                                            <option value="Sarah" ${taskAssignee === 'Sarah' ? 'selected' : ''}>Sarah</option>
+                                            <option value="Quyen" ${taskAssignee === 'Quyen' ? 'selected' : ''}>Quyen</option>
+                                            <option value="Marcus" ${taskAssignee === 'Marcus' ? 'selected' : ''}>Marcus</option>
                                         </select>
                                     </div>
 
@@ -445,11 +480,11 @@
 
                                     <div class="mb-3">
                                         <label class="text-muted fw-bold small mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">ĐỘ ƯU TIÊN (PRIORITY)</label>
-                                        <select class="form-select fw-medium shadow-none border-secondary-subtle rounded-2 py-2">
-                                            <option ${badgeText.includes('HIGHEST') ? 'selected' : ''}>Highest ⚡</option>
-                                            <option ${badgeText.includes('HIGH') ? 'selected' : ''}>High 🔴</option>
-                                            <option ${badgeText.includes('MEDIUM') ? 'selected' : ''}>Medium 🟡</option>
-                                            <option ${badgeText.includes('LOW') ? 'selected' : ''}>Low 🟢</option>
+                                        <select class="form-select fw-medium shadow-none border-secondary-subtle rounded-2 py-2" id="modalPrioritySelect">
+                                            <option value="HIGHEST" ${badgeText.includes('HIGHEST') ? 'selected' : ''}>Highest ⚡</option>
+                                            <option value="HIGH" ${badgeText.includes('HIGH') ? 'selected' : ''}>High 🔴</option>
+                                            <option value="MEDIUM" ${badgeText.includes('MEDIUM') ? 'selected' : ''}>Medium 🟡</option>
+                                            <option value="LOW" ${badgeText.includes('LOW') ? 'selected' : ''}>Low 🟢</option>
                                         </select>
                                     </div>
 
@@ -492,142 +527,84 @@
                     const card = evt.item;
                     const newStatus = evt.to.getAttribute('data-status');
                     updateQuickActionsMenu(card, newStatus);
+                    toggleDoneStyles(card, newStatus);
                     updateColumnCounts();
                 }
             });
         });
+
+        // ==============================================================
+        // LẮNG NGHE SỰ KIỆN THAY ĐỔI TRÊN MODAL ĐỂ CẬP NHẬT KANBAN BOARD
+        // ==============================================================
+        document.addEventListener('change', function (e) {
+            if (!window.targetKanbanCard) return;
+            if (!e.target.closest('#taskDetailModal')) return;
+
+            // 1. Thay đổi Trạng thái (Status)
+            if (e.target.id === 'modalStatusSelect') {
+                const newStatus = e.target.value;
+                const destColumn = document.querySelector(`.sub-kanban-column[data-status="${newStatus}"]`);
+                
+                if (destColumn) {
+                    destColumn.appendChild(window.targetKanbanCard);
+                    updateQuickActionsMenu(window.targetKanbanCard, newStatus);
+                    toggleDoneStyles(window.targetKanbanCard, newStatus);
+                    updateColumnCounts();
+                    if (typeof window.applyFilters === 'function') window.applyFilters();
+                }
+            }
+
+            // 2. Thay đổi Người xử lý (Assignee)
+            if (e.target.id === 'modalAssigneeSelect') {
+                const selectedAssignee = e.target.value;
+                
+                // Cập nhật text Tên
+                const nameEl = window.targetKanbanCard.querySelector('.task-assignee');
+                if (nameEl) nameEl.innerText = selectedAssignee;
+
+                // Cập nhật Avatar ảnh
+                const avatarImg = window.targetKanbanCard.querySelector('img');
+                const avatarMap = {
+                    'Alex': '06b6d4',
+                    'Sarah': 'f59e0b',
+                    'Quyen': '8b5cf6',
+                    'Marcus': '10b981'
+                };
+                if (avatarImg && avatarMap[selectedAssignee]) {
+                    avatarImg.src = `https://ui-avatars.com/api/?name=${selectedAssignee}&background=${avatarMap[selectedAssignee]}&color=fff`;
+                }
+
+                if (typeof window.applyFilters === 'function') window.applyFilters();
+            }
+
+            // 3. Thay đổi Độ ưu tiên (Priority)
+            if (e.target.id === 'modalPrioritySelect') {
+                const selectedPriority = e.target.value;
+                const priorityBadge = window.targetKanbanCard.querySelector('.badge');
+                
+                if (priorityBadge) {
+                    if (selectedPriority === 'HIGHEST') {
+                        priorityBadge.style.backgroundColor = '#ffbdad';
+                        priorityBadge.style.color = '#bf2600';
+                        priorityBadge.innerHTML = '<i class="bi bi-lightning-fill"></i> HIGHEST';
+                    } else if (selectedPriority === 'HIGH') {
+                        priorityBadge.style.backgroundColor = '#ffebe6';
+                        priorityBadge.style.color = '#de350b';
+                        priorityBadge.innerHTML = '<i class="bi bi-bookmark-fill"></i> HIGH';
+                    } else if (selectedPriority === 'MEDIUM') {
+                        priorityBadge.style.backgroundColor = '#fff0b3';
+                        priorityBadge.style.color = '#172b4d';
+                        priorityBadge.innerHTML = '<i class="bi bi-check-square-fill text-warning"></i> MEDIUM';
+                    } else if (selectedPriority === 'LOW') {
+                        priorityBadge.style.backgroundColor = '#e3fcef';
+                        priorityBadge.style.color = '#006644';
+                        priorityBadge.innerHTML = '<i class="bi bi-arrow-down text-success"></i> LOW';
+                    }
+                }
+
+                if (typeof window.applyFilters === 'function') window.applyFilters();
+            }
+        });
     });
-    
     </script>
 </section>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    window.targetKanbanCard = null;
-
-    // 1. KHI CLICK NGOÀI BẢNG: TÌM CHÍNH XÁC KHUNG CARD NGOÀI CÙNG
-    document.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.modal')) return;
-
-        // Quét ngược từ phần tử vừa click lên trên để tìm cái khung chứa mã WEB-x
-        let elem = e.target;
-        while (elem && elem !== document.body) {
-            if (elem.innerText && /WEB-\d+/.test(elem.innerText) && elem.innerText.length < 300) {
-                // Xác định khung bao ngoài cùng (thường có bg-white, shadow hoặc class card)
-                // Lấy phần tử cha cao nhất trước khi chạm đến phân vùng Cột (Column)
-                let wrapper = elem;
-                while (wrapper.parentElement) {
-                    let parentHTML = wrapper.parentElement.innerHTML.toLowerCase();
-                    let parentClass = wrapper.parentElement.className.toLowerCase();
-                    // Ngừng quét lên khi đụng phải khung chứa danh sách của Cột
-                    if (parentClass.includes('body') || parentClass.includes('zone') || parentClass.includes('list') || wrapper.parentElement.tagName === 'TD') {
-                        break;
-                    }
-                    wrapper = wrapper.parentElement;
-                }
-                window.targetKanbanCard = wrapper;
-                console.log("🎯 Đã khóa chính xác khung thẻ:", window.targetKanbanCard);
-                break;
-            }
-            elem = elem.parentElement;
-        }
-    });
-
-    // 2. KHI ĐỔI DỮ LIỆU TRONG MODAL: CẬP NHẬT SIÊU AN TOÀN
-    document.addEventListener('change', (e) => {
-        if (e.target && e.target.tagName === 'SELECT' && e.target.closest('.modal')) {
-            if (!window.targetKanbanCard) return;
-
-            const selectedText = e.target.options[e.target.selectedIndex].text.trim();
-            const parentLabel = e.target.parentElement ? e.target.parentElement.innerText.toLowerCase() : '';
-
-            // --- A. DỊCH CHUYỂN CỘT ---
-            if (parentLabel.includes('trạng thái') || parentLabel.includes('status')) {
-                const cleanStatus = selectedText.toLowerCase().replace(/[^a-z0-9]/g, '');
-                let destColumn = null;
-
-                // Tìm cột đích chính xác
-                document.querySelectorAll('div, th, td, h5, h6').forEach(el => {
-                    if (el.closest('.modal') || el.closest('[data-task-id]')) return;
-                    let colText = el.innerText.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    if (colText === cleanStatus || colText.includes(cleanStatus)) {
-                        const colWrapper = el.closest('[class*="column"]') || el.closest('td') || el.parentElement;
-                        destColumn = colWrapper.querySelector('div') || colWrapper; 
-                    }
-                });
-
-                // Chuyển nguyên khối Card đi một cách an toàn
-                if (destColumn && window.targetKanbanCard) {
-                    destColumn.appendChild(window.targetKanbanCard);
-                    
-                    // Cập nhật lại số đếm an toàn
-                    setTimeout(() => {
-                        document.querySelectorAll('[class*="column"], td').forEach(c => {
-                            if (c.closest('.modal')) return;
-                            const badge = c.querySelector('.badge, span');
-                            if (badge && !isNaN(parseInt(badge.innerText))) {
-                                let count = 0;
-                                c.querySelectorAll('div').forEach(d => {
-                                    if(/WEB-\d+/.test(d.innerText) && d.innerText.length < 300) count++;
-                                });
-                                badge.innerText = count > 0 ? count : badge.innerText;
-                            }
-                        });
-                    }, 100);
-                }
-            }
-
-            // --- B. ĐỔI NGƯỜI XỬ LÝ (CHỈ ĐỔI CHỮ, KHÔNG PHÁ HTML) ---
-            if (parentLabel.includes('người xử lý') || parentLabel.includes('assignee')) {
-                let shortName = 'AL'; let bgColor = '#0052CC';
-                const lowerText = selectedText.toLowerCase();
-                
-                if (lowerText.includes('alex')) { shortName = 'AL'; bgColor = '#0052CC'; }
-                else if (lowerText.includes('sarah')) { shortName = 'SA'; bgColor = '#FF9900'; }
-                else if (lowerText.includes('quyen')) { shortName = 'QU'; bgColor = '#7A52CC'; }
-                else if (lowerText.includes('marcus')) { shortName = 'MA'; bgColor = '#00B8D9'; }
-
-                // Quét từng thẻ nhỏ bên trong Card để sửa đúng mục tiêu
-                window.targetKanbanCard.querySelectorAll('*').forEach(el => {
-                    if (el.children.length === 0) { // Chỉ nhắm vào phần tử chứa chữ trực tiếp
-                        let txt = el.innerText.trim();
-                        // 1. Sửa chữ tên dài
-                        if (['Alex', 'Sarah', 'Quyen', 'Marcus'].some(n => txt.includes(n))) {
-                            el.innerText = selectedText;
-                        }
-                        // 2. Sửa Avatar tròn
-                        if (['AL', 'SA', 'QU', 'MA'].includes(txt)) {
-                            el.innerText = shortName;
-                            el.style.backgroundColor = bgColor;
-                            el.style.color = '#FFFFFF';
-                            el.style.borderRadius = '50%';
-                        }
-                    }
-                });
-            }
-
-            // --- C. ĐỔI ĐỘ ƯU TIÊN (GIỮ NGUYÊN CSS GỐC, CHỈ ĐỔI MÀU & CHỮ) ---
-            if (parentLabel.includes('ưu tiên') || parentLabel.includes('priority')) {
-                window.targetKanbanCard.querySelectorAll('*').forEach(el => {
-                    if (el.children.length === 0) {
-                        let txt = el.innerText.toUpperCase();
-                        if (txt.includes('HIGH') || txt.includes('MEDIUM') || txt.includes('LOW')) {
-                            el.innerText = selectedText.toUpperCase().replace(/[^A-Z]/g, '');
-                            
-                            // Phối lại màu mà không làm thay đổi các class padding/margin đang có
-                            if (selectedText.toLowerCase().includes('high')) {
-                                el.style.backgroundColor = '#FFEBE6'; el.style.color = '#BF2600';
-                            } else if (selectedText.toLowerCase().includes('medium')) {
-                                el.style.backgroundColor = '#FFF0B3'; el.style.color = '#172B4D';
-                            } else {
-                                el.style.backgroundColor = '#EAE6FF'; el.style.color = '#403294';
-                            }
-                        }
-                    }
-                });
-            }
-        }
-    });
-});
-</script>
