@@ -8,6 +8,7 @@ CREATE TABLE
     `email` varchar(255) UNIQUE NOT NULL,
     `password_hash` varchar(255) NOT NULL,
     `role` ENUM ('admin', 'user') DEFAULT 'user',
+    `status` ENUM ('active', 'inactive') DEFAULT 'active', -- Bổ sung cột Trạng thái hoạt động tại đây
     `last_name` varchar(255),
     `first_name` varchar(255),
     `avatar_url` varchar(255),

@@ -39,6 +39,13 @@ class Auth extends Controller
         $user = $userModel->getByUsernameOrEmail($username);
 
         if ($user && password_verify($password, $user['password_hash'])) {
+
+            if (isset($user['status']) && $user['status'] === 'inactive') {
+                $_SESSION['flash_error'] = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để mở khóa.';
+                redirect('auth');
+                exit();
+            }
+
             $_SESSION['user'] = [
                 'id'           => $user['id'],
                 'username'     => $user['username'],

@@ -8,6 +8,18 @@ class UserModel
         $this->db = new Database(); // Kết nối database qua core
     }
 
+    public function getById($id)
+    {
+        $stmt = $this->db->pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+
+    public function updateStatus($id, $status) {
+        $stmt = $this->db->pdo->prepare("UPDATE users SET status = ? WHERE id = ?");
+        return $stmt->execute([$status, $id]);
+    }
+
     public function getByUsernameOrEmail($input)
     {
         // Tìm kiếm đồng thời ở cả 2 cột username và email

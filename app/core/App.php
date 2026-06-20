@@ -19,7 +19,7 @@ class App {
                 $_SESSION['user'] = [
                     'id' => 1,
                     'name' => 'Quyen Gia',
-                    'role' => 'ADMIN',
+                    'role' => 'admin',
                     'email' => 'dev@local'
                 ];
             }
