@@ -13,10 +13,10 @@ class Database
         try {
             // Đã chèn thêm port=$this->port vào chuỗi kết nối PDO dưới đây
             $this->pdo = new PDO(
-                "mysql:host=$this->host;dbname=$this->dbname;charset=utf8mb4",
+                // "mysql:host=$this->host;dbname=$this->dbname;charset=utf8mb4",
 
                 //NOTE CHO THÀNH: Comment dòng trên và bỏ comment dòng dưới để chạy
-                //"mysql:host=$this->host;port=$this->port;dbname=$this->dbname;charset=utf8mb4",
+                "mysql:host=$this->host;port=$this->port;dbname=$this->dbname;charset=utf8mb4",
                 $this->username,
                 $this->password
             );
