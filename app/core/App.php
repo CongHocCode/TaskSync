@@ -3,13 +3,14 @@
 if (!defined('DEV_BYPASS_AUTH')) {
     define('DEV_BYPASS_AUTH', false); //TODO đang tắt để test login
 }
-
-class App {
+class App
+{
     protected $controller = "Auth"; //Mặc định mở trang Workspace (bypass login for dev) //TODO
     protected $method = "index";    // Mặc định gọi hàm index
     protected $params = [];
 
-    public function __construct() {
+    public function __construct()
+    {
         // DEV: Nếu bật DEV_BYPASS_AUTH thì tạo 1 user mẫu để bỏ qua bước login
         if (defined('DEV_BYPASS_AUTH') && DEV_BYPASS_AUTH) {
             if (session_status() === PHP_SESSION_NONE) {
@@ -50,7 +51,8 @@ class App {
         call_user_func_array([$this->controller, $this->method], $this->params);
     }
 
-    private function parseUrl() {
+    private function parseUrl()
+    {
         if (isset($_GET['url'])) {
             return explode('/', filter_var(trim($_GET['url'], '/'), FILTER_SANITIZE_URL));
         }
