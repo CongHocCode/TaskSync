@@ -1,5 +1,7 @@
 <?php
-define('BASE_URL', 'http://localhost:8081/TaskSync/public');
+// NOTE CHO THÀNH: Bỏ comment dòng này và comment dòng dưới để chạy
+// define('BASE_URL', 'http://localhost:8081/TaskSync/public');
+define('BASE_URL', 'http://localhost/TaskSync/public');
 session_start();
 
 function redirect($path)
