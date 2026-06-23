@@ -1,7 +1,15 @@
 <?php
-// NOTE CHO THÀNH: Bỏ comment dòng này và comment dòng dưới để chạy
-// define('BASE_URL', 'http://localhost:8081/TaskSync/public');
-define('BASE_URL', 'http://localhost/TaskSync/public');
+
+// Thử nạp file config.php trước để lấy cấu hình BASE_URL động
+if (file_exists(__DIR__ . '/../app/core/config.php')) {
+    require_once __DIR__ . '/../app/core/config.php';
+}
+
+// Giá trị mặc định cho BASE_URL nếu máy không sử dụng file config.php cục bộ
+if (!defined('BASE_URL')) {
+    define('BASE_URL', 'http://localhost/TaskSync/public');
+}
+
 session_start();
 
 function redirect($path)

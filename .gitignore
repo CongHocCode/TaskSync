@@ -14,3 +14,4 @@ Thumbs.db
 /vendor/
 
 README.local.md
+app/core/config.php
