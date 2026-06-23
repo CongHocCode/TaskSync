@@ -80,8 +80,14 @@ class Project extends Controller {
         // Lấy thông tin dự án hiện tại để hiển thị tên dự án lên tiêu đề
         $project = $this->projectModel->getProjectById($projectId);
         
+        // Lấy danh sách tasks từ database
+        $taskModel = $this->model('TaskModel');
+        $tasks = $taskModel->getIssuesByProjectId($projectId);
+
         $data['page_title'] = "Bảng Kanban - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
+        $data['tasks'] = $tasks;
+
         $this->view('pages/projects/kanban', $data);
     }
 

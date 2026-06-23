@@ -5,8 +5,12 @@ class Workspace extends Controller {
             redirect('auth');
         }
 
+        $taskModel = $this->model('TaskModel');
         $data['page_title'] = "Dashboard tổng hợp";
-        $this->view('pages/dashboard', $data);
+        $data['task_frequency'] = $taskModel->getTaskFrequency();
+        $data['new_users_stats'] = $taskModel->getNewUsersStats();
+
+        $this->view('pages/dashboard/index', $data);
     }
 
     public function overview() {
