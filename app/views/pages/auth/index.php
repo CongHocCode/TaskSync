@@ -357,6 +357,22 @@
                 padding: 20px;
             }
         }
+
+        @media screen and (max-width: 480px) {
+            .auth-card {
+                padding: 24px 20px !important;
+            }
+
+            .quick-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.5rem;
+            }
+
+            .name-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
     </style>
 </head>
 

@@ -1,25 +1,51 @@
 <!-- Sidebar của admin -->
 <style>
-    .app-sidebar {
-        position: relative;
-        width: 280px;
-        min-width: 75px;
-        max-width: 500px;
-        transition: width 0.05s ease;
-        overflow-x: hidden;
-        flex-shrink: 0 !important; /* Ngăn chặn trình duyệt ép nhỏ sidebar */
-    }
-    .sidebar-resizer {
-        position: absolute;
-        top: 0; right: 0;
-        width: 8px; height: 100%;
-        cursor: col-resize;
-        background: transparent;
-        z-index: 10;
-        transition: background 0.2s;
-    }
-    .sidebar-resizer:hover, .sidebar-resizer.active {
-        background: rgba(255, 255, 255, 0.15);
+    @media (min-width: 992px) {
+        .app-sidebar {
+            position: relative;
+            width: 280px;
+            min-width: 75px;
+            max-width: 500px;
+            transition: width 0.05s ease;
+            overflow-x: hidden;
+        }
+        .sidebar-resizer {
+            position: absolute;
+            top: 0; right: 0;
+            width: 8px; height: 100%;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        .sidebar-resizer:hover, .sidebar-resizer.active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .app-sidebar.collapsed { width: 75px !important; }
+        .app-sidebar.collapsed h1,
+        .app-sidebar.collapsed .sidebar-section-label,
+        .app-sidebar.collapsed .sidebar-link span,
+        .app-sidebar.collapsed .sidebar-link .badge,
+        .app-sidebar.collapsed .sidebar-project-toggle span,
+        .app-sidebar.collapsed .sidebar-project-toggle .bi-chevron-down,
+        .app-sidebar.collapsed .user-info,
+        .app-sidebar.collapsed .user-menu-btn,
+        .app-sidebar.collapsed .sidebar-project-nav {
+            display: none !important;
+        }
+        .app-sidebar.collapsed .app-btn-create-issue {
+            font-size: 0 !important;
+            padding: 10px 0;
+            justify-content: center;
+        }
+        .app-sidebar.collapsed .app-btn-create-issue i {
+            font-size: 1.5rem !important;
+            margin: 0;
+        }
+        .app-sidebar.collapsed .sidebar-collapse i {
+            transform: rotate(180deg);
+            display: inline-block;
+        }
     }
     .sidebar-link, .sidebar-project-toggle, .sidebar-brand, .sidebar-user {
         display: flex;
@@ -36,46 +62,6 @@
         text-align: left;
     }
     .app-sidebar i { min-width: 20px; }
-    .app-sidebar.collapsed {
-        width: 75px !important;
-        padding: 28px 12px !important; /* Giảm padding ngang để chừa chỗ cho icon */
-    }
-    .app-sidebar.collapsed .sidebar-logo {
-        display: none !important; /* Ẩn logo để chỉ hiển thị nút thu gọn */
-    }
-    .app-sidebar.collapsed .sidebar-collapse {
-        position: static !important;
-        margin: 0 auto !important;
-    }
-    .app-sidebar.collapsed .sidebar-user {
-        display: flex !important;
-        justify-content: center !important;
-        padding: 10px !important;
-    }
-    .app-sidebar.collapsed h1,
-    .app-sidebar.collapsed .sidebar-section-label,
-    .app-sidebar.collapsed .sidebar-link span,
-    .app-sidebar.collapsed .sidebar-link .badge,
-    .app-sidebar.collapsed .sidebar-project-toggle span,
-    .app-sidebar.collapsed .sidebar-project-toggle .bi-chevron-down,
-    .app-sidebar.collapsed .user-info,
-    .app-sidebar.collapsed .user-menu-btn,
-    .app-sidebar.collapsed .sidebar-project-nav {
-        display: none !important;
-    }
-    .app-sidebar.collapsed .app-btn-create-issue {
-        font-size: 0 !important;
-        padding: 10px 0;
-        justify-content: center;
-    }
-    .app-sidebar.collapsed .app-btn-create-issue i {
-        font-size: 1.5rem !important;
-        margin: 0;
-    }
-    .app-sidebar.collapsed .sidebar-collapse i {
-        transform: rotate(180deg);
-        display: inline-block;
-    }
 </style>
 
 <aside class="app-sidebar">
