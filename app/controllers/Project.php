@@ -123,4 +123,76 @@ class Project extends Controller {
         $data['project'] = $project;
         $this->view('pages/projects/settings', $data);
     }
+
+    // 8. Cập nhật thông tin dự án
+    public function update()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $projectId = trim($_POST['id'] ?? '');
+            $name = trim($_POST['name'] ?? '');
+            $key = strtoupper(trim($_POST['key'] ?? ''));
+            $description = trim($_POST['description'] ?? '');
+            $githubRepoUrl = trim($_POST['github_repo_url'] ?? '');
+            $userId = $_SESSION['user']['id'];
+
+            if (empty($projectId) || empty($name) || empty($key)) {
+                $_SESSION['flash_error'] = "Vui lòng nhập đầy đủ thông tin bắt buộc.";
+                redirect('project/myProjects');
+                exit();
+            }
+
+            // Kiểm tra quyền hạn: phải là Admin hệ thống hoặc Manager của dự án
+            $isAuthorized = ($_SESSION['user']['role'] === 'admin' || $this->projectModel->isProjectManager($projectId, $userId));
+            if (!$isAuthorized) {
+                $_SESSION['flash_error'] = "Bạn không có quyền chỉnh sửa dự án này.";
+                redirect('project/myProjects');
+                exit();
+            }
+
+            $success = $this->projectModel->updateProject($projectId, $name, $key, $description, $githubRepoUrl);
+
+            if ($success) {
+                $_SESSION['flash_success'] = "Cập nhật dự án thành công!";
+            } else {
+                $_SESSION['flash_error'] = "Cập nhật dự án thất bại. Có thể mã viết tắt (Key) đã tồn tại.";
+            }
+            redirect('project/myProjects');
+            exit();
+        }
+        redirect('project/myProjects');
+    }
+
+    // 9. Xóa dự án
+    public function delete()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $projectId = trim($_POST['id'] ?? '');
+            $userId = $_SESSION['user']['id'];
+
+            if (empty($projectId)) {
+                $_SESSION['flash_error'] = "ID dự án không hợp lệ.";
+                redirect('project/myProjects');
+                exit();
+            }
+
+            // Kiểm tra quyền hạn: phải là Admin hệ thống hoặc Manager của dự án
+            $isAuthorized = ($_SESSION['user']['role'] === 'admin' || $this->projectModel->isProjectManager($projectId, $userId));
+            if (!$isAuthorized) {
+                $_SESSION['flash_error'] = "Bạn không có quyền xóa dự án này.";
+                redirect('project/myProjects');
+                exit();
+            }
+
+            $success = $this->projectModel->deleteProject($projectId);
+
+            if ($success) {
+                $_SESSION['flash_success'] = "Xóa dự án thành công!";
+            } else {
+                $_SESSION['flash_error'] = "Xóa dự án thất bại. Vui lòng thử lại.";
+            }
+            redirect('project/myProjects');
+            exit();
+        }
+        redirect('project/myProjects');
+    }
 }
