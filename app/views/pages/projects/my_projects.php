@@ -41,7 +41,7 @@ $projects = $data['projects'] ?? [];
             <?php
             $roleLabel = 'MEMBER';
             if (strtolower($project['role']) === 'manager') {
-                $roleLabel = 'MANAGER';
+                $roleLabel = 'ADMIN';
             } elseif (strtolower($project['role']) === 'viewer') {
                 $roleLabel = 'VIEWER';
             }
