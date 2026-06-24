@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Dự phòng
     const pathParts = window.location.pathname.split("/");
     if (pathParts[1] === "TaskSync") {
-      return window.location.origin + "/TaskSync/public"; 
+      return window.location.origin + "/TaskSync/public";
     }
     return window.location.origin;
   };
@@ -342,35 +342,25 @@ document.addEventListener("DOMContentLoaded", function () {
     // Khóa card đang tương tác vào window
     window.targetKanbanCard = card;
 
-    // Lấy tất cả các selector form đúng chuẩn của Quyền
     const titleTextarea = document.getElementById("modalTaskTitle");
-    const statusSelect = document.getElementById("modalStatusSelect");
     const descTextarea = modalElement.querySelector(
-      ".mb-4 textarea:not(#modalTaskTitle)",
-    );
+      "textarea:not(#modalTaskTitle)",
+    ); // Ô mô tả (textarea còn lại)
+    const statusSelect = document.getElementById("modalStatusSelect");
     const assigneeSelect = modalElement.querySelector(
       "select:not(#modalStatusSelect)",
+    );
+    const projectHeader = modalElement.querySelector(
+      ".modal-header .text-muted",
     );
     const githubInput =
       modalElement.querySelector(
         'input[type="text"][placeholder*="github" i]',
       ) || modalElement.querySelector('.col-lg-4 input[type="text"]');
-    const projectHeader = modalElement.querySelector(
-      ".modal-header .text-muted",
-    );
-    const subtaskList = modalElement.querySelector(".subtask-list");
-    const subtaskBadgeCount = document.getElementById("subtaskBadgeCount");
-    const subtaskProgressBar = document.getElementById("subtaskProgressBar");
 
-    // Reset dữ liệu cũ để tạo hiệu ứng chuyển tiếp mượt mà
-    if (titleText => { if (titleText) titleText.value = ""; });
-    if (assigneeSelect) assigneeSelect.value = "";
-    if (statusSelect) statusSelect.value = "";
-    
-    // Nạp hiệu ứng loading nhẹ...
-    if (modalElement.querySelector(".modal-body")) {
-        console.log("[TaskSync] Đang tải chi tiết công việc...");
-    }
+    // Tạm thời hiển thị trạng thái đang tải
+    if (titleTextarea) titleTextarea.value = "Đang tải...";
+    if (descTextarea) descTextarea.value = "Đang tải dữ liệu...";
 
     // Thực hiện gọi API lấy dữ liệu chi tiết
     fetch(`${baseUrl}/task/detail/${taskId}`)
@@ -379,33 +369,42 @@ document.addEventListener("DOMContentLoaded", function () {
         return response.json();
       })
       .then((task) => {
-        // Điền dữ liệu vào form Modal
-        const titleInput = document.querySelector('#taskDetailModal input[placeholder*="Nhập tiêu đề"]');
-        if (titleInput) titleInput.value = task.title;
-
-        if (statusSelect) {
-            statusSelect.value = task.status;
-            statusSelect.setAttribute("data-task-id", task.id);
+        // Điền dữ liệu thật từ Database vào form Modal
+        if (titleTextarea) {
+          titleTextarea.value = task.title;
         }
 
-        const descTextarea = document.querySelector('#taskDetailModal textarea[placeholder*="Mô tả"]');
-        if (descTextarea) descTextarea.value = task.description || "";
+        if (descTextarea) {
+          descTextarea.value = task.description || "";
+        }
 
-        // Gán Assignee động trực tiếp từ ID Database (Chuẩn OOP)
+        if (statusSelect) {
+          statusSelect.value = task.status;
+          statusSelect.setAttribute("data-task-id", task.id);
+        }
+
+        // Gán Assignee động trực tiếp từ ID Database
         if (assigneeSelect) {
-            assigneeSelect.value = task.assignee_id || "";
+          assigneeSelect.value = task.assignee_id || "";
+        }
+
+        if (githubInput) {
+          githubInput.value = task.github_repo_url || "";
         }
 
         if (projectHeader) {
-            projectHeader.textContent = `${task.issue_key} / Chi tiết công việc`;
+          projectHeader.textContent = `${task.issue_key} / Chi tiết công việc`;
         }
+
+        // Kích hoạt hiển thị Modal Bootstrap 5
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modalInstance.show();
       })
       .catch((error) => {
         console.error("[TaskSync] Error loading details:", error);
         alert("Có lỗi xảy ra khi tải dữ liệu công việc.");
       });
   }
-
   // Lắng nghe sự kiện thay đổi Trạng thái (Status) ngay trong Modal
   document.addEventListener("change", function (e) {
     if (e.target.id === "modalStatusSelect") {
@@ -495,7 +494,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Đồng bộ dữ liệu thuộc tính để bộ lọc hoạt động chính xác
-            cardElement.setAttribute("data-assignee", assigneeId ? cleanedName : "Unassigned");
+            cardElement.setAttribute(
+              "data-assignee",
+              assigneeId ? cleanedName : "Unassigned",
+            );
           }
         } else {
           alert("Không thể lưu người thực hiện mới, vui lòng thử lại.");
@@ -518,13 +520,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function applyKanbanFilters() {
     const selectedAssignee = filterAssignee ? filterAssignee.value : "all";
-    const selectedPriority = filterPriority ? filterPriority.value.toUpperCase() : "all";
+    const selectedPriority = filterPriority
+      ? filterPriority.value.toUpperCase()
+      : "all";
     const selectedType = filterType ? filterType.value.toLowerCase() : "all";
     const kanbanCards = document.querySelectorAll(".kanban-item-card");
 
     kanbanCards.forEach((card) => {
       const cardAssignee = card.getAttribute("data-assignee") || "Unassigned";
-      const cardPriority = (card.getAttribute("data-priority") || "").toUpperCase();
+      const cardPriority = (
+        card.getAttribute("data-priority") || ""
+      ).toUpperCase();
       const cardType = (card.getAttribute("data-type") || "").toLowerCase();
 
       // Kiểm tra điều kiện so khớp (Đã xử lý chữ hoa/thường tránh Silent Bug)
