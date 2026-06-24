@@ -1,7 +1,7 @@
 :root {
     --bg: #0a0e27;
     --surface: #140d2c;
-    --surface-alt: #1a1438;
+    --surface-alt: #0e29d6;
     --surface-soft: rgba(255, 255, 255, 0.05);
     --text: #eef6ff;
     --muted: #a3b1cc;
@@ -65,6 +65,7 @@ button {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    flex-shrink: 0;
 }
 
 .sidebar-brand {
@@ -239,8 +240,8 @@ button {
 }
 
 .app-main.light .content-wrapper {
-    max-width: 1180px;
-    margin: 0 auto;
+    max-width: 100%;
+    width: 100%;
 }
 
 .app-main.light .app-card {
@@ -512,8 +513,8 @@ button {
 }
 
 .content-wrapper {
-    max-width: 1180px;
-    margin: 0 auto;
+    max-width: 100%;
+    width: 100%;
 }
 
 .page-content {
@@ -1006,35 +1007,126 @@ textarea {
     box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
 }
 
-/* 📱 Điểm bẻ Responsive: Thiết bị di động nhỏ hơn 768px (Mobile) */
-@media (max-width: 767.98px) {
-    /* Ép các cột Kanban xếp dọc gọn gàng */
-    .kanban-board-wrapper {
-        flex-direction: column;
-    }
-    
-    .sub-kanban-column {
-        max-height: 350px; /* Khống chế chiều cao cột di động tránh quá dài */
+@media screen and (max-width: 992px) {
+    .sidebar-resizer {
+        display: none !important;
     }
 
-    /* Thu nhỏ chữ tiêu đề chính để không chiếm diện tích */
-    .kanban-page h1 {
-        font-size: 1.5rem !important;
+    .app-shell {
+        flex-direction: row;
     }
 
-    /* Ẩn bớt sidebar gốc hoặc ép bo thu gọn khi lướt trên điện thoại */
-    .sidebar-wrapper {
-        width: 0;
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 280px !important;
+        max-width: 280px !important;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: none;
+    }
+
+    .app-sidebar.show-mobile {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1040;
         display: none;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+
+    .app-header,
+    .app-footer {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .app-content {
+        padding: 24px 22px 30px;
     }
 }
 
-/* 📟 Điểm bẻ Responsive: Máy tính bảng từ 768px đến 1199px (Tablet) */
-@media (min-width: 768px) and (max-width: 1199.98px) {
-    /* Cho phép hiển thị dạng lưới 2 cột trên một hàng thay vì tràn màn hình */
+/* 📱 Điểm bẻ Responsive: Thiết bị di động & Máy tính bảng dưới 1200px */
+@media (max-width: 1199.98px) {
+    /* Cho phép cuộn ngang các cột Kanban để dễ drag & drop */
+    .kanban-board-wrapper {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 1.5rem;
+        gap: 1.25rem;
+        margin: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+    
     .kanban-board-wrapper > div {
-        flex: 0 0 50%;
-        max-width: 50%;
+        flex: 0 0 310px !important;
+        width: 310px !important;
+        max-width: 310px !important;
+    }
+    
+    .sub-kanban-column {
+        max-height: 520px;
+    }
+
+    /* Thu nhỏ chữ tiêu đề chính */
+    .kanban-page h1 {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* 📱 Điểm bẻ Responsive: Thiết bị di động nhỏ hơn 480px */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 24px 20px !important;
+    }
+    .quick-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+    }
+    .name-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .member-project-card {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    .member-project-card > div:last-child {
+        align-self: flex-start !important;
+        text-align: left !important;
+        margin-left: 0 !important;
+    }
+    .issue-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+    .issue-item > div:first-child {
+        width: 100% !important;
+    }
+    .issue-item > div:last-child {
+        align-self: flex-start !important;
+        margin-left: 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        width: 100% !important;
     }
 }
 

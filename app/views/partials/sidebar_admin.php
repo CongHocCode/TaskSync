@@ -7,6 +7,7 @@
         max-width: 500px;
         transition: width 0.05s ease;
         overflow-x: hidden;
+        flex-shrink: 0 !important; /* Ngăn chặn trình duyệt ép nhỏ sidebar */
     }
     .sidebar-resizer {
         position: absolute;
@@ -35,7 +36,22 @@
         text-align: left;
     }
     .app-sidebar i { min-width: 20px; }
-    .app-sidebar.collapsed { width: 75px !important; }
+    .app-sidebar.collapsed {
+        width: 75px !important;
+        padding: 28px 12px !important; /* Giảm padding ngang để chừa chỗ cho icon */
+    }
+    .app-sidebar.collapsed .sidebar-logo {
+        display: none !important; /* Ẩn logo để chỉ hiển thị nút thu gọn */
+    }
+    .app-sidebar.collapsed .sidebar-collapse {
+        position: static !important;
+        margin: 0 auto !important;
+    }
+    .app-sidebar.collapsed .sidebar-user {
+        display: flex !important;
+        justify-content: center !important;
+        padding: 10px !important;
+    }
     .app-sidebar.collapsed h1,
     .app-sidebar.collapsed .sidebar-section-label,
     .app-sidebar.collapsed .sidebar-link span,
@@ -139,9 +155,11 @@
 
         if (toggleBtn && sidebar) {
             toggleBtn.addEventListener("click", function(e) {
-                e.preventDefault();
-                sidebar.classList.toggle("collapsed");
-                sidebar.style.width = '';
+                if (window.innerWidth > 992) {
+                    e.preventDefault();
+                    sidebar.classList.toggle("collapsed");
+                    sidebar.style.width = '';
+                }
             });
         }
 

@@ -434,5 +434,69 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // ==============================================================
+    // 4. BỘ LỌC KANBAN DỰA TRÊN THÀNH VIÊN, ĐỘ ƯU TIÊN, LOẠI HÌNH
+    // ==============================================================
+    const filterAssignee = document.getElementById('filterAssignee');
+    const filterPriority = document.getElementById('filterPriority');
+    const filterType = document.getElementById('filterType');
+
+    function applyFilters() {
+        const assigneeVal = filterAssignee ? filterAssignee.value : 'all';
+        const priorityVal = filterPriority ? filterPriority.value.toUpperCase() : 'all';
+        const typeVal = filterType ? filterType.value.toLowerCase() : 'all';
+
+        document.querySelectorAll('.kanban-item-card').forEach(card => {
+            const cardAssignee = card.getAttribute('data-assignee') || 'Unassigned';
+            const cardPriority = (card.getAttribute('data-priority') || '').toUpperCase();
+            const cardType = (card.getAttribute('data-type') || '').toLowerCase();
+
+            const matchAssignee = (assigneeVal === 'all' || cardAssignee === assigneeVal);
+            const matchPriority = (priorityVal === 'all' || cardPriority === priorityVal);
+            const matchType = (typeVal === 'all' || cardType === typeVal);
+
+            if (matchAssignee && matchPriority && matchType) {
+                card.style.setProperty('display', 'block', 'important');
+            } else {
+                card.style.setProperty('display', 'none', 'important');
+            }
+        });
+        
+        // Cập nhật lại số lượng task ở tiêu đề mỗi cột
+        updateColumnCounts();
+    }
+
+    if (filterAssignee) filterAssignee.addEventListener('change', applyFilters);
+    if (filterPriority) filterPriority.addEventListener('change', applyFilters);
+    if (filterType) filterType.addEventListener('change', applyFilters);
+
+    // ==============================================================
+    // 5. ĐIỀU KHIỂN SIDEBAR DI ĐỘNG (OFF-CANVAS DRAWER)
+    // ==============================================================
+    const mobileToggleBtn = document.getElementById('mobile-sidebar-toggle');
+    const mobileSidebar = document.querySelector('.app-sidebar');
+    const mobileOverlay = document.getElementById('sidebar-overlay');
+
+    if (mobileToggleBtn && mobileSidebar && mobileOverlay) {
+        mobileToggleBtn.addEventListener('click', function () {
+            mobileSidebar.classList.add('show-mobile');
+            mobileOverlay.classList.add('show');
+        });
+
+        mobileOverlay.addEventListener('click', function () {
+            mobileSidebar.classList.remove('show-mobile');
+            mobileOverlay.classList.remove('show');
+        });
+        
+        // Đóng sidebar khi click nút mũi tên thu gọn bên trong
+        const sidebarCloseBtn = mobileSidebar.querySelector('.sidebar-collapse');
+        if (sidebarCloseBtn) {
+            sidebarCloseBtn.addEventListener('click', function () {
+                mobileSidebar.classList.remove('show-mobile');
+                mobileOverlay.classList.remove('show');
+            });
+        }
+    }
+
 });
 

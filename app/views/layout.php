@@ -24,6 +24,9 @@
 
 <body>
     <div class="app-shell">
+        <!-- Overlay cho Sidebar di động -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <!-- Sidebar chung -->
         <?php 
         // Nếu là Admin thì nạp menu Admin, ngược lại nạp menu làm việc thường

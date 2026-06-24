@@ -12,6 +12,7 @@
         transition: width 0.05s ease;
         /* Giảm thời gian để khi kéo chuột mượt hơn, không bị trễ */
         overflow-x: hidden;
+        flex-shrink: 0 !important; /* Ngăn chặn trình duyệt ép nhỏ sidebar */
     }
 
     /* Thanh handle ẩn ở mép phải để rê chuột vào kéo */
@@ -68,6 +69,22 @@
     .app-sidebar.collapsed {
         width: 75px !important;
         /* Fix cứng kích thước khi đóng hẳn */
+        padding: 28px 12px !important; /* Giảm padding ngang để chừa chỗ cho icon */
+    }
+
+    .app-sidebar.collapsed .sidebar-logo {
+        display: none !important; /* Ẩn logo để chỉ hiển thị nút thu gọn */
+    }
+
+    .app-sidebar.collapsed .sidebar-collapse {
+        position: static !important;
+        margin: 0 auto !important;
+    }
+
+    .app-sidebar.collapsed .sidebar-user {
+        display: flex !important;
+        justify-content: center !important;
+        padding: 10px !important;
     }
 
     /* Ẩn toàn bộ các phần chữ, nhãn tiêu đề khi thu nhỏ */
@@ -194,10 +211,12 @@
 
         if (toggleBtn && sidebar) {
             toggleBtn.addEventListener("click", function(e) {
-                e.preventDefault();
-                sidebar.classList.toggle("collapsed");
-                // Reset lại inline-width để CSS class tự quyết định kích thước cố định
-                sidebar.style.width = '';
+                if (window.innerWidth > 992) {
+                    e.preventDefault();
+                    sidebar.classList.toggle("collapsed");
+                    // Reset lại inline-width để CSS class tự quyết định kích thước cố định
+                    sidebar.style.width = '';
+                }
             });
         }
 
