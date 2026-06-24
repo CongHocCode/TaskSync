@@ -37,7 +37,7 @@ class Project extends Controller
         $data['page_title'] = "Dự án của tôi";
         // Gọi model lấy danh sách dự án mà user này tham gia
         $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
-
+        
         $this->view('pages/projects/my_projects', $data);
     }
 
