@@ -4,6 +4,23 @@
         <p>Giám sát nhanh các Task và Dự án của bạn hàng ngày.</p>
     </div>
 
+    <!-- Hộp chứa biểu đồ trực quan -->
+    <div class="dashboard-grid mb-4" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+        <div class="app-card">
+            <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 15px;">Tần suất xử lý công việc</h3>
+            <div style="position: relative; height: 280px; width: 100%;">
+                <canvas id="taskFrequencyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="app-card">
+            <h3 style="color: #1a1632 !important; font-weight: bold !important; margin-bottom: 15px;">Thống kê người dùng mới</h3>
+            <div style="position: relative; height: 280px; width: 100%;">
+                <canvas id="newUsersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
         <div class="app-card">
             <h3 style="color: #1a1632 !important; font-weight: bold !important;">Tổng quan Task</h3>
@@ -100,3 +117,12 @@
         </div>
     </div>
 </div>
+
+<!-- Tải thư viện Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Gán dữ liệu PHP cho JavaScript -->
+<script>
+    window.taskFrequencyData = <?php echo json_encode($data['task_frequency'] ?? []); ?>;
+    window.newUsersStatsData = <?php echo json_encode($data['new_users_stats'] ?? []); ?>;
+</script>

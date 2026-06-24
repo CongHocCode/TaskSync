@@ -357,6 +357,22 @@
                 padding: 20px;
             }
         }
+
+        @media screen and (max-width: 480px) {
+            .auth-card {
+                padding: 24px 20px !important;
+            }
+
+            .quick-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.5rem;
+            }
+
+            .name-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
     </style>
 </head>
 
@@ -423,7 +439,12 @@
                                 <label for="login-password">MẬT KHẨU</label>
                                 <a href="#" class="forgot-link" style="font-size: 0.82rem;">Quên mật khẩu?</a>
                             </div>
-                            <input type="password" id="login-password" name="password" class="auth-input" placeholder="••••••••••••" required>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="password" id="login-password" name="password" class="auth-input" placeholder="••••••••••••" required style="padding-right: 2.75rem;">
+                                <button type="button" id="toggle-password-btn" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 4px; outline: none;" aria-label="Hiện/Ẩn mật khẩu">
+                                    <i class="bi bi-eye" id="toggle-password-icon"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn-submit">
@@ -489,7 +510,12 @@
 
                         <div class="form-group">
                             <label for="reg-password">MẬT KHẨU</label>
-                            <input type="password" id="reg-password" name="password" class="auth-input" placeholder="••••••••" required>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="password" id="reg-password" name="password" class="auth-input" placeholder="••••••••" required style="padding-right: 2.75rem;">
+                                <button type="button" id="toggle-reg-password-btn" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 4px; outline: none;" aria-label="Hiện/Ẩn mật khẩu">
+                                    <i class="bi bi-eye" id="toggle-reg-password-icon"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn-submit">
@@ -525,6 +551,44 @@
         function fillQuickAccount(username, password) {
             document.getElementById('login-username').value = username;
             document.getElementById('login-password').value = password;
+        }
+
+        // Hiện/Ẩn mật khẩu - Đăng nhập
+        const loginPasswordInput = document.getElementById('login-password');
+        const togglePasswordBtn = document.getElementById('toggle-password-btn');
+        const togglePasswordIcon = document.getElementById('toggle-password-icon');
+
+        if (togglePasswordBtn && loginPasswordInput && togglePasswordIcon) {
+            togglePasswordBtn.addEventListener('click', function () {
+                const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                loginPasswordInput.setAttribute('type', type);
+                if (type === 'text') {
+                    togglePasswordIcon.classList.remove('bi-eye');
+                    togglePasswordIcon.classList.add('bi-eye-slash');
+                } else {
+                    togglePasswordIcon.classList.remove('bi-eye-slash');
+                    togglePasswordIcon.classList.add('bi-eye');
+                }
+            });
+        }
+
+        // Hiện/Ẩn mật khẩu - Đăng ký
+        const regPasswordInput = document.getElementById('reg-password');
+        const toggleRegPasswordBtn = document.getElementById('toggle-reg-password-btn');
+        const toggleRegPasswordIcon = document.getElementById('toggle-reg-password-icon');
+
+        if (toggleRegPasswordBtn && regPasswordInput && toggleRegPasswordIcon) {
+            toggleRegPasswordBtn.addEventListener('click', function () {
+                const type = regPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                regPasswordInput.setAttribute('type', type);
+                if (type === 'text') {
+                    toggleRegPasswordIcon.classList.remove('bi-eye');
+                    toggleRegPasswordIcon.classList.add('bi-eye-slash');
+                } else {
+                    toggleRegPasswordIcon.classList.remove('bi-eye-slash');
+                    toggleRegPasswordIcon.classList.add('bi-eye');
+                }
+            });
         }
     </script>
 

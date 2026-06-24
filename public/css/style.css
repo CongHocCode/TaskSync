@@ -1,13 +1,17 @@
 :root {
     --bg: #0a0e27;
     --surface: #140d2c;
-    --surface-alt: #1a1438;
+    --surface-alt: #381cc2;
     --surface-soft: rgba(255, 255, 255, 0.05);
     --text: #eef6ff;
-    --muted: #b09dd9;
-    --primary: #7c3aed;
-    --primary-strong: #6d28d9;
-    --accent: #a78bfa;
+    --muted: #a3b1cc;
+    
+    /* 6. Màu tím thương hiệu (Primary) - Sắc tím hoàng gia rực rỡ của thanh status topbar */
+    --primary: #4318ff;
+    --primary-strong: #3311de;
+    
+    /* Màu nhấn nhá phụ (Accent) */
+    --accent: #707eae;
     --success: #39c08d;
     --danger: #f16565;
     --border: rgba(255, 255, 255, 0.12);
@@ -61,6 +65,7 @@ button {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    flex-shrink: 0;
 }
 
 .sidebar-brand {
@@ -235,8 +240,8 @@ button {
 }
 
 .app-main.light .content-wrapper {
-    max-width: 1180px;
-    margin: 0 auto;
+    max-width: 100%;
+    width: 100%;
 }
 
 .app-main.light .app-card {
@@ -508,8 +513,8 @@ button {
 }
 
 .content-wrapper {
-    max-width: 1180px;
-    margin: 0 auto;
+    max-width: 100%;
+    width: 100%;
 }
 
 .page-content {
@@ -690,28 +695,7 @@ textarea {
     backdrop-filter: blur(10px);
 }
 
-@media screen and (max-width: 992px) {
-    .app-shell {
-        flex-direction: column;
-    }
-
-    .app-sidebar {
-        width: 100%;
-        max-width: none;
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .app-header,
-    .app-footer {
-        padding-left: 22px;
-        padding-right: 22px;
-    }
-
-    .app-content {
-        padding: 24px 22px 30px;
-    }
-}
+/* Đã lược bỏ media query cũ tại đây để gom nhóm xuống phần dưới */
 
 .kanban-board {
     display: grid;
@@ -858,81 +842,232 @@ textarea {
     accent-color: var(--accent);
 }
 
+/* ==========================================================================
+   CẤU HÌNH RESPONSIVE & DI ĐỘNG (MOBILE & TABLET SUPPORT)
+   ========================================================================== */
+
+/* 💻 Điểm bẻ Responsive: Thiết bị di động & Máy tính bảng dưới 1200px */
+@media (max-width: 1199.98px) {
+    /* Cho phép cuộn ngang các cột Kanban để dễ drag & drop */
+    .kanban-board-wrapper {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 1.5rem;
+        gap: 1.25rem;
+        margin: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .kanban-board-wrapper > div {
+        flex: 0 0 310px !important;
+        width: 310px !important;
+        max-width: 310px !important;
+    }
+    
+    .sub-kanban-column {
+        max-height: 520px;
+    }
+
+    /* Thu nhỏ chữ tiêu đề chính */
+    .kanban-page h1 {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* 📟 Điểm bẻ Responsive: Thiết bị dưới 1024px */
 @media (max-width: 1024px) {
-    .app-sidebar {
-        min-width: 220px;
-        max-width: 220px;
-        padding: 20px 18px;
-    }
-
-    .kanban-board {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 860px) {
-    .app-shell {
-        flex-direction: column;
-    }
-
-    .app-sidebar {
-        width: 100%;
-        max-width: 100%;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 20px;
-    }
-
-    .sidebar-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        padding-top: 0.75rem;
-    }
-
-    .sidebar-link {
-        width: calc(50% - 0.5rem);
-    }
-
-    .app-header {
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .header-actions {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .app-content {
-        padding: 22px 20px 28px;
-    }
-
-    .kanban-board {
-        grid-template-columns: 1fr;
-    }
-
-    .kanban-column {
-        min-height: unset;
-    }
-}
-
-@media (max-width: 640px) {
-    .app-sidebar {
-        display: none;
-    }
-
     .page-heading {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .task-details-panel {
-        width: 100%;
+        gap: 1rem;
     }
 }
 
-/* User Section in Sidebar */
+/* 📱 Điểm bẻ Responsive: Thiết bị di động & Máy tính bảng dưới 992px */
+@media screen and (max-width: 992px) {
+    .sidebar-resizer {
+        display: none !important;
+    }
+
+    .app-shell {
+        flex-direction: row;
+    }
+
+    .app-sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh !important;
+        width: 280px !important;
+        max-width: 280px !important;
+        min-width: 0 !important;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: none;
+    }
+
+    .app-sidebar.show-mobile {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1040;
+        display: none;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+
+    .app-header,
+    .app-footer {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+
+    .app-content {
+        padding: 20px 16px 30px !important;
+    }
+}
+
+/* 📱 Điểm bẻ Responsive: Thiết bị di động dưới 768px */
+@media (max-width: 767.98px) {
+    /* Thu nhỏ các thành phần trên header để không bị tràn màn hình */
+    .session-label {
+        display: none !important; /* Ẩn chữ Admin Session */
+    }
+    
+    .header-session {
+        gap: 0.35rem !important;
+    }
+
+    .header-session i {
+        font-size: 1.1rem !important;
+    }
+
+    .session-user {
+        font-size: 0.85rem !important;
+    }
+
+    .header-actions .app-btn span {
+        display: none !important; /* Ẩn nhãn chữ trên các nút, chỉ giữ lại icon */
+    }
+
+    .header-actions .app-btn {
+        padding: 0.5rem 0.75rem !important;
+        min-height: 38px;
+    }
+
+    .user-chip {
+        padding: 0.25rem !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .search-wrapper {
+        max-width: 150px;
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    .app-input {
+        min-width: unset !important;
+        width: 100% !important;
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* Điều chỉnh các phần tiêu đề trang */
+    .page-header h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    /* Panel chi tiết task */
+    .task-details-panel {
+        width: 100% !important;
+    }
+}
+
+/* 📱 Điểm bẻ Responsive: Thiết bị di động nhỏ hơn 576px */
+@media (max-width: 575.98px) {
+    .app-header {
+        padding: 12px 14px !important;
+    }
+    
+    .search-wrapper {
+        max-width: 110px;
+    }
+    
+    .app-input {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* 📱 Điểm bẻ Responsive: Thiết bị di động cực nhỏ (nhỏ hơn 480px) */
+@media (max-width: 480px) {
+    .quick-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+    }
+
+    .member-project-card {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+        padding: 1rem !important;
+    }
+
+    .member-project-card > div:last-child {
+        align-self: flex-start !important;
+        text-align: left !important;
+        margin-left: 0 !important;
+    }
+
+    .issue-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+        padding: 0.85rem 1rem !important;
+    }
+
+    .issue-item > div:first-child {
+        width: 100% !important;
+    }
+
+    .issue-item > div:last-child {
+        align-self: flex-start !important;
+        margin-left: 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+}
+
+/* Chiều cao tối thiểu cho vùng chứa thẻ bên trong cột để dễ rê thả */
+.sub-kanban-column {
+    min-height: 250px;
+    max-height: calc(100vh - 220px);
+}
+
+/* Hiệu ứng di chuột vào thẻ công việc */
+.kanban-item-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.kanban-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+/* User Section in Sidebar (Desktop-only default) */
 .sidebar-user {
     display: flex;
     align-items: center;
@@ -983,59 +1118,5 @@ textarea {
 .user-menu-btn:hover {
     color: var(--accent);
 }
-/* ==========================================================================
-   CẤU HÌNH LIÊN QUAN ĐẾN BẢNG KANBAN & DI ĐỘNG RESPONSIVE
-   ========================================================================== */
-
-/* Chiều cao tối thiểu cho vùng chứa thẻ bên trong cột để dễ rê thả sau này */
-.sub-kanban-column {
-    min-height: 250px;
-    max-height: calc(100vh - 220px);
-}
-
-/* Hiệu ứng di chuột vào thẻ công việc */
-.kanban-item-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.kanban-item-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
-}
-
-/* 📱 Điểm bẻ Responsive: Thiết bị di động nhỏ hơn 768px (Mobile) */
-@media (max-width: 767.98px) {
-    /* Ép các cột Kanban xếp dọc gọn gàng */
-    .kanban-board-wrapper {
-        flex-direction: column;
-    }
-    
-    .sub-kanban-column {
-        max-height: 350px; /* Khống chế chiều cao cột di động tránh quá dài */
-    }
-
-    /* Thu nhỏ chữ tiêu đề chính để không chiếm diện tích */
-    .kanban-page h1 {
-        font-size: 1.5rem !important;
-    }
-
-    /* Ẩn bớt sidebar gốc hoặc ép bo thu gọn khi lướt trên điện thoại */
-    .sidebar-wrapper {
-        width: 0;
-        display: none;
-    }
-}
-
-/* 📟 Điểm bẻ Responsive: Máy tính bảng từ 768px đến 1199px (Tablet) */
-@media (min-width: 768px) and (max-width: 1199.98px) {
-    /* Cho phép hiển thị dạng lưới 2 cột trên một hàng thay vì tràn màn hình */
-    .kanban-board-wrapper > div {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
-}
 
 /* //bảng kanban */
-
-
-
-

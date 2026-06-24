@@ -8,7 +8,7 @@ class ProjectModel {
         $this->db = $databaseInstance->pdo; 
     }
 
-    // 1. Lấy TẤT CẢ các dự án trên hệ thống 
+    // Lấy TẤT CẢ các dự án trên hệ thống 
     public function getAllProjects() {
         $sql = "SELECT p.*, u.username as owner_name 
                 FROM projects p
@@ -19,7 +19,7 @@ class ProjectModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 2. Lấy danh sách các dự án mà một user cụ thể tham gia (myProjects)
+    // Lấy danh sách các dự án mà một user cụ thể tham gia (myProjects) chủ yếu cho trang admin
     public function getProjectsByUserId($userId) {
         $sql = "SELECT p.*, pm.role 
                 FROM projects p 
@@ -31,7 +31,7 @@ class ProjectModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 3. Lấy thông tin chi tiết của một dự án cụ thể theo ID (Dùng cho Kanban, List, Members...)
+    // Lấy thông tin chi tiết của một dự án cụ thể theo ID (Dùng cho Kanban, List, Members...)
     public function getProjectById($projectId) {
         $sql = "SELECT * FROM projects WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -39,7 +39,7 @@ class ProjectModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // 4. Hàm THÊM dự án mới (Dùng transaction để đảm bảo lưu đồng thời vào bảng projects và project_members)
+    //  Hàm THÊM dự án mới (Dùng transaction để đảm bảo lưu đồng thời vào bảng projects và project_members)
     public function createProject($name, $key, $description, $githubRepoUrl, $ownerId) {
     try {
         $this->db->beginTransaction(); 
