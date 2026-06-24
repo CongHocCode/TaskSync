@@ -4,10 +4,14 @@
     --surface-alt: #1a1438;
     --surface-soft: rgba(255, 255, 255, 0.05);
     --text: #eef6ff;
-    --muted: #b09dd9;
-    --primary: #3919dc;
+    --muted: #a3b1cc;
+    
+    /* 6. Màu tím thương hiệu (Primary) - Sắc tím hoàng gia rực rỡ của thanh status topbar */
+    --primary: #4318ff;
     --primary-strong: #3311de;
-    --accent: #a78bfa;
+    
+    /* Màu nhấn nhá phụ (Accent) */
+    --accent: #707eae;
     --success: #39c08d;
     --danger: #f16565;
     --border: rgba(255, 255, 255, 0.12);
