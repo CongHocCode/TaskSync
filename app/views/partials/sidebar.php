@@ -43,6 +43,7 @@ if ($activeProject) {
 ?>
 <style>
     @media (min-width: 992px) {
+
         /* --- TRẠNG THÁI MẶC ĐỊNH (MỞ RỘNG) --- */
         .app-sidebar {
             position: relative;
@@ -144,6 +145,12 @@ if ($activeProject) {
     /* Giữ khoảng cách cố định cho icon để không bị bóp méo khi thu nhỏ */
     .app-sidebar i {
         min-width: 20px;
+    }
+
+    #createIssueModal input {
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
     }
 </style>
 
