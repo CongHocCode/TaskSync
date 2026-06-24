@@ -180,7 +180,7 @@
                                 $priorityIcon = 'bi-arrow-down text-success';
                             }
 
-                            // NOTE: Xử lý gán tên người thực hiện một cách an toàn và động
+                            // NOTE: Xử lý gán tên người thực hiện 
                             $assigneeFullName = trim(($task['assignee_first'] ?? '') . ' ' . ($task['assignee_last'] ?? ''));
                             if (!empty($assigneeFullName)) {
                                 $assignee = $assigneeFullName;
@@ -188,7 +188,7 @@
                                 $assignee = !empty($task['assignee_name']) ? $task['assignee_name'] : 'Unassigned';
                             }
 
-                            // NOTE: Tạo màu nền ngẫu nhiên theo ID người gán để tránh cấu trúc rẽ nhánh if/else gán cứng cũ của T2
+                            // NOTE: Tạo màu nền ngẫu nhiên theo ID
                             $assigneeId = $task['assignee_id'] ?? 0;
                             $avatarColors = ['06b6d4', 'f59e0b', '8b5cf6', '10b981', 'ec4899', '3b82f6'];
                             $avatarBg = $assigneeId ? $avatarColors[$assigneeId % count($avatarColors)] : '64748b';
