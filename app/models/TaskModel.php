@@ -1,14 +1,17 @@
 <?php
-class TaskModel {
+class TaskModel
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $databaseInstance = new Database();
         $this->db = $databaseInstance->pdo;
     }
 
     // Lấy thông tin chi tiết một task bằng ID
-    public function getById($id) {
+    public function getById($id)
+    {
         $sql = "SELECT i.*, 
                        CONCAT(u1.first_name, ' ', u1.last_name) AS assignee_full_name,
                        u1.username AS assignee_username,
@@ -29,7 +32,8 @@ class TaskModel {
     }
 
     // Lấy danh sách sub-tasks của một task
-    public function getSubtasksByTaskId($taskId) {
+    public function getSubtasksByTaskId($taskId)
+    {
         $sql = "SELECT * FROM issues WHERE parent_issue_id = :task_id ORDER BY id ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['task_id' => $taskId]);
@@ -37,7 +41,8 @@ class TaskModel {
     }
 
     // Cập nhật trạng thái của task
-    public function updateStatus($id, $status) {
+    public function updateStatus($id, $status)
+    {
         $sql = "UPDATE issues SET status = :status WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
@@ -46,8 +51,55 @@ class TaskModel {
         ]);
     }
 
+    public function createIssue($data)
+    {
+        try {
+            // Bắt đầu Transaction để bảo toàn tính toàn vẹn dữ liệu
+            $this->db->beginTransaction();
+
+            // 1. Tăng counter của dự án lên 1
+            $sqlCounter = "UPDATE projects SET issue_counter = issue_counter + 1 WHERE id = :project_id";
+            $stmtCounter = $this->db->prepare($sqlCounter);
+            $stmtCounter->execute(['project_id' => $data['project_id']]);
+
+            // 2. Lấy mã Key và Counter mới của dự án
+            $sqlProj = "SELECT `key`, issue_counter FROM projects WHERE id = :project_id";
+            $stmtProj = $this->db->prepare($sqlProj);
+            $stmtProj->execute(['project_id' => $data['project_id']]);
+            $project = $stmtProj->fetch();
+
+            // Ghép mã (ví dụ: TS-12)
+            $issueKey = $project['key'] . '-' . $project['issue_counter'];
+
+            // 3. Thực hiện lưu Task mới vào bảng issues
+            $sqlInsert = "INSERT INTO issues (project_id, issue_key, title, description, type, status, priority, reporter_id, assignee_id, created_at) 
+                      VALUES (:project_id, :issue_key, :title, :description, :type, 'todo', :priority, :reporter_id, :assignee_id, NOW())";
+
+            $stmtInsert = $this->db->prepare($sqlInsert);
+            $stmtInsert->execute([
+                'project_id' => $data['project_id'],
+                'issue_key'  => $issueKey,
+                'title'      => $data['title'],
+                'description' => $data['description'],
+                'type'       => $data['type'],
+                'priority'   => $data['priority'],
+                'reporter_id' => $data['reporter_id'], // Thường là ID của chính User đang đăng nhập
+                'assignee_id' => $data['assignee_id']
+            ]);
+
+            // Hoàn tất lưu mọi thay đổi
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            // Có lỗi xảy ra, hoàn tác lại toàn bộ để tránh sai lệch dữ liệu
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
     // Lấy toàn bộ task của một dự án cụ thể
-    public function getIssuesByProjectId($projectId) {
+    public function getIssuesByProjectId($projectId)
+    {
         $sql = "SELECT i.*, 
                        u.username AS assignee_name, 
                        u.avatar_url AS assignee_avatar
@@ -61,7 +113,8 @@ class TaskModel {
     }
 
     // Lấy tần suất xử lý công việc của các thành viên (Số lượng task được giao)
-    public function getTaskFrequency() {
+    public function getTaskFrequency()
+    {
         $sql = "SELECT u.username AS member_name, COUNT(i.id) AS task_count
                 FROM users u
                 LEFT JOIN issues i ON u.id = i.assignee_id
@@ -73,7 +126,8 @@ class TaskModel {
     }
 
     // Lấy thống kê số lượng người dùng đăng ký theo ngày
-    public function getNewUsersStats() {
+    public function getNewUsersStats()
+    {
         $sql = "SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS reg_date, COUNT(*) AS user_count
                 FROM users
                 GROUP BY reg_date
@@ -84,7 +138,8 @@ class TaskModel {
     }
 
     // Lấy danh sách công việc được gán cho một user cụ thể (chưa hoàn thành)
-    public function getAssignedIssuesByUserId($userId) {
+    public function getAssignedIssuesByUserId($userId)
+    {
         $sql = "SELECT i.*, p.key AS project_key
                 FROM issues i
                 LEFT JOIN projects p ON i.project_id = p.id
@@ -99,5 +154,15 @@ class TaskModel {
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateTaskAssignee($taskId, $assigneeId)
+    {
+        $sql = "UPDATE issues SET assignee_id = :assignee_id, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'assignee_id' => $assigneeId,
+            'id' => $taskId
+        ]);
     }
 }
