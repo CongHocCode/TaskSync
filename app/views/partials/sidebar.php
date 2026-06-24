@@ -109,6 +109,7 @@
         <div class="sidebar-logo">M</div>
         <div>
             <h1>Workspace</h1>
+            <p style="font-size: 0.65rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">T</p>
         </div>
         <button class="sidebar-collapse" aria-label="Thu gọn sidebar">
             <i class="bi bi-chevron-left"></i>
@@ -169,10 +170,12 @@
     </div>
 
     <div class="sidebar-user">
-        <img src="https://ui-avatars.com/api/?name=QG&background=7c3aed&color=fff" alt="Avatar" class="user-avatar">
+        <!-- Avatar lấy động từ Session -->
+        <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user']['display_name'] ?? 'User') ?>&background=7c3aed&color=fff" alt="Avatar" class="user-avatar">
         <div class="user-info">
-            <div class="user-name">Quyen Gia</div>
-            <div class="user-role">ADMIN</div>
+            <!-- Tên User thực tế đang đăng nhập -->
+            <div class="user-name"><?= htmlspecialchars($_SESSION['user']['display_name'] ?? 'User') ?></div>
+            <div class="user-role"><?= strtoupper(htmlspecialchars($_SESSION['user']['role'] ?? 'MEMBER')) ?></div>
         </div>
 
         <a href="<?= BASE_URL ?>/auth/logout" class="user-menu-btn text-decoration-none d-flex align-items-center justify-content-center" title="Đăng xuất" style="color: #ff4d4f !important;">

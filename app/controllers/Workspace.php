@@ -5,12 +5,21 @@ class Workspace extends Controller {
             redirect('auth');
         }
 
-        $taskModel = $this->model('TaskModel');
-        $data['page_title'] = "Dashboard tổng hợp";
-        $data['task_frequency'] = $taskModel->getTaskFrequency();
-        $data['new_users_stats'] = $taskModel->getNewUsersStats();
+        // Nếu là admin thì chuyển hướng sang dashboard của admin
+        if ($_SESSION['user']['role'] === 'admin') {
+            redirect('admin/dashboard');
+            exit();
+        }
 
-        $this->view('pages/dashboard/index', $data);
+        $userId = $_SESSION['user']['id'];
+        $taskModel = $this->model('TaskModel');
+        $projectModel = $this->model('ProjectModel');
+
+        $data['page_title'] = "Dashboard tổng hợp";
+        $data['assigned_issues'] = $taskModel->getAssignedIssuesByUserId($userId);
+        $data['my_projects'] = $projectModel->getProjectsWithCountsByUserId($userId);
+
+        $this->view('pages/dashboard/member', $data);
     }
 
     public function overview() {

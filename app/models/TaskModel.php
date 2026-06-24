@@ -82,4 +82,22 @@ class TaskModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // Lấy danh sách công việc được gán cho một user cụ thể (chưa hoàn thành)
+    public function getAssignedIssuesByUserId($userId) {
+        $sql = "SELECT i.*, p.key AS project_key
+                FROM issues i
+                LEFT JOIN projects p ON i.project_id = p.id
+                WHERE i.assignee_id = :user_id AND i.status != 'done'
+                ORDER BY CASE i.priority 
+                            WHEN 'highest' THEN 1 
+                            WHEN 'high' THEN 2 
+                            WHEN 'medium' THEN 3 
+                            WHEN 'low' THEN 4 
+                            ELSE 5 
+                         END, i.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

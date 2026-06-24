@@ -84,9 +84,13 @@ class Project extends Controller {
         $taskModel = $this->model('TaskModel');
         $tasks = $taskModel->getIssuesByProjectId($projectId);
 
+        // Lấy danh sách thành viên tham gia dự án
+        $members = $this->projectModel->getProjectMembers($projectId);
+
         $data['page_title'] = "Bảng Kanban - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
         $data['tasks'] = $tasks;
+        $data['members'] = $members;
 
         $this->view('pages/projects/kanban', $data);
     }

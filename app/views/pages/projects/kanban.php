@@ -44,12 +44,39 @@
         
         <div class="d-flex align-items-center gap-2 d-none d-md-flex">
             <div class="d-flex align-items-center me-2">
-                <img src="https://ui-avatars.com/api/?name=Alex&background=06b6d4&color=fff" class="rounded-circle border border-2 border-white shadow-sm" width="32" height="32" style="margin-right: -10px; z-index: 4; position: relative;">
-                <img src="https://ui-avatars.com/api/?name=Sarah&background=f59e0b&color=fff" class="rounded-circle border border-2 border-white shadow-sm" width="32" height="32" style="margin-right: -10px; z-index: 3; position: relative;">
-                <img src="https://ui-avatars.com/api/?name=Quyen&background=8b5cf6&color=fff" class="rounded-circle border border-2 border-white shadow-sm" width="32" height="32" style="margin-right: -10px; z-index: 2; position: relative;">
-                <img src="https://ui-avatars.com/api/?name=Marcus&background=10b981&color=fff" class="rounded-circle border border-2 border-white shadow-sm" width="32" height="32" style="z-index: 1; position: relative;">
+                <?php 
+                $avatarColors = ['06b6d4', 'f59e0b', '8b5cf6', '10b981', 'ec4899', '3b82f6'];
+                $idx = 0;
+                $maxDisplay = 4;
+                $totalMembers = count($data['members'] ?? []);
+                foreach (($data['members'] ?? []) as $member): 
+                    if ($idx >= $maxDisplay) break;
+                    $color = $avatarColors[$idx % count($avatarColors)];
+                    $fullName = $member['first_name'] . ' ' . $member['last_name'];
+                    $displayName = !empty(trim($fullName)) ? $fullName : $member['username'];
+                    $avatarUrl = !empty($member['avatar_url']) && $member['avatar_url'] !== 'default-avatar.png'
+                        ? BASE_URL . '/uploads/avatars/' . $member['avatar_url']
+                        : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=" . $color . "&color=fff";
+                    $zIndex = $totalMembers - $idx;
+                ?>
+                    <img src="<?= $avatarUrl ?>" 
+                         class="rounded-circle border border-2 border-white shadow-sm" 
+                         width="32" 
+                         height="32" 
+                         style="margin-right: -10px; z-index: <?= $zIndex ?>; position: relative;"
+                         title="<?= htmlspecialchars($displayName) ?> (<?= htmlspecialchars($member['role']) ?>)">
+                <?php 
+                    $idx++;
+                endforeach; 
+                if ($totalMembers > $maxDisplay):
+                ?>
+                    <span class="rounded-circle border border-2 border-white shadow-sm bg-secondary text-white d-flex align-items-center justify-content-center fw-bold small" 
+                          style="width: 32px; height: 32px; z-index: 0; position: relative; font-size: 0.75rem; margin-left: 5px;">
+                        +<?= ($totalMembers - $maxDisplay) ?>
+                    </span>
+                <?php endif; ?>
             </div>
-            <a href="#" class="text-primary fw-semibold small text-decoration-none">Quản lý thành viên</a>
+            <a href="<?= BASE_URL ?>/project/members/<?= $data['project']['id'] ?>" class="text-primary fw-semibold small text-decoration-none">Quản lý thành viên</a>
         </div>
     </div>
 
@@ -57,10 +84,12 @@
         <span class="text-muted small fw-bold me-2"><i class="bi bi-funnel text-secondary"></i> Bộ lọc:</span>
         <select id="filterAssignee" class="form-select form-select-sm w-auto bg-white border border-secondary-subtle text-dark ps-3 pe-4 rounded-pill fw-medium custom-filter-select" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Lọc theo thành viên">
             <option value="all">Tất cả người gán</option>
-            <option value="Alex">Alex</option>
-            <option value="Sarah">Sarah</option>
-            <option value="Quyen">Quyen</option>
-            <option value="Marcus">Marcus</option>
+            <?php foreach (($data['members'] ?? []) as $member): 
+                $fullName = $member['first_name'] . ' ' . $member['last_name'];
+                $displayName = !empty(trim($fullName)) ? $fullName : $member['username'];
+            ?>
+                <option value="<?= htmlspecialchars($member['username']) ?>"><?= htmlspecialchars($displayName) ?></option>
+            <?php endforeach; ?>
         </select>
         <select id="filterPriority" class="form-select form-select-sm w-auto bg-white border border-secondary-subtle text-dark ps-3 pe-4 rounded-pill fw-medium custom-filter-select" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Lọc theo độ ưu tiên">
             <option value="all">Mọi độ ưu tiên</option>
@@ -132,6 +161,9 @@
                         ?>
                             <div class="card border border-light shadow-sm bg-white kanban-item-card rounded-3 <?= $isDone ? 'opacity-75' : '' ?>" 
                                  data-id="<?= $task['id'] ?>" 
+                                 data-assignee="<?= htmlspecialchars($assignee) ?>"
+                                 data-priority="<?= htmlspecialchars(strtoupper($task['priority'])) ?>"
+                                 data-type="<?= htmlspecialchars(ucfirst($task['type'])) ?>"
                                  draggable="true" 
                                  role="button">
                                 <div class="card-body p-3">

@@ -83,4 +83,30 @@ class ProjectModel {
             return false;
         }
     }
+
+    // Lấy danh sách các dự án kèm theo số lượng thành viên và số lượng công việc mà user tham gia
+    public function getProjectsWithCountsByUserId($userId) {
+        $sql = "SELECT p.*, pm.role, 
+                       (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) AS member_count,
+                       (SELECT COUNT(*) FROM issues WHERE project_id = p.id) AS issue_count
+                FROM projects p 
+                JOIN project_members pm ON p.id = pm.project_id 
+                WHERE pm.user_id = :user_id
+                ORDER BY p.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách thành viên tham gia dự án
+    public function getProjectMembers($projectId) {
+        $sql = "SELECT pm.role, u.id, u.username, u.first_name, u.last_name, u.avatar_url 
+                FROM project_members pm
+                JOIN users u ON pm.user_id = u.id
+                WHERE pm.project_id = :project_id
+                ORDER BY pm.role = 'manager' DESC, u.first_name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['project_id' => $projectId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
