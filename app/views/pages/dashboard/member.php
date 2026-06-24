@@ -9,7 +9,6 @@
         <h2>Chào mừng quay lại, <?= htmlspecialchars($firstName) ?>!</h2>
         <p>Giám sát nhanh các Task và Dự án của bạn hàng ngày.</p>
     </div>
-
     <style>
         .priority-badge.highest {
             background: #fee2e2 !important;
@@ -67,7 +66,6 @@
             color: #6b7280;
         }
     </style>
-
     <div class="row g-4">
         <!-- Cột trái: My Assigned Issues -->
         <div class="col-lg-6 col-md-12">
@@ -77,7 +75,6 @@
                     <a href="<?= BASE_URL ?>/task/myTasks" class="text-decoration-none" style="color: #7c3aed; font-weight: 700; font-size: 0.9rem; transition: color 0.2s;">Xem tất cả</a>
                 </div>
                 <p style="color: #6b7280; font-size: 0.85rem; margin-top: -8px; margin-bottom: 1.5rem;">Các công việc đang được gán cho tài khoản cá nhân</p>
-
                 <div class="issues-list">
                     <?php if (empty($data['assigned_issues'])): ?>
                         <div class="text-center py-4 text-muted">
@@ -105,7 +102,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Cột phải: Danh sách Dự án -->
         <div class="col-lg-6 col-md-12">
             <div class="app-card h-100 mb-0" style="background: #fff; border: 1px solid rgba(11, 18, 32, 0.06); box-shadow: 0 12px 30px rgba(11, 18, 32, 0.06);">
@@ -113,7 +109,6 @@
                     <h3 style="color: #1a1632 !important; font-weight: 700 !important; margin: 0; font-size: 1.2rem;">Danh sách Dự án (<?= count($data['my_projects'] ?? []) ?>)</h3>
                 </div>
                 <p style="color: #6b7280; font-size: 0.85rem; margin-top: -8px; margin-bottom: 1.5rem;">Các không gian dự án bạn đang tham gia</p>
-
                 <div class="projects-list">
                     <?php if (empty($data['my_projects'])): ?>
                         <div class="text-center py-4 text-muted">

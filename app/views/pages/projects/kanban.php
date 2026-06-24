@@ -218,4 +218,4 @@
 
     <!-- Bootstrap Modal chứa chi tiết công việc (Sử dụng đúng chuẩn form của Quyền từ TaskSync) -->
     <?php require_once __DIR__ . '/../../partials/task_modal_right.php'; ?>
-</section>
+</section>

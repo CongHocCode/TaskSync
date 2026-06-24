@@ -50,4 +50,3 @@ $displayName = $user['display_name'] ?? 'User';
         <?php endif; ?>
     </div>
 </header>
-

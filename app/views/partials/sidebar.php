@@ -3,7 +3,7 @@
     .app-sidebar {
         position: relative;
         /* Bắt buộc để định vị thanh kéo */
-        width: 280px;
+        width: 380px;
         /* Chiều rộng mặc định */
         min-width: 75px;
         /* Giới hạn nhỏ nhất khi kéo */
@@ -109,7 +109,7 @@
         <div class="sidebar-logo">M</div>
         <div>
             <h1>Workspace</h1>
-            <p style="font-size: 0.65rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">T</p>
+            <p style="font-size: 0.65rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">TaskSync</p>
         </div>
         <button class="sidebar-collapse" aria-label="Thu gọn sidebar">
             <i class="bi bi-chevron-left"></i>
@@ -191,6 +191,7 @@
         const resizer = document.querySelector(".sidebar-resizer");
 
         // 1. CHỨC NĂNG CLICK NÚT MŨI TÊN ĐỂ THU PHÓNG NHANH
+
         if (toggleBtn && sidebar) {
             toggleBtn.addEventListener("click", function(e) {
                 e.preventDefault();
