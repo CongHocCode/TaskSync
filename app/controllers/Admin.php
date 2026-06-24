@@ -12,8 +12,12 @@ class Admin extends Controller
     // Trang Dashboard thống kê hệ thống (admin/dashboard)
     public function dashboard()
     {
+        $taskModel = $this->model('TaskModel');
         $data['page_title'] = "Thống kê hệ thống";
-        $this->view('pages/admin/dashboard', $data);
+        $data['task_frequency'] = $taskModel->getTaskFrequency();
+        $data['new_users_stats'] = $taskModel->getNewUsersStats();
+        
+        $this->view('pages/dashboard/index', $data);
     }
 
     // Trang danh sách nhân viên (admin/users)

@@ -1,7 +1,9 @@
 <?php
-class Project extends Controller {
+class Project extends Controller
+{
     private $projectModel;
-    public function __construct() {
+    public function __construct()
+    {
         // Tự động nạp ProjectModel cho tất cả các hàm bên dưới sử dụng
         $this->projectModel = $this->model('ProjectModel');
 
@@ -9,7 +11,7 @@ class Project extends Controller {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        
+
         if (!isset($_SESSION['user'])) {
             $_SESSION['flash_error'] = "Vui lòng đăng nhập để tiếp tục.";
             redirect('auth');
@@ -17,28 +19,31 @@ class Project extends Controller {
         }
     }
     // 1. Danh sách tất cả dự án (Hệ thống)- này tui làm theo mẫu nha
-    public function index() {
+    public function index()
+    {
         $data['page_title'] = "Tất cả dự án";
-        
+
         // Gọi model lấy toàn bộ dự án
         $data['projects'] = $this->projectModel->getAllProjects();
-        
+
         $this->view('pages/projects/index', $data);
     }
 
-     // 2. Dự án của người dùng hiện tại
-    public function myProjects() {
+    // 2. Dự án của người dùng hiện tại
+    public function myProjects()
+    {
         $userId = $_SESSION['user']['id']; // Lấy ID của user đang đăng nhập từ Session
-        
+
         $data['page_title'] = "Dự án của tôi";
         // Gọi model lấy danh sách dự án mà user này tham gia
         $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
-        
-        $this->view('pages/projects/my-projects', $data);
+
+        $this->view('pages/projects/my_projects', $data);
     }
 
     // 3. Hàm tạo dự án mới (Cả hiển thị form và xử lý lưu data)
-    public function create() {
+    public function create()
+    {
         // Nếu người dùng gửi Form lên (Request POST)
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = trim($_POST['name'] ?? '');
@@ -72,53 +77,67 @@ class Project extends Controller {
         $this->view('pages/projects/create', $data);
     }
     // 4. Bảng Kanban của dự án
-    public function kanban($projectId = null) {
+    public function kanban($projectId = null)
+    {
         if (!$projectId) {
             redirect('project/myProjects');
         }
-        
+
         // Lấy thông tin dự án hiện tại để hiển thị tên dự án lên tiêu đề
         $project = $this->projectModel->getProjectById($projectId);
-        
+
+        // Lấy danh sách tasks từ database
+        $taskModel = $this->model('TaskModel');
+        $tasks = $taskModel->getIssuesByProjectId($projectId);
+
+        // Lấy danh sách thành viên tham gia dự án
+        $members = $this->projectModel->getProjectMembers($projectId);
+
         $data['page_title'] = "Bảng Kanban - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
+        $data['tasks'] = $tasks;
+        $data['members'] = $members;
+
         $this->view('pages/projects/kanban', $data);
     }
 
     // 5. Danh sách task của dự án
-    public function list($projectId = null) {
+    public function list($projectId = null)
+    {
         if (!$projectId) {
             redirect('project/myProjects');
         }
-        
+
         $project = $this->projectModel->getProjectById($projectId);
-        
+
         $data['page_title'] = "Danh sách - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
         $this->view('pages/projects/list', $data);
     }
 
     // 6. Thành viên dự án
-    public function members($projectId = null) {
+    public function members($projectId = null)
+    {
         if (!$projectId) {
             redirect('project/myProjects');
         }
-        
+
         $project = $this->projectModel->getProjectById($projectId);
-        
+
         $data['page_title'] = "Thành viên Dự án - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
         $this->view('pages/projects/members', $data);
     }
 
     // 7. Cấu hình dự án
-    public function settings($projectId = null) {
+    public function settings($projectId = null)
+    {
         if (!$projectId) {
             redirect('project/myProjects');
         }
-        
+
         $project = $this->projectModel->getProjectById($projectId);
-        
+
         $data['page_title'] = "Cấu hình dự án - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
         $this->view('pages/projects/settings', $data);

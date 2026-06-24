@@ -8,7 +8,7 @@ class ProjectModel {
         $this->db = $databaseInstance->pdo; 
     }
 
-    // 1. Lấy TẤT CẢ các dự án trên hệ thống 
+    // Lấy TẤT CẢ các dự án trên hệ thống 
     public function getAllProjects() {
         $sql = "SELECT p.*, u.username as owner_name 
                 FROM projects p
@@ -19,7 +19,7 @@ class ProjectModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 2. Lấy danh sách các dự án mà một user cụ thể tham gia (myProjects)
+    // Lấy danh sách các dự án mà một user cụ thể tham gia (myProjects) chủ yếu cho trang admin
     public function getProjectsByUserId($userId) {
         $sql = "SELECT p.*, pm.role 
                 FROM projects p 
@@ -31,7 +31,7 @@ class ProjectModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 3. Lấy thông tin chi tiết của một dự án cụ thể theo ID (Dùng cho Kanban, List, Members...)
+    // Lấy thông tin chi tiết của một dự án cụ thể theo ID (Dùng cho Kanban, List, Members...)
     public function getProjectById($projectId) {
         $sql = "SELECT * FROM projects WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -39,7 +39,7 @@ class ProjectModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // 4. Hàm THÊM dự án mới (Dùng transaction để đảm bảo lưu đồng thời vào bảng projects và project_members)
+    //  Hàm THÊM dự án mới (Dùng transaction để đảm bảo lưu đồng thời vào bảng projects và project_members)
     public function createProject($name, $key, $description, $githubRepoUrl, $ownerId) {
     try {
         $this->db->beginTransaction(); 
@@ -82,5 +82,50 @@ class ProjectModel {
             $this->db->rollBack(); // Hoàn tác (hủy bỏ) nếu xảy ra bất kỳ lỗi SQL nào
             return false;
         }
+    }
+
+    // Lấy danh sách các dự án kèm theo số lượng thành viên và số lượng công việc mà user tham gia
+    public function getProjectsWithCountsByUserId($userId) {
+        $sql = "SELECT p.*, pm.role, 
+                       (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) AS member_count,
+                       (SELECT COUNT(*) FROM issues WHERE project_id = p.id) AS issue_count
+                FROM projects p 
+                JOIN project_members pm ON p.id = pm.project_id 
+                WHERE pm.user_id = :user_id
+                ORDER BY p.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách thành viên tham gia dự án
+    public function getProjectMembers($projectId) {
+        $sql = "SELECT pm.role, u.id, u.username, u.first_name, u.last_name, u.avatar_url 
+                FROM project_members pm
+                JOIN users u ON pm.user_id = u.id
+                WHERE pm.project_id = :project_id
+                ORDER BY pm.role = 'manager' DESC, u.first_name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['project_id' => $projectId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách các dự án sắp xếp thông minh theo mức độ hoạt động và thời gian tạo để làm Sidebar mặc định
+    public function getProjectsOrderedForSidebar($userId) {
+        $sql = "SELECT p.*, COUNT(i.id) AS user_task_count
+                FROM projects p
+                LEFT JOIN project_members pm ON p.id = pm.project_id
+                LEFT JOIN issues i ON p.id = i.project_id AND i.assignee_id = :user_id
+                WHERE pm.user_id = :user_id_member OR p.owner_id = :owner_id
+                GROUP BY p.id
+                ORDER BY user_task_count DESC, p.created_at ASC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'user_id' => $userId,
+            'user_id_member' => $userId,
+            'owner_id' => $userId
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

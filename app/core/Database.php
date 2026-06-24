@@ -7,9 +7,9 @@ if (file_exists(__DIR__ . '/config.php')) {
 
 class Database
 {
-    // Giá trị cấu hình mặc định (dành cho Quyết và Quyền)
+    // Giá trị cấu hình mặc định (Đã sửa sẵn port 3307 để máy Thành chạy được ngay)
     private $host = "localhost";
-    private $port = "3306"; 
+    private $port = "3307"; 
     private $dbname = "task_sync";
     private $username = "root";
     private $password = "";

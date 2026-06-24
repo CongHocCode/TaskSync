@@ -7,7 +7,7 @@ if (file_exists(__DIR__ . '/../app/core/config.php')) {
 
 // Giá trị mặc định cho BASE_URL nếu máy không sử dụng file config.php cục bộ
 if (!defined('BASE_URL')) {
-    define('BASE_URL', 'http://localhost/TaskSync/public');
+    define('BASE_URL', 'http://localhost:8081/TaskSync/public');
 }
 
 session_start();
