@@ -110,8 +110,17 @@ class Project extends Controller
 
         $project = $this->projectModel->getProjectById($projectId);
 
+        // Lấy danh sách tasks từ database
+        $taskModel = $this->model('TaskModel');
+        $tasks = $taskModel->getIssuesByProjectId($projectId);
+
+        // Lấy danh sách thành viên tham gia dự án
+        $members = $this->projectModel->getProjectMembers($projectId);
+
         $data['page_title'] = "Danh sách - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
+        $data['tasks'] = $tasks;
+        $data['members'] = $members;
         $this->view('pages/projects/list', $data);
     }
 

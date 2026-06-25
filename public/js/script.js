@@ -221,6 +221,9 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log(
             `[TaskSync] Đã cập nhật thành công Task ${taskId} sang ${status}`,
           );
+          if (!document.querySelector(".kanban-board-wrapper")) {
+            location.reload();
+          }
         } else {
           console.error("[TaskSync] Lỗi cập nhật:", data.error);
           alert("Không thể lưu trạng thái mới, vui lòng thử lại.");
@@ -405,6 +408,8 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Có lỗi xảy ra khi tải dữ liệu công việc.");
       });
   }
+  window.openTaskDetailModal = openTaskDetailModal;
+
   // Lắng nghe sự kiện thay đổi Trạng thái (Status) ngay trong Modal
   document.addEventListener("change", function (e) {
     if (e.target.id === "modalStatusSelect") {
@@ -423,6 +428,9 @@ document.addEventListener("DOMContentLoaded", function () {
         updateColumnCounts();
 
         // Đồng bộ thay đổi lên máy chủ
+        updateTaskStatus(taskId, newStatus);
+      } else {
+        // Cập nhật lên máy chủ và reload nếu ở trang danh sách
         updateTaskStatus(taskId, newStatus);
       }
     }
@@ -498,6 +506,10 @@ document.addEventListener("DOMContentLoaded", function () {
               "data-assignee",
               assigneeId ? cleanedName : "Unassigned",
             );
+          } else {
+            if (!document.querySelector(".kanban-board-wrapper")) {
+              location.reload();
+            }
           }
         } else {
           alert("Không thể lưu người thực hiện mới, vui lòng thử lại.");
