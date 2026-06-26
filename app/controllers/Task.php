@@ -54,7 +54,7 @@ class Task extends Controller
         $data['page_title'] = "Công việc của tôi";
         $data['tasks']      = $tasks;
         $data['stats']      = $stats;
-        $this->view('pages/tasks/my-tasks', $data);
+        $this->view('pages/tasks/my_tasks', $data);
     }
 
     public function create()
