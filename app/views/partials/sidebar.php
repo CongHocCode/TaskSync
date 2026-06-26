@@ -1,5 +1,6 @@
 <?php
 // Khởi tạo Model để tính toán dự án kích hoạt
+require_once __DIR__ . '/../../models/ProjectModel.php';
 $projectModel = new ProjectModel();
 $userId = $_SESSION['user']['id'] ?? null;
 
