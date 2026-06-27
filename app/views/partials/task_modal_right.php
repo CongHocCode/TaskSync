@@ -9,7 +9,7 @@
             </div>
             <div class="modal-body p-4 pt-2">
                 <div class="row g-5">
-                    
+
                     <div class="col-lg-8">
                         <div class="mb-4">
                             <textarea id="modalTaskTitle" class="form-control fw-bold text-dark seamless-input" rows="2" style="font-size: 1.4rem; resize: none;" placeholder="Nhập tên công việc..."></textarea>
@@ -33,7 +33,7 @@
                             <div class="progress mb-3 rounded-pill" style="height: 6px; background-color: #e2e8f0;">
                                 <div class="progress-bar rounded-pill bg-primary transition-all" id="subtaskProgressBar" style="width: 0%;"></div>
                             </div>
-                            
+
                             <div class="subtask-list"></div>
 
                             <div class="mt-2 input-group">
@@ -54,22 +54,36 @@
                                     <option value="done">Done</option>
                                 </select>
                             </div>
-                            
+
                             <div class="mb-4">
                                 <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">NGƯỜI XỬ LÝ (ASSIGNEE)</label>
-                                <select class="form-select seamless-input text-dark fw-medium" style="background-color: #fff; border: 1px solid #cbd5e1 !important;">
-                                    <option>Alex (AL)</option>
-                                    <option>Sarah (SA)</option>
-                                    <option>Quyen (QU)</option>
-                                    <option>Marcus (MA)</option>
+                                <select class="form-select border-0 bg-transparent fw-bold text-dark" style="box-shadow: none;">
+                                    <option value="">Chưa phân công (Unassigned)</option>
+                                    <!-- Do là một phần của trang kanban nên cũng sẽ có được ds members của kanban khi load -->
+                                    <?php if (!empty($data['members'])): ?>
+                                        <?php foreach ($data['members'] as $member):
+                                            $fullName = trim(($member['first_name'] ?? '') . ' ' . ($member['last_name'] ?? ''));
+                                            $displayName = !empty($fullName) ? $fullName : $member['username'];
+
+                                            // Tự động trích xuất 2 chữ cái đầu để hiển thị dạng viết tắt (ví dụ: Văn Nguyễn -> VN)
+                                            $initials = !empty($member['first_name']) && !empty($member['last_name'])
+                                                ? strtoupper(substr($member['first_name'], 0, 1) . substr($member['last_name'], 0, 1))
+                                                : strtoupper(substr($member['username'], 0, 2));
+                                        ?>
+                                            <!-- Gán value bằng ID số nguyên của user để khớp tuyệt đối với CSDL và JS -->
+                                            <option value="<?= $member['id'] ?>">
+                                                <?= htmlspecialchars($displayName) ?> (<?= $initials ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </select>
                             </div>
-                            
+
                             <div class="mb-4">
                                 <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">GITHUB BRANCH / URL</label>
                                 <input type="text" class="form-control seamless-input font-monospace text-dark" style="background-color: #fff; border: 1px solid #cbd5e1 !important;" placeholder="https://github.com/.../pull/1">
                             </div>
-                            
+
                             <hr class="border-secondary-subtle my-4 opacity-50">
                             <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" style="background-color: #fff1f2; color: #e11d48; border-radius: 8px;">
                                 <i class="bi bi-trash3"></i> XÓA CÔNG VIỆC
