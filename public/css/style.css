@@ -6,11 +6,11 @@
     --text: #eef6ff;
     --muted: #a3b1cc;
     
-    /* 6. Màu tím thương hiệu (Primary) - Sắc tím hoàng gia rực rỡ của thanh status topbar */
+
     --primary: #4318ff;
     --primary-strong: #3311de;
     
-    /* Màu nhấn nhá phụ (Accent) */
+    /* Màu nhấn phụ (Accent) */
     --accent: #707eae;
     --success: #39c08d;
     --danger: #f16565;
