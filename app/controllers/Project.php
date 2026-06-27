@@ -18,7 +18,7 @@ class Project extends Controller
             exit();
         }
     }
-    // 1. Danh sách tất cả dự án (Hệ thống)- này tui làm theo mẫu nha
+    // Danh sách tất cả dự án (Hệ thống)- này tui làm theo mẫu nha
     public function index()
     {
         $data['page_title'] = "Tất cả dự án";
@@ -29,7 +29,7 @@ class Project extends Controller
         $this->view('pages/projects/index', $data);
     }
 
-    // 2. Dự án của người dùng hiện tại
+    // Dự án của người dùng hiện tại
     public function myProjects()
     {
         $userId = $_SESSION['user']['id']; // Lấy ID của user đang đăng nhập từ Session
@@ -37,11 +37,11 @@ class Project extends Controller
         $data['page_title'] = "Dự án của tôi";
         // Gọi model lấy danh sách dự án mà user này tham gia
         $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
-        
+
         $this->view('pages/projects/my_projects', $data);
     }
 
-    // 3. Hàm tạo dự án mới (Cả hiển thị form và xử lý lưu data)
+    // Hàm tạo dự án mới (Cả hiển thị form và xử lý lưu data)
     public function create()
     {
         // Nếu người dùng gửi Form lên (Request POST)
@@ -76,7 +76,7 @@ class Project extends Controller
         $data['page_title'] = "Tạo dự án mới";
         $this->view('pages/projects/create', $data);
     }
-    // 4. Bảng Kanban của dự án
+    // Bảng Kanban của dự án
     public function kanban($projectId = null)
     {
         if (!$projectId) {
@@ -101,7 +101,7 @@ class Project extends Controller
         $this->view('pages/projects/kanban', $data);
     }
 
-    // 5. Danh sách task của dự án
+    // Danh sách task của dự án
     public function list($projectId = null)
     {
         if (!$projectId) {
@@ -124,21 +124,72 @@ class Project extends Controller
         $this->view('pages/projects/list', $data);
     }
 
-    // 6. Thành viên dự án
+    // Trang quản lý thành viên & Thống kê dự án
     public function members($projectId = null)
     {
         if (!$projectId) {
-            redirect('project/myProjects');
+            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            exit();
         }
 
         $project = $this->projectModel->getProjectById($projectId);
 
-        $data['page_title'] = "Thành viên Dự án - " . ($project['name'] ?? "WEB");
-        $data['project'] = $project;
-        $this->view('pages/projects/members', $data);
+        if (!$project) {
+            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            exit();
+        }
+
+        // Lấy thành viên hiện tại
+        $members = $this->projectModel->getProjectMembers($projectId);
+
+        // Lấy nhân sự chưa có trong dự án (để đưa vào ô Select thêm thành viên)
+        $nonMembers = $this->projectModel->getNonMembersOfProject($projectId);
+
+        // Lấy thống kê của riêng dự án này (Nhiệm vụ 2 - Phần Dự án)
+        $projectStats = $this->projectModel->getProjectStats($projectId);
+
+        $this->view('pages/projects/members', [
+            'page_title'  => $project['name'] . ' - Thành viên',
+            'project'     => $project,
+            'members'     => $members,
+            'non_members' => $nonMembers,
+            'stats'       => $projectStats
+        ]);
+    }
+    
+    // Thêm thành viên dự án
+    public function addMember()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $projectId = $_POST['project_id'] ?? null;
+            $userId    = $_POST['user_id'] ?? null;
+            $role      = $_POST['role'] ?? 'member';
+
+            if ($projectId && $userId) {
+                $this->projectModel->addMemberToProject($projectId, $userId, $role);
+            }
+            // Thêm xong, đẩy quay lại đúng trang thành viên của dự án đó
+            header('Location: ' . BASE_URL . '/project/members/' . $projectId);
+            exit();
+        }
     }
 
-    // 7. Cấu hình dự án
+    public function memberStats($userId) {
+        // Lấy ID dự án từ URL gửi lên bằng tham số GET
+        $projectId = $_GET['project_id'] ?? null; 
+
+        $projects = $this->projectModel->getProjectsByMemberId($userId);
+        $tasks    = $this->projectModel->getMemberTaskStats($userId, $projectId);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'projects' => $projects,
+            'tasks'    => $tasks
+        ]);
+        exit();
+    }
+
+    // Cấu hình dự án
     public function settings($projectId = null)
     {
         if (!$projectId) {
@@ -152,7 +203,7 @@ class Project extends Controller
         $this->view('pages/projects/settings', $data);
     }
 
-    // 8. Cập nhật thông tin dự án
+    // Cập nhật thông tin dự án
     public function update()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -190,7 +241,7 @@ class Project extends Controller
         redirect('project/myProjects');
     }
 
-    // 9. Xóa dự án
+    // Xóa dự án
     public function delete()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {

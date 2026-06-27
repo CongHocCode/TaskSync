@@ -15,10 +15,10 @@
             --bg: #0a0e27;
             --surface: #140d2c;
             --text: #eef6ff;
-            --muted: #b09dd9;
-            --primary: #7c3aed;
-            --primary-strong: #6d28d9;
-            --accent: #a78bfa;
+            --muted: #a3b1cc;
+            --primary: #4318ff;
+            --primary-strong: #3311de;
+            --accent: #707eae;
             --danger: #f16565;
             --success: #39c08d;
             --border: rgba(255, 255, 255, 0.12);
@@ -559,7 +559,7 @@
         const togglePasswordIcon = document.getElementById('toggle-password-icon');
 
         if (togglePasswordBtn && loginPasswordInput && togglePasswordIcon) {
-            togglePasswordBtn.addEventListener('click', function () {
+            togglePasswordBtn.addEventListener('click', function() {
                 const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 loginPasswordInput.setAttribute('type', type);
                 if (type === 'text') {
@@ -578,7 +578,7 @@
         const toggleRegPasswordIcon = document.getElementById('toggle-reg-password-icon');
 
         if (toggleRegPasswordBtn && regPasswordInput && toggleRegPasswordIcon) {
-            toggleRegPasswordBtn.addEventListener('click', function () {
+            toggleRegPasswordBtn.addEventListener('click', function() {
                 const type = regPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 regPasswordInput.setAttribute('type', type);
                 if (type === 'text') {

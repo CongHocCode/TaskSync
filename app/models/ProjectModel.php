@@ -1,15 +1,18 @@
 <?php
-class ProjectModel {
+class ProjectModel
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $databaseInstance = new Database();
 
-        $this->db = $databaseInstance->pdo; 
+        $this->db = $databaseInstance->pdo;
     }
 
     // Lấy TẤT CẢ các dự án trên hệ thống 
-    public function getAllProjects() {
+    public function getAllProjects()
+    {
         $sql = "SELECT p.*, u.username as owner_name 
                 FROM projects p
                 LEFT JOIN users u ON p.owner_id = u.id
@@ -20,7 +23,8 @@ class ProjectModel {
     }
 
     // Lấy danh sách các dự án mà một user cụ thể tham gia (myProjects) chủ yếu cho trang admin
-    public function getProjectsByUserId($userId) {
+    public function getProjectsByUserId($userId)
+    {
         $sql = "SELECT p.*, pm.role 
                 FROM projects p 
                 JOIN project_members pm ON p.id = pm.project_id 
@@ -32,7 +36,8 @@ class ProjectModel {
     }
 
     // Lấy thông tin chi tiết của một dự án cụ thể theo ID (Dùng cho Kanban, List, Members...)
-    public function getProjectById($projectId) {
+    public function getProjectById($projectId)
+    {
         $sql = "SELECT * FROM projects WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $projectId]);
@@ -40,52 +45,52 @@ class ProjectModel {
     }
 
     //  Hàm THÊM dự án mới (Dùng transaction để đảm bảo lưu đồng thời vào bảng projects và project_members)
-    public function createProject($name, $key, $description, $githubRepoUrl, $ownerId) {
-    try {
-        $this->db->beginTransaction(); 
+    public function createProject($name, $key, $description, $githubRepoUrl, $ownerId)
+    {
+        try {
+            $this->db->beginTransaction();
 
-        // 1. Thêm vào bảng projects (Đủ 5 cột và 5 nhãn giữ chỗ)
-        $sqlProject = "INSERT INTO projects (`name`, `key`, `description`, `github_repo_url`, `owner_id`) 
+            // 1. Thêm vào bảng projects (Đủ 5 cột và 5 nhãn giữ chỗ)
+            $sqlProject = "INSERT INTO projects (`name`, `key`, `description`, `github_repo_url`, `owner_id`) 
                        VALUES (:name, :key, :description, :github_repo_url, :owner_id)";
-        
-        $stmt1 = $this->db->prepare($sqlProject);
-        
-        // Đếm kỹ: Mảng này phải có đúng 5 key tương ứng với 5 nhãn ở trên
-        $stmt1->execute([
-            'name'            => $name,
-            'key'             => $key,
-            'description'     => $description,
-            'github_repo_url' => $githubRepoUrl,
-            'owner_id'        => $ownerId
-        ]);
 
-        // Lấy ID tự tăng của dự án vừa tạo
-        $projectId = $this->db->lastInsertId();
+            $stmt1 = $this->db->prepare($sqlProject);
 
-        // 2. Thêm quyền cho người tạo vào bảng project_members (Đủ 2 nhãn)
-        $sqlMember = "INSERT INTO project_members (`project_id`, `user_id`, `role`) 
+            // Đếm kỹ: Mảng này phải có đúng 5 key tương ứng với 5 nhãn ở trên
+            $stmt1->execute([
+                'name'            => $name,
+                'key'             => $key,
+                'description'     => $description,
+                'github_repo_url' => $githubRepoUrl,
+                'owner_id'        => $ownerId
+            ]);
+
+            // Lấy ID tự tăng của dự án vừa tạo
+            $projectId = $this->db->lastInsertId();
+
+            // 2. Thêm quyền cho người tạo vào bảng project_members (Đủ 2 nhãn)
+            $sqlMember = "INSERT INTO project_members (`project_id`, `user_id`, `role`) 
                       VALUES (:project_id, :user_id, 'manager')";
-        
-        $stmt2 = $this->db->prepare($sqlMember);
-        
-        // Mảng này phải có đúng 2 key tương ứng với 2 nhãn ở trên
-        $stmt2->execute([
-            'project_id' => $projectId,
-            'user_id'    => $ownerId
-        ]);
 
-        $this->db->commit(); 
-        return true;
+            $stmt2 = $this->db->prepare($sqlMember);
 
-    } 
-    catch (Exception $e) {
+            // Mảng này phải có đúng 2 key tương ứng với 2 nhãn ở trên
+            $stmt2->execute([
+                'project_id' => $projectId,
+                'user_id'    => $ownerId
+            ]);
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
             $this->db->rollBack(); // Hoàn tác (hủy bỏ) nếu xảy ra bất kỳ lỗi SQL nào
             return false;
         }
     }
 
     // Lấy danh sách các dự án kèm theo số lượng thành viên và số lượng công việc mà user tham gia
-    public function getProjectsWithCountsByUserId($userId) {
+    public function getProjectsWithCountsByUserId($userId)
+    {
         $sql = "SELECT p.*, pm.role, 
                        (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) AS member_count,
                        (SELECT COUNT(*) FROM issues WHERE project_id = p.id) AS issue_count
@@ -99,7 +104,8 @@ class ProjectModel {
     }
 
     // Lấy danh sách thành viên tham gia dự án
-    public function getProjectMembers($projectId) {
+    public function getProjectMembers($projectId)
+    {
         $sql = "SELECT pm.role, u.id, u.username, u.first_name, u.last_name, u.avatar_url 
                 FROM project_members pm
                 JOIN users u ON pm.user_id = u.id
@@ -110,8 +116,37 @@ class ProjectModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    //Lấy nhân sự chưa tham gia project để tránh add trùng
+    public function getNonMembersOfProject($projectId)
+    {
+        $sql = "SELECT id, username, first_name, last_name 
+                FROM users 
+                WHERE status = 'active' AND id NOT IN (
+                    SELECT user_id FROM project_members WHERE project_id = :project_id
+                )
+                ORDER BY first_name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['project_id' => $projectId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function addMemberToProject($projectId, $userId, $role = 'member')
+    {
+        $sql = "INSERT INTO project_members(project_id, user_id, role)
+                VALUE (:project_id, :user_id, :role)
+                ON DUPLICATE KEY UPDATE role = :role_update";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'project_id' => $projectId,
+            'user_id' => $userId,
+            'role' => $role,
+            'role_update' => $role
+        ]);
+    }
+
     // Lấy danh sách các dự án sắp xếp thông minh theo mức độ hoạt động và thời gian tạo để làm Sidebar mặc định
-    public function getProjectsOrderedForSidebar($userId) {
+    public function getProjectsOrderedForSidebar($userId)
+    {
         $sql = "SELECT p.*, COUNT(i.id) AS user_task_count
                 FROM projects p
                 LEFT JOIN project_members pm ON p.id = pm.project_id
@@ -119,7 +154,7 @@ class ProjectModel {
                 WHERE pm.user_id = :user_id_member OR p.owner_id = :owner_id
                 GROUP BY p.id
                 ORDER BY user_task_count DESC, p.created_at ASC";
-                
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             'user_id' => $userId,
@@ -129,8 +164,42 @@ class ProjectModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    //Lấy danh sách dự án mà nhân viên cụ thể tham gia
+    public function getProjectsByMemberId($userId)
+    {
+        $sql = "SELECT p.name, p.key, pm.role 
+                FROM project_members pm
+                JOIN projects p ON pm.project_id = p.id
+                WHERE pm.user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    //Lấy SỐ LƯỢNG công việc được giao cho một nhân viên theo trạng thái (TODO, DONE,....) (khác với hàm bên IssueModel là lấy các cột khác)
+    public function getMemberTaskStats($userId, $projectId = null)
+    {
+        $sql = "SELECT status, COUNT(*) as count 
+                FROM issues 
+                WHERE assignee_id = :user_id";
+
+        $params = ['user_id' => $userId];
+
+        if ($projectId !== null) {
+            $sql .= " AND project_id = :project_id";
+            $params['project_id'] = $projectId;
+        }
+
+        $sql .= " GROUP BY status";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Kiểm tra xem user có quyền quản lý (manager) dự án không
-    public function isProjectManager($projectId, $userId) {
+    public function isProjectManager($projectId, $userId)
+    {
         $sql = "SELECT role FROM project_members WHERE project_id = :project_id AND user_id = :user_id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
@@ -142,7 +211,8 @@ class ProjectModel {
     }
 
     // Cập nhật thông tin dự án và đồng bộ key công việc cascade
-    public function updateProject($projectId, $name, $key, $description, $githubRepoUrl) {
+    public function updateProject($projectId, $name, $key, $description, $githubRepoUrl)
+    {
         try {
             $this->db->beginTransaction();
 
@@ -188,8 +258,22 @@ class ProjectModel {
         }
     }
 
+    //Lấy thống kê số task đã hoàn thành
+    public function getProjectStats($projectId)
+    {
+        $sql = "SELECT
+                    COUNT(id) as total_tasks,
+                    SUM(CASE WHEN status ='done' THEN 1 ELSE 0 END) as completed_tasks
+                FROM issues
+                WHERE project_id = :project_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['project_id' => $projectId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     // Xóa dự án (Cơ sở dữ liệu tự động ON DELETE CASCADE cho các bảng liên quan)
-    public function deleteProject($projectId) {
+    public function deleteProject($projectId)
+    {
         try {
             $sql = "DELETE FROM projects WHERE id = :id";
             $stmt = $this->db->prepare($sql);
@@ -199,4 +283,3 @@ class ProjectModel {
         }
     }
 }
-
