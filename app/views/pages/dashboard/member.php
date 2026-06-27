@@ -66,16 +66,16 @@
             color: #6b7280;
         }
         .issue-item {
-    transition: all 0.2s ease-in-out; 
-    cursor: pointer; 
-}
+            transition: all 0.2s ease-in-out; 
+            cursor: pointer; 
+        }
 
-.issue-item:hover {
-    background: #f1f1f5 !important; 
-    border-color: rgba(11, 18, 32, 0.15) !important; 
-    transform: translateY(-2px); 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-}
+        .issue-item:hover {
+            background: #f1f1f5 !important; 
+            border-color: rgba(11, 18, 32, 0.15) !important; 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+        }
     </style>
     <div class="row g-4">
         <!-- Cột trái: My Assigned Issues -->
