@@ -156,7 +156,7 @@ class Project extends Controller
             'stats'       => $projectStats
         ]);
     }
-    
+
     // Thêm thành viên dự án
     public function addMember()
     {
@@ -174,9 +174,10 @@ class Project extends Controller
         }
     }
 
-    public function memberStats($userId) {
+    public function memberStats($userId)
+    {
         // Lấy ID dự án từ URL gửi lên bằng tham số GET
-        $projectId = $_GET['project_id'] ?? null; 
+        $projectId = $_GET['project_id'] ?? null;
 
         $projects = $this->projectModel->getProjectsByMemberId($userId);
         $tasks    = $this->projectModel->getMemberTaskStats($userId, $projectId);
@@ -189,18 +190,41 @@ class Project extends Controller
         exit();
     }
 
-    // Cấu hình dự án
+    // Trang cấu hình dự án (Chỉ dành riêng cho Quản lý dự án - Manager)
     public function settings($projectId = null)
     {
         if (!$projectId) {
-            redirect('project/myProjects');
+            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            exit();
         }
 
-        $project = $this->projectModel->getProjectById($projectId);
+        $projectModel = $this->model('ProjectModel');
 
-        $data['page_title'] = "Cấu hình dự án - " . ($project['name'] ?? "WEB");
-        $data['project'] = $project;
-        $this->view('pages/projects/settings', $data);
+        // Kiểm tra quyền Manager thực tế từ Database
+        $isManager = $projectModel->isProjectManager($projectId, $_SESSION['user']['id']);
+
+        if (!$isManager) {
+            // Nếu cố tình truy cập trái phép, chặn lại và đẩy ngược về bảng Kanban
+            header('Location: ' . BASE_URL . '/project/kanban/' . $projectId);
+            exit();
+        }
+
+        $project = $projectModel->getProjectById($projectId);
+
+        if (!$project) {
+            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            exit();
+        }
+
+        // Lấy thống kê sức khỏe dự án
+        $projectStats = $projectModel->getProjectStats($projectId);
+
+        // Nạp view Cấu hình dự án
+        $this->view('pages/projects/settings', [
+            'page_title' => $project['name'] . ' - Cấu hình',
+            'project'    => $project,
+            'stats'      => $projectStats
+        ]);
     }
 
     // Cập nhật thông tin dự án

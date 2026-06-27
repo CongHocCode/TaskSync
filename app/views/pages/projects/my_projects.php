@@ -35,29 +35,37 @@ $projects = $data['projects'] ?? [];
 <?php endif; ?>
 
 <!-- KHỐI HIỂN THỊ DANH SÁCH DỰ ÁN (Dạng lưới, cố định chiều cao ô, tự động thêm dấu ... khi quá dài) -->
- 
- <style>
+
+<style>
     /* Class xử lý cắt chữ cho Tiêu đề (1 dòng) */
     .truncate-title {
         display: -webkit-box !important;
-        -webkit-line-clamp: 1 !important; /* Hiển thị tối đa 1 dòng */
+        -webkit-line-clamp: 1 !important;
+        /* Hiển thị tối đa 1 dòng */
         -webkit-box-orient: vertical !important;
         overflow: hidden !important;
-        text-overflow: ellipsis !important; /* Thêm dấu ... ở cuối */
-        height: 1.5rem; /* Cố định chiều cao tương ứng với line-height */
+        text-overflow: ellipsis !important;
+        /* Thêm dấu ... ở cuối */
+        height: 1.5rem;
+        /* Cố định chiều cao tương ứng với line-height */
         line-height: 1.5rem;
     }
 
     /* Class xử lý cắt chữ cho Mô tả (3 dòng) - FIX LỖI CẮT CHỮ */
     .truncate-description {
         display: -webkit-box !important;
-        -webkit-line-clamp: 3 !important; /* Ép buộc chỉ hiển thị 3 dòng */
+        -webkit-line-clamp: 3 !important;
+        /* Ép buộc chỉ hiển thị 3 dòng */
         -webkit-box-orient: vertical !important;
-        overflow: hidden !important; /* Ẩn toàn bộ nội dung tràn */
-        text-overflow: ellipsis !important; /* Thêm dấu ... */
-        height: 4.5rem !important; /* Cố định chiều cao cứng, không để tự động */
-        line-height: 1.5rem !important; /* Đảm bảo line-height nhất quán */
-        
+        overflow: hidden !important;
+        /* Ẩn toàn bộ nội dung tràn */
+        text-overflow: ellipsis !important;
+        /* Thêm dấu ... */
+        height: 4.5rem !important;
+        /* Cố định chiều cao cứng, không để tự động */
+        line-height: 1.5rem !important;
+        /* Đảm bảo line-height nhất quán */
+
         /* Cần thêm thuộc tính này để ép trình duyệt tuân thủ chiều cao cứng */
         max-height: 4.5rem !important;
     }
@@ -107,16 +115,11 @@ $projects = $data['projects'] ?? [];
                                 </span>
                                 <div class="d-flex gap-2">
                                     <?php if (strtolower($project['role']) === 'manager' || (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin')): ?>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" style="font-size: 0.8rem;"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editProjectModal"
-                                            data-id="<?= $project['id'] ?>"
-                                            data-name="<?= htmlspecialchars($project['name']) ?>"
-                                            data-key="<?= htmlspecialchars($project['key']) ?>"
-                                            data-desc="<?= htmlspecialchars($project['description'] ?? '') ?>"
-                                            data-github="<?= htmlspecialchars($project['github_repo_url'] ?? '') ?>">
+                                        <a href="<?= BASE_URL ?>/project/settings/<?= $project['id'] ?>"
+                                            class="btn btn-sm btn-outline-secondary px-2 py-1"
+                                            style="font-size: 0.8rem;">
                                             Tùy chỉnh
-                                        </button>
+                                        </a>
                                     <?php endif; ?>
                                     <a href="kanban/<?= $project['id'] ?>" class="text-decoration-none fw-semibold" style="color: #4f46e5; font-size: 0.85rem; padding-top: 2px;">
                                         Vào dự án →
@@ -140,51 +143,7 @@ $projects = $data['projects'] ?? [];
         </div>
     <?php endif; ?>
 </div>
-<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 620px;">
-        <div class="modal-content border-0 rounded-4 shadow-lg" style="background-color: #ffffff;">
-            <div class="modal-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="modal-title fw-bold m-0" id="editProjectModalLabel" style="color: #1e1b4b; font-size: 1.15rem;">Tùy chỉnh Dự án</h5>
-                    <button type="button" class="btn-close text-muted" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.85rem;"></button>
-                </div>
 
-                <form id="editProjectForm" action="update" method="POST">
-                    <input type="hidden" id="edit_project_id" name="id">
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.9rem;">Tên Dự án <span class="text-danger">*</span></label>
-                        <input type="text" id="edit_name" name="name" class="form-control py-2 px-3 border-secondary-subtle" required style="border-radius: 8px; font-size: 0.95rem;">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.9rem;">Project Key <span class="text-danger">*</span></label>
-                        <input type="text" id="edit_key" name="key" class="form-control py-2 px-3 border-secondary-subtle" required maxlength="10" style="border-radius: 8px; font-size: 0.95rem; text-transform: uppercase;">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.9rem;">Mô tả</label>
-                        <textarea id="edit_description" name="description" class="form-control py-2 px-3 border-secondary-subtle" rows="3" style="border-radius: 8px; font-size: 0.95rem; resize: none;"></textarea>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.9rem;">GitHub Repository</label>
-                        <input type="url" id="edit_github" name="github_repo_url" class="form-control py-2 px-3 border-secondary-subtle" style="border-radius: 8px; font-size: 0.95rem;">
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <button type="button" id="btnDeleteProject" class="btn text-white px-3 py-2 fw-semibold" style="background-color: #dc3545; border-radius: 8px; font-size: 0.95rem; border: none;">
-                            Xóa Dự án
-                        </button>
-                        <button type="submit" id="btnUpdateProject" class="btn text-white px-4 py-2 fw-semibold" style="background-color: #4f46e5; border-radius: 8px; font-size: 0.95rem; border: none;">
-                            Lưu Thay Đổi
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- BOOTSTRAP 5 MODAL (Hộp thoại nổi chứa Form Tạo dự án) -->
 <div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
@@ -273,47 +232,4 @@ $projects = $data['projects'] ?? [];
     }
 </style>
 
-<!-- Script xử lý điền thông tin và Xóa/Cập nhật Dự án -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const editProjectModal = document.getElementById('editProjectModal');
-    const editProjectForm = document.getElementById('editProjectForm');
-    
-    if (editProjectModal && editProjectForm) {
-        editProjectModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Nút kích hoạt modal
-            
-            // Lấy thông tin từ thuộc tính data-*
-            const id = button.getAttribute('data-id');
-            const name = button.getAttribute('data-name');
-            const key = button.getAttribute('data-key');
-            const desc = button.getAttribute('data-desc');
-            const github = button.getAttribute('data-github');
-            
-            // Điền dữ liệu vào form
-            document.getElementById('edit_project_id').value = id;
-            document.getElementById('edit_name').value = name;
-            document.getElementById('edit_key').value = key;
-            document.getElementById('edit_description').value = desc;
-            document.getElementById('edit_github').value = github;
-            
-            // Đảm bảo hành động mặc định là cập nhật
-            editProjectForm.setAttribute('action', 'update');
-        });
-    }
-
-    // Xử lý sự kiện click nút Xóa dự án
-    const btnDeleteProject = document.getElementById('btnDeleteProject');
-    if (btnDeleteProject && editProjectForm) {
-        btnDeleteProject.addEventListener('click', function () {
-            const projectName = document.getElementById('edit_name').value;
-            const confirmMsg = `Bạn có chắc chắn muốn xóa dự án "${projectName}"?\n\nHành động này không thể hoàn tác và toàn bộ dữ liệu, thành viên, công việc (task) thuộc dự án này cũng sẽ bị xóa sạch!`;
-            
-            if (confirm(confirmMsg)) {
-                editProjectForm.setAttribute('action', 'delete');
-                editProjectForm.submit();
-            }
-        });
-    }
-});
-</script>
+<!-- ĐÃ CHUYỂN QUA PHẦN CẤU HÌNH DỰ ÁN NÊN KHÔNG CÒN PHẦN SCRIPT XỬ LÝ KHI CÓ MODAL -->

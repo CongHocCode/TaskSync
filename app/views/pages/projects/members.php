@@ -2,7 +2,7 @@
     <!-- Tiêu đề trang -->
     <div class="mb-4">
         <h1 class="h3 mb-2 fw-bold text-dark">
-            <i class="bi bi-people-fill text-primary me-2"></i>Thành viên & Điều phối dự án: <span class="text-primary"><?= htmlspecialchars($data['project']['name']) ?></span>
+            <i class="bi bi-people-fill text-primary me-2"></i>Thành viên dự án: <span class="text-primary"><?= htmlspecialchars($data['project']['name']) ?></span>
         </h1>
         <p class="text-muted" style="font-size: 0.95rem;">Quản lý nhân sự, phân quyền vai trò và theo dõi hiệu suất làm việc của dự án.</p>
     </div>
@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        <!-- CỘT PHẢI: THÊM THÀNH VIÊN MỚI & THỐNG KÊ SỨC KHỎE DỰ ÁN -->
+        <!-- CỘT PHẢI: THÊM THÀNH VIÊN MỚI -->
         <div class="col-12 col-xl-4">
             <div class="d-flex flex-column gap-4">
 
@@ -104,34 +104,6 @@
                         </form>
                     <?php endif; ?>
                 </div>
-
-                <!-- KHỐI 2: SỨC KHỎE DỰ ÁN (Nhiệm vụ 2 - Phần Dự án) -->
-                <?php
-                $total = $data['stats']['total_tasks'] ?? 0;
-                $completed = $data['stats']['completed_tasks'] ?? 0;
-                $percent = $total ? round(($completed / $total) * 100) : 0;
-                ?>
-                <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
-                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-activity text-danger me-2"></i>Sức khỏe dự án</h5>
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-secondary small fw-medium">Tiến độ hoàn thành:</span>
-                        <span class="text-dark fw-bold"><?= $percent ?>%</span>
-                    </div>
-                    <div class="progress mb-3" style="height: 10px; border-radius: 10px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: <?= $percent ?>%; border-radius: 10px;" aria-valuenow="<?= $percent ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                    <div class="row g-2 text-center mt-2">
-                        <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-primary">
-                            <small class="text-secondary d-block">Tổng Task</small>
-                            <span class="h4 fw-bold text-dark"><?= $total ?></span>
-                        </div>
-                        <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-success">
-                            <small class="text-secondary d-block">Đã xong</small>
-                            <span class="h4 fw-bold text-dark"><?= $completed ?></span>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>

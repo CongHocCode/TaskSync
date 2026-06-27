@@ -4,40 +4,41 @@ require_once __DIR__ . '/../../models/ProjectModel.php';
 $projectModel = new ProjectModel();
 $userId = $_SESSION['user']['id'] ?? null;
 
-// Lấy danh sách dự án sắp xếp theo số task và ngày tạo
+//Lấy toàn bộ project của user (Chỉ chạy đúng 1 lần)
 $userProjects = $userId ? $projectModel->getProjectsOrderedForSidebar($userId) : [];
 
 $activeProject = null;
+$isManager = false;
 $otherProjects = [];
 
-// Xác định dự án đang được mở
+// Xác định dự án đang được hiển thị chính trên sidebar
 if (isset($data['project']) && !empty($data['project'])) {
-    // Trường hợp 1: Nếu đang đứng ở trang dự án cụ thể, chọn chính nó làm active
+    // Trường hợp 1: Nếu đang đứng ở trang dự án cụ thể, lấy chính nó làm active
     $activeProject = $data['project'];
-    // Lọc các dự án còn lại để đưa vào dropdown
-    $otherProjects = array_filter($userProjects, function ($p) use ($activeProject) {
-        return $p['id'] != $activeProject['id'];
-    });
-} else {
-    // Trường hợp 2: Nếu đang đứng ở trang ngoài (Dashboard cá nhân, Profile)
-    if (!empty($userProjects)) {
-        // Chọn dự án đầu tiên trong danh sách đã sắp xếp thông minh làm mặc định
-        $activeProject = $userProjects[0];
-        // Các dự án còn lại đưa vào dropdown
-        $otherProjects = array_slice($userProjects, 1);
-    }
+} elseif (!empty($userProjects)) {
+    // Trường hợp 2: Nếu đang đứng ở trang ngoài (Dashboard, Profile), lấy dự án đầu tiên làm mặc định
+    $activeProject = $userProjects[0];
 }
 
-// Xử lý khi user không có dự án
 if ($activeProject) {
-    // Nếu có dự án, các liên kết trỏ về dự án đó
-    $kanbanUrl = BASE_URL . "/project/kanban/" . $activeProject['id'];
-    $listUrl   = BASE_URL . "/project/list/" . $activeProject['id'];
-    $membersUrl = BASE_URL . "/project/members/" . $activeProject['id'];
-    $settingsUrl = BASE_URL . "/project/settings/" . $activeProject['id'];
+    $currentProjId = $activeProject['id'];
+
+    // Gọi CSDL kiểm tra quyền Manager
+    $isManager = $projectModel->isProjectManager($currentProjId, $userId);
+
+    // Lọc các dự án còn lại để đưa vào dropdown chuyển dự án
+    $otherProjects = array_filter($userProjects, function ($p) use ($currentProjId) {
+        return $p['id'] != $currentProjId;
+    });
+
+    // Thiết lập các liên kết động trỏ về dự án đó
+    $kanbanUrl   = BASE_URL . "/project/kanban/" . $currentProjId;
+    $listUrl     = BASE_URL . "/project/list/" . $currentProjId;
+    $membersUrl  = BASE_URL . "/project/members/" . $currentProjId;
+    $settingsUrl = BASE_URL . "/project/settings/" . $currentProjId;
     $projectNameDisplay = htmlspecialchars($activeProject['key'] . ' - ' . $activeProject['name']);
 } else {
-    // Nếu chưa có bất kỳ dự án nào, tất cả liên kết dẫn đến trang tạo mới dự án
+    // Trường hợp đặc biệt: User chưa tham gia bất kỳ dự án nào (Empty State)
     $kanbanUrl = $listUrl = $membersUrl = $settingsUrl = BASE_URL . "/project/create";
     $projectNameDisplay = "Chưa có dự án";
 }
@@ -251,10 +252,13 @@ if ($activeProject) {
                     <i class="bi bi-people-fill"></i>
                     <span>Thành viên Dự án</span>
                 </a>
-                <a href="<?= $settingsUrl ?>" class="sidebar-link">
-                    <i class="bi bi-gear-fill"></i>
-                    <span>Cấu hình dự án</span>
-                </a>
+                <!-- Chỉ hiển thị nút Cấu hình nếu là Manager -->
+                <?php if ($isManager): ?>
+                    <a href="<?= $settingsUrl ?>" class="sidebar-link">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>Cấu hình dự án</span>
+                    </a>
+                <?php endif; ?>
             </nav>
         </div>
     </div>
