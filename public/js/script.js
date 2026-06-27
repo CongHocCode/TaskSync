@@ -583,11 +583,13 @@ document.addEventListener("DOMContentLoaded", function () {
     mobileToggleBtn.addEventListener("click", function () {
       mobileSidebar.classList.add("show-mobile");
       mobileOverlay.classList.add("show");
+      document.body.style.overflow = "hidden"; // Khóa cuộn trang nền
     });
 
     mobileOverlay.addEventListener("click", function () {
       mobileSidebar.classList.remove("show-mobile");
       mobileOverlay.classList.remove("show");
+      document.body.style.overflow = ""; // Mở khóa cuộn trang nền
     });
 
     // Đóng sidebar khi click nút mũi tên thu gọn bên trong
@@ -596,6 +598,7 @@ document.addEventListener("DOMContentLoaded", function () {
       sidebarCloseBtn.addEventListener("click", function () {
         mobileSidebar.classList.remove("show-mobile");
         mobileOverlay.classList.remove("show");
+        document.body.style.overflow = ""; // Mở khóa cuộn trang nền
       });
     }
   }

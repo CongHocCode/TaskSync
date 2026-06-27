@@ -898,7 +898,8 @@ textarea {
         position: fixed !important;
         top: 0;
         left: 0;
-        height: 100vh !important;
+        height: 100% !important;
+        height: 100dvh !important;
         width: 280px !important;
         max-width: 280px !important;
         min-width: 0 !important;
@@ -907,6 +908,11 @@ textarea {
         transition: transform 0.3s ease;
         border-right: 1px solid rgba(255, 255, 255, 0.08);
         border-bottom: none;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        padding-top: calc(28px + env(safe-area-inset-top)) !important;
+        padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
     }
 
     .app-sidebar.show-mobile {
@@ -919,10 +925,12 @@ textarea {
         left: 0;
         width: 100vw;
         height: 100vh;
+        height: 100dvh;
         background: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
         z-index: 1040;
         display: none;
+        cursor: pointer;
     }
 
     .sidebar-overlay.show {
