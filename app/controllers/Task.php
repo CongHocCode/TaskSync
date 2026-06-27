@@ -62,6 +62,16 @@ class Task extends Controller
         // Tạo task mới
         $data['page_title'] = "Tạo Issue mới";
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Xử lý due_date: chỉ lưu nếu hợp lệ và lớn hơn thời điểm hiện tại
+            $dueDateRaw = trim($_POST['due_date'] ?? '');
+            $dueDate = null;
+            if (!empty($dueDateRaw)) {
+                $parsedDate = strtotime($dueDateRaw);
+                if ($parsedDate !== false && $parsedDate > time()) {
+                    $dueDate = date('Y-m-d H:i:s', $parsedDate);
+                }
+            }
+
             $data = [
                 'project_id'  => $_POST['project_id'] ?? null,
                 'title'       => trim($_POST['title'] ?? ''),
@@ -69,6 +79,7 @@ class Task extends Controller
                 'type'        => $_POST['type'] ?? 'task',
                 'priority'    => $_POST['priority'] ?? 'MEDIUM',
                 'assignee_id' => $_POST['assignee_id'] ?? null,
+                'due_date'    => $dueDate,
                 'reporter_id' => $_SESSION['user']['id'] // Người tạo chính là người đang login
             ];
 

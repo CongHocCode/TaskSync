@@ -72,8 +72,8 @@ class TaskModel
             $issueKey = $project['key'] . '-' . $project['issue_counter'];
 
             // 3. Thực hiện lưu Task mới vào bảng issues
-            $sqlInsert = "INSERT INTO issues (project_id, issue_key, title, description, type, status, priority, reporter_id, assignee_id, created_at) 
-                      VALUES (:project_id, :issue_key, :title, :description, :type, 'todo', :priority, :reporter_id, :assignee_id, NOW())";
+            $sqlInsert = "INSERT INTO issues (project_id, issue_key, title, description, type, status, priority, reporter_id, assignee_id, due_date, created_at) 
+                      VALUES (:project_id, :issue_key, :title, :description, :type, 'todo', :priority, :reporter_id, :assignee_id, :due_date, NOW())";
 
             $stmtInsert = $this->db->prepare($sqlInsert);
             $stmtInsert->execute([
@@ -84,7 +84,8 @@ class TaskModel
                 'type'       => $data['type'],
                 'priority'   => $data['priority'],
                 'reporter_id' => $data['reporter_id'], // Thường là ID của chính User đang đăng nhập
-                'assignee_id' => $data['assignee_id']
+                'assignee_id' => $data['assignee_id'],
+                'due_date'   => $data['due_date'] ?? null
             ]);
 
             // Hoàn tất lưu mọi thay đổi
