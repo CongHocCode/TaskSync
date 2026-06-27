@@ -38,7 +38,7 @@ class Project extends Controller
         // Gọi model lấy danh sách dự án mà user này tham gia
         $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
         
-        $this->view('pages/projects/my_projects', $data);
+        $this->view('pages/workspace/my_projects', $data);
     }
 
     // 3. Hàm tạo dự án mới (Cả hiển thị form và xử lý lưu data)

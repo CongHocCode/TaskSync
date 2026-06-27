@@ -332,6 +332,17 @@ if ($activeProject) {
                                 </select>
                             </div>
 
+                            <!-- Hạn thực hiện (Due Date) -->
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-secondary" for="due_date_input">
+                                    Hạn thực hiện <span class="text-muted fw-normal">(Tùy chọn)</span>
+                                </label>
+                                <input type="datetime-local" class="form-control border-secondary-subtle" id="due_date_input" name="due_date">
+                                <div class="invalid-feedback" id="due_date_error">
+                                    Hạn thực hiện phải lớn hơn thời điểm hiện tại.
+                                </div>
+                            </div>
+
                             <!-- Mô tả chi tiết -->
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-secondary">Mô tả chi tiết công việc</label>
@@ -355,6 +366,56 @@ if ($activeProject) {
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // ===== VALIDATE DUE DATE =====
+        const createIssueModal = document.getElementById('createIssueModal');
+        if (createIssueModal) {
+            const dueDateInput = document.getElementById('due_date_input');
+            const createIssueForm = createIssueModal.querySelector('form');
+
+            // Khi mở modal, set giá trị min là thời điểm hiện tại
+            createIssueModal.addEventListener('show.bs.modal', function() {
+                if (dueDateInput) {
+                    const now = new Date();
+                    // Format: YYYY-MM-DDTHH:MM (datetime-local format)
+                    const pad = n => String(n).padStart(2, '0');
+                    const minVal = now.getFullYear() + '-' +
+                        pad(now.getMonth() + 1) + '-' +
+                        pad(now.getDate()) + 'T' +
+                        pad(now.getHours()) + ':' +
+                        pad(now.getMinutes());
+                    dueDateInput.setAttribute('min', minVal);
+                    dueDateInput.value = '';
+                    dueDateInput.classList.remove('is-invalid');
+                }
+            });
+
+            // Validate trước khi submit
+            if (createIssueForm) {
+                createIssueForm.addEventListener('submit', function(e) {
+                    if (dueDateInput && dueDateInput.value) {
+                        const selectedDate = new Date(dueDateInput.value);
+                        const now = new Date();
+                        if (selectedDate <= now) {
+                            e.preventDefault();
+                            dueDateInput.classList.add('is-invalid');
+                            dueDateInput.focus();
+                            return false;
+                        } else {
+                            dueDateInput.classList.remove('is-invalid');
+                        }
+                    }
+                });
+
+                // Xóa lỗi khi user thay đổi giá trị
+                if (dueDateInput) {
+                    dueDateInput.addEventListener('change', function() {
+                        dueDateInput.classList.remove('is-invalid');
+                    });
+                }
+            }
+        }
+
+        // ===== SIDEBAR CONTROLS =====
         const toggleBtn = document.querySelector(".sidebar-collapse");
         const sidebar = document.querySelector(".app-sidebar");
         const resizer = document.querySelector(".sidebar-resizer");
