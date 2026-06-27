@@ -97,14 +97,23 @@ class TaskModel
         }
     }
 
-    // Lấy toàn bộ task của một dự án cụ thể
+    // Lấy toàn bộ task của một dự án cụ thể kèm thông tin người được gán và người tạo
     public function getIssuesByProjectId($projectId)
     {
         $sql = "SELECT i.*, 
-                       u.username AS assignee_name, 
-                       u.avatar_url AS assignee_avatar
+                       CONCAT(u1.first_name, ' ', u1.last_name) AS assignee_full_name,
+                       u1.username AS assignee_username,
+                       u1.avatar_url AS assignee_avatar,
+                       u1.first_name AS assignee_first,
+                       u1.last_name AS assignee_last,
+                       CONCAT(u2.first_name, ' ', u2.last_name) AS reporter_full_name,
+                       u2.username AS reporter_username,
+                       u2.avatar_url AS reporter_avatar,
+                       u2.first_name AS reporter_first,
+                       u2.last_name AS reporter_last
                 FROM issues i
-                LEFT JOIN users u ON i.assignee_id = u.id
+                LEFT JOIN users u1 ON i.assignee_id = u1.id
+                LEFT JOIN users u2 ON i.reporter_id = u2.id
                 WHERE i.project_id = :project_id
                 ORDER BY i.id ASC";
         $stmt = $this->db->prepare($sql);
@@ -137,12 +146,18 @@ class TaskModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách công việc được gán cho một user cụ thể (chưa hoàn thành)
+    // Lấy danh sách công việc được gán cho một user (chưa hoàn thành - dùng cho Dashboard)
     public function getAssignedIssuesByUserId($userId)
     {
-        $sql = "SELECT i.*, p.key AS project_key
+        $sql = "SELECT i.*, 
+                       p.key AS project_key,
+                       p.name AS project_name,
+                       CONCAT(u2.first_name, ' ', u2.last_name) AS reporter_full_name,
+                       u2.username AS reporter_username,
+                       u2.avatar_url AS reporter_avatar
                 FROM issues i
                 LEFT JOIN projects p ON i.project_id = p.id
+                LEFT JOIN users u2 ON i.reporter_id = u2.id
                 WHERE i.assignee_id = :user_id AND i.status != 'done'
                 ORDER BY CASE i.priority 
                             WHEN 'highest' THEN 1 
@@ -151,6 +166,40 @@ class TaskModel
                             WHEN 'low' THEN 4 
                             ELSE 5 
                          END, i.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy TẤT CẢ công việc của user (kể cả done - dùng cho trang My Tasks đầy đủ)
+    public function getAllIssuesByUserId($userId)
+    {
+        $sql = "SELECT i.*, 
+                       p.key AS project_key,
+                       p.name AS project_name,
+                       p.id AS project_id_ref,
+                       CONCAT(u2.first_name, ' ', u2.last_name) AS reporter_full_name,
+                       u2.username AS reporter_username,
+                       u2.avatar_url AS reporter_avatar
+                FROM issues i
+                LEFT JOIN projects p ON i.project_id = p.id
+                LEFT JOIN users u2 ON i.reporter_id = u2.id
+                WHERE i.assignee_id = :user_id
+                ORDER BY CASE i.status
+                            WHEN 'in_progress' THEN 1
+                            WHEN 'in_review' THEN 2
+                            WHEN 'todo' THEN 3
+                            WHEN 'done' THEN 4
+                            ELSE 5
+                         END,
+                         CASE i.priority 
+                            WHEN 'highest' THEN 1 
+                            WHEN 'high' THEN 2 
+                            WHEN 'medium' THEN 3 
+                            WHEN 'low' THEN 4 
+                            ELSE 5 
+                         END,
+                         i.due_date ASC, i.created_at DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

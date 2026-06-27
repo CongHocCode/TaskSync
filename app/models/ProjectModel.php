@@ -128,4 +128,75 @@ class ProjectModel {
         ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // Kiểm tra xem user có quyền quản lý (manager) dự án không
+    public function isProjectManager($projectId, $userId) {
+        $sql = "SELECT role FROM project_members WHERE project_id = :project_id AND user_id = :user_id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'project_id' => $projectId,
+            'user_id' => $userId
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result && strtolower($result['role']) === 'manager';
+    }
+
+    // Cập nhật thông tin dự án và đồng bộ key công việc cascade
+    public function updateProject($projectId, $name, $key, $description, $githubRepoUrl) {
+        try {
+            $this->db->beginTransaction();
+
+            // Lấy key cũ của project trước để so sánh
+            $sqlGetOld = "SELECT `key` FROM projects WHERE id = :id FOR UPDATE";
+            $stmtGetOld = $this->db->prepare($sqlGetOld);
+            $stmtGetOld->execute(['id' => $projectId]);
+            $oldProject = $stmtGetOld->fetch(PDO::FETCH_ASSOC);
+            $oldKey = $oldProject ? $oldProject['key'] : '';
+
+            // Cập nhật bảng projects
+            $sql = "UPDATE projects 
+                    SET `name` = :name, `key` = :key, `description` = :description, `github_repo_url` = :github_repo_url 
+                    WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'id' => $projectId,
+                'name' => $name,
+                'key' => $key,
+                'description' => $description,
+                'github_repo_url' => $githubRepoUrl
+            ]);
+
+            // Nếu key thay đổi, cập nhật lại issue_key cho các công việc cũ thuộc dự án này
+            if ($oldKey !== '' && $oldKey !== $key) {
+                // Ví dụ: WEB-12 thành ABC-12
+                $sqlUpdateIssues = "UPDATE issues 
+                                    SET issue_key = CONCAT(:new_key, '-', SUBSTRING(issue_key, LENGTH(:old_key) + 2)) 
+                                    WHERE project_id = :project_id";
+                $stmtUpdateIssues = $this->db->prepare($sqlUpdateIssues);
+                $stmtUpdateIssues->execute([
+                    'new_key' => $key,
+                    'old_key' => $oldKey,
+                    'project_id' => $projectId
+                ]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+    // Xóa dự án (Cơ sở dữ liệu tự động ON DELETE CASCADE cho các bảng liên quan)
+    public function deleteProject($projectId) {
+        try {
+            $sql = "DELETE FROM projects WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute(['id' => $projectId]);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 }
+
