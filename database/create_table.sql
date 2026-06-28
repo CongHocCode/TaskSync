@@ -8,7 +8,7 @@ CREATE TABLE
     `email` varchar(255) UNIQUE NOT NULL,
     `password_hash` varchar(255) NOT NULL,
     `role` ENUM ('admin', 'user') DEFAULT 'user',
-    `status` ENUM ('active', 'inactive') DEFAULT 'active', -- Bổ sung cột Trạng thái hoạt động tại đây
+    `status` ENUM ('active', 'inactive') DEFAULT 'active', -- Bổ sung cột Trạng thái hoạt động
     `last_name` varchar(255),
     `first_name` varchar(255),
     `avatar_url` varchar(255),
@@ -32,6 +32,8 @@ CREATE TABLE
     `project_id` INT,
     `user_id` INT,
     `role` ENUM ('manager', 'member', 'viewer') DEFAULT 'member',
+    `status` ENUM('pending', 'active') NOT NULL DEFAULT 'pending', -- Bổ sung cột Trạng thái lời mời
+    `invited_by` INT DEFAULT NULL, -- Bổ sung ID người gửi lời mời
     PRIMARY KEY (`project_id`, `user_id`)
   );
 
@@ -39,7 +41,7 @@ CREATE TABLE
   `issues` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `project_id` INT NOT NULL,
-    `parent_issue_id` INT DEFAULT NULL,
+    `parent_issue_id` INT DEFAULT NULL, -- Tự liên kết cho việc con (Subtasks)
     `issue_key` varchar(255) UNIQUE NOT NULL,
     `title` varchar(255) NOT NULL,
     `description` text,
@@ -75,6 +77,9 @@ ALTER TABLE `project_members` ADD FOREIGN KEY (`project_id`) REFERENCES `project
 
 ALTER TABLE `project_members` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
+-- Bổ sung khóa ngoại liên kết người mời (invited_by) về bảng users.id (SET NULL để khi user bị xóa thì liên kết lời mời chỉ bị rỗng chứ không xóa mất dòng thành viên)
+ALTER TABLE `project_members` ADD FOREIGN KEY (`invited_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
 -- Khóa ngoại cho bảng Issues
 ALTER TABLE `issues` ADD FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE;
 
@@ -88,26 +93,3 @@ ALTER TABLE `issues` ADD FOREIGN KEY (`parent_issue_id`) REFERENCES `issues` (`i
 ALTER TABLE `comments` ADD FOREIGN KEY (`issue_id`) REFERENCES `issues` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `comments` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
--- ==========================================
--- 3. DỮ LIỆU MẪU (SEED DATA)
--- ==========================================
--- Tài khoản: admin | Mật khẩu: 123456
-INSERT INTO
-  `users` (
-    `username`,
-    `email`,
-    `password_hash`,
-    `role`,
-    `first_name`,
-    `last_name`
-  )
-VALUES
-  (
-    'admin',
-    'admin@tasksync.vn',
-    '$2y$10$F3oF9BQkQhKrshFXx2F8uu/ZqLgtCJ.zRn8q3t0OdVd8aG1fL0J9i',
-    'admin',
-    'Nguyễn',
-    'Át Min'
-  );

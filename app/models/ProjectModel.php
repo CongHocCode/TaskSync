@@ -153,17 +153,19 @@ class ProjectModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function addMemberToProject($projectId, $userId, $role = 'member')
+    public function addMemberToProject($projectId, $userId, $role = 'member', $invitedBy = null)
     {
-        $sql = "INSERT INTO project_members(project_id, user_id, role)
-                VALUE (:project_id, :user_id, :role)
-                ON DUPLICATE KEY UPDATE role = :role_update";
+        $sql = "INSERT INTO project_members (project_id, user_id, role, invited_by) 
+                VALUES (:project_id, :user_id, :role, :invited_by)
+                ON DUPLICATE KEY UPDATE role = :role_update, invited_by = :invited_by_update";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
-            'project_id' => $projectId,
-            'user_id' => $userId,
-            'role' => $role,
-            'role_update' => $role
+            'project_id'         => $projectId,
+            'user_id'            => $userId,
+            'role'               => $role,
+            'invited_by'         => $invitedBy,
+            'role_update'        => $role,
+            'invited_by_update'  => $invitedBy
         ]);
     }
 
@@ -244,6 +246,19 @@ class ProjectModel
         return $result && strtolower($result['role']) === 'manager';
     }
 
+    //TODO
+    public function isProjectMember($projectId, $userId)
+    {
+        $sql = "SELECT role FROM project_members WHERE project_id = :project_id AND user_id = :user_id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'project_id' => $projectId,
+            'user_id' => $userId
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result && strtolower($result['role']) === 'member';
+    }
+
     // Cập nhật thông tin dự án và đồng bộ key công việc cascade
     public function updateProject($projectId, $name, $key, $description, $githubRepoUrl)
     {
@@ -315,5 +330,47 @@ class ProjectModel
         } catch (Exception $e) {
             return false;
         }
+    }
+
+    //CÁC HÀM XỬ LÝ LỜI MỜI VÀO DỰ ÁN
+
+    // Lấy danh sách lời mời dự án đang chờ của một User
+    public function getPendingInvitations($userId)
+    {
+        $sql = "SELECT pm.project_id, p.name as project_name, p.key as project_key,
+                       CONCAT(u.first_name, ' ', u.last_name) as sender_name, u.avatar_url as sender_avatar
+                FROM project_members pm
+                JOIN projects p ON pm.project_id = p.id
+                JOIN users u ON pm.invited_by = u.id -- Lấy chính xác người gửi lời mời thật
+                WHERE pm.user_id = :user_id AND pm.status = 'pending'
+                ORDER BY p.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Chấp nhận lời mời tham gia dự án
+    public function acceptInvitation($projectId, $userId)
+    {
+        $sql = "UPDATE project_members 
+                SET status = 'active' 
+                WHERE project_id = :project_id AND user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'project_id' => $projectId,
+            'user_id'    => $userId
+        ]);
+    }
+
+    // Từ chối lời mời (Xóa bản ghi khỏi bảng trung gian)
+    public function declineInvitation($projectId, $userId)
+    {
+        $sql = "DELETE FROM project_members 
+                WHERE project_id = :project_id AND user_id = :user_id AND status = 'pending'";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'project_id' => $projectId,
+            'user_id'    => $userId
+        ]);
     }
 }
