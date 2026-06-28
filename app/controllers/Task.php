@@ -2,12 +2,13 @@
 class Task extends Controller
 {
     private $taskModel;
-
+    //Nạp thêm projectModel cho các chức năng liên quan
+    private $projectModel;
     public function __construct()
     {
         // Tự động nạp TaskModel
         $this->taskModel = $this->model('TaskModel');
-
+        $this->projectModel = $this->model('ProjectModel');
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -38,10 +39,10 @@ class Task extends Controller
     public function myTasks()
     {
         $userId = $_SESSION['user']['id'];
-        
+
         // Lấy tất cả công việc được gán cho user hiện tại
         $tasks = $this->taskModel->getAllIssuesByUserId($userId);
-        
+
         // Thống kê nhanh
         $stats = [
             'total'       => count($tasks),
@@ -50,7 +51,7 @@ class Task extends Controller
             'in_review'   => count(array_filter($tasks, fn($t) => $t['status'] === 'in_review')),
             'done'        => count(array_filter($tasks, fn($t) => $t['status'] === 'done')),
         ];
-        
+
         $data['page_title'] = "Công việc của tôi";
         $data['tasks']      = $tasks;
         $data['stats']      = $stats;
@@ -94,11 +95,31 @@ class Task extends Controller
                 }
 
                 // Nếu lỗi, đẩy ngược về danh sách dự án
-                redirect('workspace/my_projects');
+                redirect('project/myProjects');
                 exit();
             }
         }
         $this->view('pages/tasks/create', $data);
+    }
+
+    public function delete()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $taskId = $input['task_id'] ?? null;
+
+            if ($taskId) {
+                $taskModel = $this->model('TaskModel');
+                $success = $taskModel->deleteTask($taskId);
+
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $success]);
+                exit();
+            }
+        }
+        header('HTTP/1.1 400 Bad Request');
+        echo json_encode(['success' => false, 'error' => 'Yêu cầu không hợp lệ']);
+        exit();
     }
 
     public function edit($taskId = null)
@@ -125,6 +146,19 @@ class Task extends Controller
             http_response_code(404);
             echo json_encode(['error' => 'Không tìm thấy công việc']);
             exit;
+        }
+
+        // 1. Lấy ID dự án thực tế của Task này
+        $projectId = $this->taskModel->getProjectIdByTaskId($id);
+
+        // 2. Kiểm tra tư cách thành viên dự án
+        $isMember = $this->projectModel->isProjectMember($projectId, $_SESSION['user']['id']);
+        $isAdmin = ($_SESSION['user']['role'] === 'admin');
+
+        if (!$isMember && !$isAdmin) {
+            header('HTTP/1.1 403 Forbidden');
+            echo json_encode(['success' => false, 'error' => 'Bạn không có quyền truy cập công việc này.']);
+            exit();
         }
 
         // Lấy danh sách subtasks

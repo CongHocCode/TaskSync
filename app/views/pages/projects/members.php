@@ -2,13 +2,13 @@
     <!-- Tiêu đề trang -->
     <div class="mb-4">
         <h1 class="h3 mb-2 fw-bold text-dark">
-            <i class="bi bi-people-fill text-primary me-2"></i>Thành viên dự án: <span class="text-primary"><?= htmlspecialchars($data['project']['name']) ?></span>
+            <i class="bi bi-people-fill text-primary me-2"></i>Thành viên & Điều phối dự án: <span class="text-primary"><?= htmlspecialchars($data['project']['name']) ?></span>
         </h1>
         <p class="text-muted" style="font-size: 0.95rem;">Quản lý nhân sự, phân quyền vai trò và theo dõi hiệu suất làm việc của dự án.</p>
     </div>
 
     <div class="row g-4">
-        <!-- CỘT TRÁI: DANH SÁCH THÀNH VIÊN HIỆN TẠI -->
+        <!-- CỘT TRÁI (65%): DANH SÁCH THÀNH VIÊN HIỆN TẠI -->
         <div class="col-12 col-xl-8">
             <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
                 <h5 class="fw-bold mb-3 text-dark">Danh sách thành viên hiện tại (<?= count($data['members']) ?>)</h5>
@@ -27,6 +27,7 @@
                             <?php foreach (($data['members'] ?? []) as $member):
                                 $fullName = trim(($member['first_name'] ?? '') . ' ' . ($member['last_name'] ?? ''));
                                 $displayName = !empty($fullName) ? $fullName : $member['username'];
+                                $isPending = ($member['status'] === 'pending'); // Kiểm tra trạng thái chờ
 
                                 $avatarColors = ['06b6d4', 'f59e0b', '8b5cf6', '10b981', 'ec4899', '3b82f6'];
                                 $avatarBg = $member['id'] ? $avatarColors[$member['id'] % count($avatarColors)] : '64748b';
@@ -34,10 +35,10 @@
                                     ? BASE_URL . '/uploads/avatars/' . $member['avatar_url']
                                     : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=" . $avatarBg . "&color=fff";
                             ?>
-                                <tr>
+                                <tr class="<?= $isPending ? 'opacity-75' : '' ?>">
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="<?= $avatarUrl ?>" class="rounded-circle shadow-sm" width="40" height="40">
+                                            <img src="<?= $avatarUrl ?>" class="rounded-circle shadow-sm" width="40" height="40" style="<?= $isPending ? 'filter: grayscale(1);' : '' ?>">
                                             <div>
                                                 <div class="fw-bold text-dark"><?= htmlspecialchars($displayName) ?></div>
                                                 <small class="text-muted">@<?= htmlspecialchars($member['username']) ?></small>
@@ -46,15 +47,59 @@
                                     </td>
                                     <td class="text-muted" style="font-size: 0.9rem;"><?= htmlspecialchars($member['email'] ?? 'Chưa cập nhật') ?></td>
                                     <td>
+                                        <!-- Badge Vai trò -->
                                         <span class="badge rounded px-3 py-1.5 <?= $member['role'] === 'manager' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary' ?> text-capitalize small">
                                             <?= htmlspecialchars($member['role']) ?>
                                         </span>
+
+                                        <!-- Badge Trạng thái Lời mời -->
+                                        <?php if ($isPending): ?>
+                                            <span class="badge bg-warning-subtle text-warning rounded px-2.5 py-1.5 small ms-1">
+                                                <i class="bi bi-clock-history me-1"></i>Pending
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-subtle text-success rounded px-2.5 py-1.5 small ms-1">
+                                                <i class="bi bi-check-circle me-1"></i>Active
+                                            </span>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-end">
-                                        <!-- Gọi hàm JS mở Hồ sơ động kèm ID của User -->
-                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="viewStaffDetails(<?= $member['id'] ?>, '<?= htmlspecialchars($displayName) ?>')">
-                                            <i class="bi bi-eye-fill me-1"></i> Xem hồ sơ
-                                        </button>
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <!-- Xem hồ sơ nhân sự -->
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="viewStaffDetails(<?= $member['id'] ?>, '<?= htmlspecialchars($displayName) ?>')">
+                                                <i class="bi bi-eye-fill me-1"></i> Xem hồ sơ
+                                            </button>
+
+                                            <!-- CHỈ hiển thị nút Bổ nhiệm/Bãi nhiệm nếu thành viên đã ACTIVE -->
+                                            <?php if (!$isPending && ($data['is_authorized_to_delete'] ?? false) && $data['project']['owner_id'] != $member['id'] && $_SESSION['user']['id'] != $member['id']): ?>
+                                                <form action="<?= BASE_URL ?>/project/changeRole" method="POST" class="d-inline">
+                                                    <input type="hidden" name="project_id" value="<?= $data['project']['id'] ?>">
+                                                    <input type="hidden" name="user_id" value="<?= $member['id'] ?>">
+
+                                                    <?php if ($member['role'] === 'manager'): ?>
+                                                        <input type="hidden" name="role" value="member">
+                                                        <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="return confirm('Bạn có chắc chắn muốn bãi nhiệm chức vụ Quản lý của thành viên này?');">
+                                                            <i class="bi bi-person-down"></i> Bãi nhiệm
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <input type="hidden" name="role" value="manager">
+                                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="return confirm('Bạn có chắc chắn muốn bổ nhiệm thành viên này làm Quản lý dự án?');">
+                                                            <i class="bi bi-person-up"></i> Bổ nhiệm
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </form>
+                                            <?php endif; ?>
+
+                                            <!-- Xóa thành viên / Hủy lời mời -->
+                                            <?php if (($data['is_authorized_to_delete'] ?? false) && $data['project']['owner_id'] != $member['id'] && $_SESSION['user']['id'] != $member['id'] && $member['role'] !== 'manager'): ?>
+                                                <a href="<?= BASE_URL ?>/project/removeMember/<?= $data['project']['id'] ?>/<?= $member['id'] ?>"
+                                                    class="btn btn-sm <?= $isPending ? 'btn-outline-secondary' : 'btn-outline-danger' ?> rounded-pill px-3"
+                                                    onclick="return confirm('<?= $isPending ? 'Bạn có chắc chắn muốn hủy bỏ lời mời tham gia dự án này?' : 'Bạn có chắc chắn muốn mời thành viên này ra khỏi dự án?' ?>');">
+                                                    <i class="<?= $isPending ? 'bi bi-x-circle' : 'bi bi-person-x-fill' ?>"></i>
+                                                    <?= $isPending ? 'Hủy lời mời' : 'Xóa' ?>
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -64,52 +109,115 @@
             </div>
         </div>
 
-        <!-- CỘT PHẢI: THÊM THÀNH VIÊN MỚI -->
+        <!-- CỘT PHẢI (35%): NÚT MỞ MODAL THÊM THÀNH VIÊN MỚI & SỨC KHỎE DỰ ÁN -->
         <div class="col-12 col-xl-4">
             <div class="d-flex flex-column gap-4">
 
-                <!-- KHỐI 1: THÊM THÀNH VIÊN MỚI -->
+                <!-- KHỐI 1: NÚT KÍCH HOẠT MODAL THÊM THÀNH VIÊN ĐỘNG -->
                 <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
-                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-person-plus-fill text-success me-2"></i>Thêm thành viên</h5>
+                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-person-plus-fill text-success me-2"></i>Mời thành viên</h5>
+                    <p class="text-muted small">Mời thêm nhân sự mới tham gia thực thi công việc của dự án này.</p>
 
-                    <?php if (empty($data['non_members'])): ?>
-                        <div class="alert alert-info py-2 small mb-0">Tất cả nhân sự trong hệ thống đều đã tham gia dự án này.</div>
-                    <?php else: ?>
-                        <form action="<?= BASE_URL ?>/project/addMember" method="POST">
-                            <input type="hidden" name="project_id" value="<?= $data['project']['id'] ?>">
-
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-secondary">Chọn nhân sự</label>
-                                <select class="form-select border-secondary-subtle" name="user_id" required>
-                                    <option value="" disabled selected>Chọn nhân viên...</option>
-                                    <?php foreach ($data['non_members'] as $user):
-                                        $uName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-                                        $displayUName = !empty($uName) ? $uName : $user['username'];
-                                    ?>
-                                        <option value="<?= $user['id'] ?>"><?= htmlspecialchars($displayUName) ?> (@<?= htmlspecialchars($user['username']) ?>)</option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-secondary">Vai trò dự án</label>
-                                <select class="form-select border-secondary-subtle" name="role" required>
-                                    <option value="member" selected>Member (Thực thi)</option>
-                                    <option value="manager">Manager (Quản lý)</option>
-                                    <option value="viewer">Viewer (Chỉ xem)</option>
-                                </select>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold"><i class="bi bi-check-lg me-1"></i>Thêm vào dự án</button>
-                        </form>
-                    <?php endif; ?>
+                    <!-- Nút mở Modal tìm kiếm và chọn nhân sự chuyên nghiệp -->
+                    <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 rounded-pill"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addMemberModal">
+                        <i class="bi bi-person-plus-fill fs-5"></i> Thêm thành viên mới
+                    </button>
                 </div>
+
+                <!-- KHỐI 2: SỨC KHỎE DỰ ÁN -->
+                <?php
+                $total = $data['stats']['total_tasks'] ?? 0;
+                $completed = $data['stats']['completed_tasks'] ?? 0;
+                $percent = $total ? round(($completed / $total) * 100) : 0;
+                ?>
+                <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
+                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-activity text-danger me-2"></i>Sức khỏe dự án</h5>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-secondary small fw-medium">Tiến độ hoàn thành:</span>
+                        <span class="text-dark fw-bold"><?= $percent ?>%</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 10px; border-radius: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: <?= $percent ?>%; border-radius: 10px;" aria-valuenow="<?= $percent ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="row g-2 text-center mt-2">
+                        <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-primary">
+                            <small class="text-secondary d-block">Tổng Task</small>
+                            <span class="h4 fw-bold text-dark"><?= $total ?></span>
+                        </div>
+                        <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-success">
+                            <small class="text-secondary d-block">Đã xong</small>
+                            <span class="h4 fw-bold text-dark"><?= $completed ?></span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal chi tiết nhân sự -->
+<!-- ==============================================================
+     MODAL 1: THÊM THÀNH VIÊN ĐỘNG BẰNG TÌM KIẾM AJAX
+     ============================================================== -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div class="modal-header border-bottom-0 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-plus-fill text-success me-2"></i>Tìm kiếm & Thêm thành viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="<?= BASE_URL ?>/project/addMember" method="POST">
+                <input type="hidden" name="project_id" value="<?= $data['project']['id'] ?>">
+                <!-- ID người dùng được chọn (Gán ngầm bằng JavaScript) -->
+                <input type="hidden" name="user_id" id="selectedUserId" required>
+
+                <div class="modal-body py-2 px-4 text-dark">
+                    <!-- Ô gõ tìm kiếm -->
+                    <div class="mb-3 position-relative">
+                        <label class="form-label small fw-bold text-secondary">Tìm kiếm theo Tên đăng nhập hoặc Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-secondary-subtle text-secondary"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-secondary-subtle text-dark" id="memberSearchInput" autocomplete="off" placeholder="Gõ từ 2 ký tự để tìm kiếm nhân sự..." required>
+                        </div>
+                    </div>
+
+                    <!-- Khu vực danh sách kết quả tìm kiếm đổ động bằng AJAX -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Kết quả tìm kiếm:</label>
+                        <div class="list-group overflow-y-auto" id="searchResultList" style="max-height: 200px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px; background-color: #f8fafc;">
+                            <div class="text-muted text-center py-3 small">Vui lòng nhập thông tin để tìm nhân sự ngoài dự án...</div>
+                        </div>
+                    </div>
+
+                    <!-- Chọn vai trò cho thành viên mới -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Vai trò dự án</label>
+                        <select class="form-select border-secondary-subtle" name="role" required>
+                            <option value="member" selected>Member (Thành viên)</option>
+                            <option value="manager">Manager (Quản lý)</option>
+                            <option value="viewer">Viewer (Người xem)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top-0 py-3 px-4 bg-light">
+                    <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Hủy</button>
+                    <!-- Khóa nút submit cho đến khi JS đã gán ID người dùng chọn hợp lệ -->
+                    <button type="submit" class="btn btn-primary px-4 py-2 fw-bold" id="submitAddMemberBtn" disabled>
+                        <i class="bi bi-check-lg me-1"></i>Xác nhận thêm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================
+     MODAL 2: CHI TIẾT NHÂN SỰ ĐỘNG
+     ============================================================== -->
 <div class="modal fade" id="staffDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
@@ -144,8 +252,87 @@
 </div>
 
 <script>
-    const baseUrl = "<?= BASE_URL ?>"; 
-    // Hàm gọi Fetch API lấy chi tiết số liệu nhân sự động theo thời gian thực
+    // Khai báo biến đường dẫn gốc của PHP cho JS sử dụng
+    const baseUrl = "<?= BASE_URL ?>";
+
+    //TÍCH HỢP TÌM KIẾM THÀNH VIÊN ĐỘNG BẰNG JS DEBOUNCE (MẤT 30 GIÂY ĐỂ HOẠT ĐỘNG)
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('memberSearchInput');
+        const resultList = document.getElementById('searchResultList');
+        const selectedUserIdInput = document.getElementById('selectedUserId');
+        const submitBtn = document.getElementById('submitAddMemberBtn');
+
+        let searchTimeout = null;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = searchInput.value.trim();
+
+                // Nếu ô nhập ít hơn 2 ký tự, reset danh sách kết quả về rỗng
+                if (query.length < 2) {
+                    resultList.innerHTML = '<div class="text-muted text-center py-3 small">Vui lòng gõ từ 2 ký tự trở lên để quét CSDL...</div>';
+                    if (submitBtn) submitBtn.setAttribute('disabled', 'true');
+                    return;
+                }
+
+                // Kỹ thuật Debounce (chống dội) 300 mili-giây: Chỉ gọi máy chủ sau khi người dùng ngừng gõ phím
+                searchTimeout = setTimeout(() => {
+                    resultList.innerHTML = '<div class="text-muted text-center py-3 small"><div class="spinner-border spinner-border-sm text-secondary me-2"></div>Đang tìm kiếm...</div>';
+
+                    // Gửi Fetch API tìm kiếm động các nhân sự CHƯA có trong dự án
+                    fetch(`${baseUrl}/project/searchNonMembers/<?= $data['project']['id'] ?>?q=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(users => {
+                            if (users.length === 0) {
+                                resultList.innerHTML = '<div class="text-danger text-center py-3 small"><i class="bi bi-x-circle me-1"></i>Không tìm thấy nhân sự phù hợp ngoài dự án!</div>';
+                                if (submitBtn) submitBtn.setAttribute('disabled', 'true');
+                                return;
+                            }
+
+                            let html = '';
+                            users.forEach(user => {
+                                const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+                                const displayName = fullName || user.username;
+
+                                // Tạo thẻ button cho phép bấm chọn nhanh
+                                html += `
+                                <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2.5" onclick="selectUserToInvite(${user.id}, '${displayName}')">
+                                    <div>
+                                        <div class="fw-bold text-dark text-start" style="font-size: 0.9rem;">${displayName}</div>
+                                        <small class="text-muted">@${user.username} - ${user.email}</small>
+                                    </div>
+                                    <i class="bi bi-plus-circle-fill text-success fs-5"></i>
+                                </button>
+                            `;
+                            });
+                            resultList.innerHTML = html;
+                        })
+                        .catch(err => {
+                            console.error('Lỗi tìm kiếm API:', err);
+                            resultList.innerHTML = '<div class="text-danger text-center py-3 small">Lỗi kết nối máy chủ</div>';
+                        });
+                }, 300);
+            });
+        }
+
+        // Hàm toàn cục khi click chọn 1 user từ kết quả tìm kiếm
+        window.selectUserToInvite = function(userId, displayName) {
+            selectedUserIdInput.value = userId;
+            searchInput.value = displayName; // Đưa tên hiển thị lên ô tìm kiếm
+
+            // Hiển thị thông báo đã chọn thành công để người dùng dễ nhận biết
+            resultList.innerHTML = `
+            <div class="alert alert-success py-2.5 mb-0 small text-center" style="border: none;">
+                <i class="bi bi-check-circle-fill me-2 fs-6"></i>Đã chọn thành công: <strong>${displayName}</strong>
+            </div>`;
+
+            // Kích hoạt mở khóa nút Xác nhận thêm của Form
+            if (submitBtn) submitBtn.removeAttribute('disabled');
+        };
+    });
+
+    // Hàm Fetch API lấy chi tiết năng lực nhân sự động
     function viewStaffDetails(userId, displayName) {
         const modal = new bootstrap.Modal(document.getElementById('staffDetailModal'));
         document.getElementById('modalStaffName').textContent = displayName;
@@ -153,17 +340,17 @@
         const projectsList = document.getElementById('modalStaffProjects');
         const tasksContainer = document.getElementById('modalStaffTasks');
 
-        // Hiển thị trạng thái đang nạp...
+        // Hiện trạng thái đang tải...
         projectsList.innerHTML = '<li class="list-group-item text-muted text-center py-3">Đang tải danh sách...</li>';
         tasksContainer.innerHTML = '<div class="col-12 text-muted text-center py-3">Đang thống kê...</div>';
 
         modal.show();
 
-
+        // Gọi API động lấy chi tiết nhân sự có lọc theo dự án hiện tại
         fetch(`${baseUrl}/project/memberStats/${userId}?project_id=<?= $data['project']['id'] ?>`)
             .then(response => response.json())
             .then(data => {
-                // Đổ danh sách các dự án tham gia
+                // 1. Đổ danh sách các dự án tham gia
                 let projHtml = '';
                 if (data.projects.length === 0) {
                     projHtml = '<li class="list-group-item text-muted text-center py-3">Chưa tham gia dự án nào</li>';
@@ -203,7 +390,6 @@
                 let taskHtml = '';
                 const taskMap = {};
 
-                // Chuyển mảng kết quả đếm về dạng Map key-value
                 data.tasks.forEach(t => {
                     taskMap[t.status] = parseInt(t.count) || 0;
                 });

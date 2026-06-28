@@ -98,6 +98,14 @@ class TaskModel
         }
     }
 
+    //Xóa task
+    public function deleteTask($taskId)
+    {
+        $sql = "DELETE FROM issues WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute(['id' => $taskId]);
+    }
+
     // Lấy toàn bộ task của một dự án cụ thể kèm thông tin người được gán và người tạo
     public function getIssuesByProjectId($projectId)
     {
@@ -120,6 +128,14 @@ class TaskModel
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['project_id' => $projectId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy ID dự án của một Task cụ thể
+    public function getProjectIdByTaskId($taskId) {
+        $sql = "SELECT project_id FROM issues WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $taskId]);
+        return $stmt->fetchColumn(); // Trả về con số ID dự án
     }
 
     // Lấy tần suất xử lý công việc của các thành viên (Số lượng task được giao)

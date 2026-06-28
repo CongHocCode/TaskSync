@@ -108,7 +108,7 @@
                             </div>
 
                             <hr class="border-secondary-subtle my-4 opacity-50">
-                            <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" style="background-color: #fff1f2; color: #e11d48; border-radius: 8px;">
+                            <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" id="btnDeleteTask" style="background-color: #fff1f2; color: #e11d48; border-radius: 8px;">
                                 <i class="bi bi-trash3"></i> XÓA CÔNG VIỆC
                             </button>
                         </div>
