@@ -157,6 +157,19 @@ class Project extends Controller
         ]);
     }
 
+    public function searchNonMembers($projectId)
+    {
+        // Lấy từ khóa tìm kiếm qua tham số GET, ví dụ: ?q=nguyen
+        $searchTerm = trim($_GET['q'] ?? '');
+
+        $projectModel = $this->model('ProjectModel');
+        $results = $projectModel->searchNonMembersOfProject($projectId, $searchTerm);
+
+        header('Content-Type: application/json');
+        echo json_encode($results);
+        exit();
+    }
+
     // Thêm thành viên dự án
     public function addMember()
     {
@@ -183,7 +196,7 @@ class Project extends Controller
             $this->projectModel->removeMemberFromProject($projectId, $userId);
         }
 
-        redirect('/project/members/'. $projectId);
+        redirect('/project/members/' . $projectId);
         exit();
     }
 

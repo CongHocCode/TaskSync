@@ -130,6 +130,29 @@ class ProjectModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function searchNonMembersOfProject($projectId, $searchTerm)
+    {
+        $sql = "SELECT id, username, first_name, last_name, avatar_url, email 
+                FROM users 
+                WHERE status = 'active' 
+                  AND (username LIKE :q1 OR email LIKE :q2 OR first_name LIKE :q3 OR last_name LIKE :q4)
+                  AND id NOT IN (
+                      SELECT user_id FROM project_members WHERE project_id = :project_id
+                  )
+                ORDER BY first_name ASC 
+                LIMIT 10"; // Giới hạn 10 kết quả để bảo vệ tối đa hiệu năng máy chủ và trình duyệt
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'q1' => "%$searchTerm%",
+            'q2' => "%$searchTerm%",
+            'q3' => "%$searchTerm%",
+            'q4' => "%$searchTerm%",
+            'project_id' => $projectId
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function addMemberToProject($projectId, $userId, $role = 'member')
     {
         $sql = "INSERT INTO project_members(project_id, user_id, role)
