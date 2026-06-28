@@ -118,7 +118,7 @@
                 $fullName = $member['first_name'] . ' ' . $member['last_name'];
                 $displayName = !empty(trim($fullName)) ? $fullName : $member['username'];
             ?>
-                <option value="<?= htmlspecialchars($member['username']) ?>"><?= htmlspecialchars($displayName) ?></option>
+                <option value="<?= htmlspecialchars($displayName) ?>"><?= htmlspecialchars($displayName) ?></option>
             <?php endforeach; ?>
         </select>
         <select id="filterPriority" class="form-select form-select-sm w-auto bg-white border border-secondary-subtle text-dark ps-3 pe-4 rounded-pill fw-medium custom-filter-select" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Lọc theo độ ưu tiên">
@@ -201,7 +201,7 @@
                         ?>
                             <div class="card border border-light shadow-sm bg-white kanban-item-card rounded-3 <?= $isDone ? 'opacity-75' : '' ?>"
                                 data-id="<?= $task['id'] ?>"
-                                data-assignee="<?= htmlspecialchars($task['assignee_username'] ?? ($task['assignee_name'] ?? 'Unassigned')) ?>"
+                                data-assignee="<?= htmlspecialchars($assignee) ?>"
                                 data-priority="<?= htmlspecialchars(strtoupper($task['priority'])) ?>"
                                 data-type="<?= htmlspecialchars(ucfirst($task['type'])) ?>"
                                 draggable="true"
