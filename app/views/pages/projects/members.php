@@ -27,6 +27,7 @@
                             <?php foreach (($data['members'] ?? []) as $member):
                                 $fullName = trim(($member['first_name'] ?? '') . ' ' . ($member['last_name'] ?? ''));
                                 $displayName = !empty($fullName) ? $fullName : $member['username'];
+                                $isPending = ($member['status'] === 'pending'); // Kiểm tra trạng thái chờ
 
                                 $avatarColors = ['06b6d4', 'f59e0b', '8b5cf6', '10b981', 'ec4899', '3b82f6'];
                                 $avatarBg = $member['id'] ? $avatarColors[$member['id'] % count($avatarColors)] : '64748b';
@@ -34,10 +35,10 @@
                                     ? BASE_URL . '/uploads/avatars/' . $member['avatar_url']
                                     : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=" . $avatarBg . "&color=fff";
                             ?>
-                                <tr>
+                                <tr class="<?= $isPending ? 'opacity-75' : '' ?>">
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="<?= $avatarUrl ?>" class="rounded-circle shadow-sm" width="40" height="40">
+                                            <img src="<?= $avatarUrl ?>" class="rounded-circle shadow-sm" width="40" height="40" style="<?= $isPending ? 'filter: grayscale(1);' : '' ?>">
                                             <div>
                                                 <div class="fw-bold text-dark"><?= htmlspecialchars($displayName) ?></div>
                                                 <small class="text-muted">@<?= htmlspecialchars($member['username']) ?></small>
@@ -46,32 +47,41 @@
                                     </td>
                                     <td class="text-muted" style="font-size: 0.9rem;"><?= htmlspecialchars($member['email'] ?? 'Chưa cập nhật') ?></td>
                                     <td>
+                                        <!-- Badge Vai trò -->
                                         <span class="badge rounded px-3 py-1.5 <?= $member['role'] === 'manager' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary' ?> text-capitalize small">
                                             <?= htmlspecialchars($member['role']) ?>
                                         </span>
+
+                                        <!-- Badge Trạng thái Lời mời -->
+                                        <?php if ($isPending): ?>
+                                            <span class="badge bg-warning-subtle text-warning rounded px-2.5 py-1.5 small ms-1">
+                                                <i class="bi bi-clock-history me-1"></i>Pending
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-subtle text-success rounded px-2.5 py-1.5 small ms-1">
+                                                <i class="bi bi-check-circle me-1"></i>Active
+                                            </span>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-end">
-                                        <!-- CỘT HÀNH ĐỘNG-->
                                         <div class="d-flex justify-content-end gap-2">
                                             <!-- Xem hồ sơ nhân sự -->
                                             <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="viewStaffDetails(<?= $member['id'] ?>, '<?= htmlspecialchars($displayName) ?>')">
                                                 <i class="bi bi-eye-fill me-1"></i> Xem hồ sơ
                                             </button>
 
-                                            <!-- NÚT BỔ NHIỆM / BÃI NHIỆM VAI TRÒ (Chỉ hiện nếu tài khoản xem có quyền và không tự bổ nhiệm chính mình) -->
-                                            <?php if ($data['is_authorized_to_delete'] && $data['project']['owner_id'] != $member['id'] && $_SESSION['user']['id'] != $member['id']): ?>
+                                            <!-- CHỈ hiển thị nút Bổ nhiệm/Bãi nhiệm nếu thành viên đã ACTIVE -->
+                                            <?php if (!$isPending && ($data['is_authorized_to_delete'] ?? false) && $data['project']['owner_id'] != $member['id'] && $_SESSION['user']['id'] != $member['id']): ?>
                                                 <form action="<?= BASE_URL ?>/project/changeRole" method="POST" class="d-inline">
                                                     <input type="hidden" name="project_id" value="<?= $data['project']['id'] ?>">
                                                     <input type="hidden" name="user_id" value="<?= $member['id'] ?>">
 
                                                     <?php if ($member['role'] === 'manager'): ?>
-                                                        <!-- Nếu hiện tại là Manager -> Hiển thị nút bãi nhiệm về Member -->
                                                         <input type="hidden" name="role" value="member">
                                                         <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="return confirm('Bạn có chắc chắn muốn bãi nhiệm chức vụ Quản lý của thành viên này?');">
                                                             <i class="bi bi-person-down"></i> Bãi nhiệm
                                                         </button>
                                                     <?php else: ?>
-                                                        <!-- Nếu hiện tại là Member/Viewer -> Hiển thị nút bổ nhiệm lên Manager -->
                                                         <input type="hidden" name="role" value="manager">
                                                         <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="return confirm('Bạn có chắc chắn muốn bổ nhiệm thành viên này làm Quản lý dự án?');">
                                                             <i class="bi bi-person-up"></i> Bổ nhiệm
@@ -80,12 +90,13 @@
                                                 </form>
                                             <?php endif; ?>
 
-                                            <!-- Nút Xóa-->
-                                            <?php if ($data['is_authorized_to_delete'] && $data['project']['owner_id'] != $member['id'] && $_SESSION['user']['id'] != $member['id'] && $member['role'] !== 'manager'): ?>
+                                            <!-- Xóa thành viên / Hủy lời mời -->
+                                            <?php if (($data['is_authorized_to_delete'] ?? false) && $data['project']['owner_id'] != $member['id'] && $_SESSION['user']['id'] != $member['id'] && $member['role'] !== 'manager'): ?>
                                                 <a href="<?= BASE_URL ?>/project/removeMember/<?= $data['project']['id'] ?>/<?= $member['id'] ?>"
-                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                    onclick="return confirm('Bạn có chắc chắn muốn mời thành viên này ra khỏi dự án?');">
-                                                    <i class="bi bi-person-x-fill"></i> Xóa
+                                                    class="btn btn-sm <?= $isPending ? 'btn-outline-secondary' : 'btn-outline-danger' ?> rounded-pill px-3"
+                                                    onclick="return confirm('<?= $isPending ? 'Bạn có chắc chắn muốn hủy bỏ lời mời tham gia dự án này?' : 'Bạn có chắc chắn muốn mời thành viên này ra khỏi dự án?' ?>');">
+                                                    <i class="<?= $isPending ? 'bi bi-x-circle' : 'bi bi-person-x-fill' ?>"></i>
+                                                    <?= $isPending ? 'Hủy lời mời' : 'Xóa' ?>
                                                 </a>
                                             <?php endif; ?>
                                         </div>

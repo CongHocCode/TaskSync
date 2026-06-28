@@ -100,11 +100,14 @@ class Project extends Controller
 
         // Lấy danh sách thành viên tham gia dự án
         $members = $this->projectModel->getProjectMembers($projectId);
-
+        // Lọc các member đang active để đưa cho kanban
+        $activeMembers = array_filter($members ?? [], function ($m) {
+            return ($m['status'] ?? 'active') === 'active';
+        });
         $data['page_title'] = "Bảng Kanban - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
         $data['tasks'] = $tasks;
-        $data['members'] = $members;
+        $data['members'] = $activeMembers;
 
         $this->view('pages/projects/kanban', $data);
     }
@@ -140,7 +143,7 @@ class Project extends Controller
             exit();
         }
 
-        $project = $this->projectModel->getProjectById($projectId);        
+        $project = $this->projectModel->getProjectById($projectId);
 
         if (!$project) {
             redirect('project/myProjects');

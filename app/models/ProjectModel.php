@@ -106,7 +106,7 @@ class ProjectModel
     // Lấy danh sách thành viên tham gia dự án
     public function getProjectMembers($projectId)
     {
-        $sql = "SELECT pm.role, u.id, u.username, u.first_name, u.last_name, u.avatar_url , u.email
+        $sql = "SELECT pm.role, pm.status, u.id, u.username, u.first_name, u.last_name, u.avatar_url , u.email
                 FROM project_members pm
                 JOIN users u ON pm.user_id = u.id
                 WHERE pm.project_id = :project_id
