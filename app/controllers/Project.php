@@ -37,7 +37,7 @@ class Project extends Controller
         $data['page_title'] = "Dự án của tôi";
         // Gọi model lấy danh sách dự án mà user này tham gia
         $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
-        
+
         $this->view('pages/workspace/my_projects', $data);
     }
 
@@ -172,6 +172,19 @@ class Project extends Controller
             header('Location: ' . BASE_URL . '/project/members/' . $projectId);
             exit();
         }
+    }
+
+    public function removeMember($projectId, $userId)
+    {
+        // Kiểm tra bảo mật: Chỉ Manager của dự án hoặc Admin hệ thống mới được quyền xóa thành viên
+        $isAuthorized = ($_SESSION['user']['role'] === 'admin' || $this->projectModel->isProjectManager($projectId, $_SESSION['user']['id']));
+
+        if ($isAuthorized) {
+            $this->projectModel->removeMemberFromProject($projectId, $userId);
+        }
+
+        redirect('/project/members/'. $projectId);
+        exit();
     }
 
     public function memberStats($userId)

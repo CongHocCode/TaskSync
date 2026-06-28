@@ -55,6 +55,14 @@
                                         <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="viewStaffDetails(<?= $member['id'] ?>, '<?= htmlspecialchars($displayName) ?>')">
                                             <i class="bi bi-eye-fill me-1"></i> Xem hồ sơ
                                         </button>
+                                        <!-- Chỉ hiển thị nút xóa nếu có role là manager và không được xóa manager khác -->
+                                        <?php if ($data['project']['owner_id'] != $member['id'] && $_SESSION['user']['id'] != $member['id']  && $member['role'] !== 'manager'): ?>
+                                            <a href="<?= BASE_URL ?>/project/removeMember/<?= $data['project']['id'] ?>/<?= $member['id'] ?>"
+                                                class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                onclick="return confirm('Bạn có chắc chắn muốn mời thành viên này ra khỏi dự án?');">
+                                                <i class="bi bi-person-x-fill"></i> Xóa
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -144,7 +152,7 @@
 </div>
 
 <script>
-    const baseUrl = "<?= BASE_URL ?>"; 
+    const baseUrl = "<?= BASE_URL ?>";
     // Hàm gọi Fetch API lấy chi tiết số liệu nhân sự động theo thời gian thực
     function viewStaffDetails(userId, displayName) {
         const modal = new bootstrap.Modal(document.getElementById('staffDetailModal'));

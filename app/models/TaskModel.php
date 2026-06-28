@@ -98,6 +98,14 @@ class TaskModel
         }
     }
 
+    //Xóa task
+    public function deleteTask($taskId)
+    {
+        $sql = "DELETE FROM issues WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute(['id' => $taskId]);
+    }
+
     // Lấy toàn bộ task của một dự án cụ thể kèm thông tin người được gán và người tạo
     public function getIssuesByProjectId($projectId)
     {

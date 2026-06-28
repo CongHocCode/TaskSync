@@ -144,6 +144,17 @@ class ProjectModel
         ]);
     }
 
+    // Xóa thành viên ra khỏi dự án (member chỉ mất tư cách tham gia dự án các issue cũ được gán sẽ vẫn còn)
+    public function removeMemberFromProject($projectId, $userId)
+    {
+        $sql = "DELETE FROM project_members WHERE project_id = :project_id AND user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'project_id' => $projectId,
+            'user_id'    => $userId
+        ]);
+    }
+
     // Lấy danh sách các dự án sắp xếp thông minh theo mức độ hoạt động và thời gian tạo để làm Sidebar mặc định
     public function getProjectsOrderedForSidebar($userId)
     {
