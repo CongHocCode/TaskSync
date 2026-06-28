@@ -263,7 +263,7 @@ if ($activeProject) {
         </div>
     </div>
 
-    <div class="sidebar-user">
+    <div class="sidebar-user" style="position: relative;">
         <!-- Avatar lấy động từ Session -->
         <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user']['display_name'] ?? 'User') ?>&background=7c3aed&color=fff" alt="Avatar" class="user-avatar">
         <div class="user-info">
@@ -272,7 +272,10 @@ if ($activeProject) {
             <div class="user-role"><?= strtoupper(htmlspecialchars($_SESSION['user']['role'] ?? 'MEMBER')) ?></div>
         </div>
 
-        <a href="<?= BASE_URL ?>/auth/logout" class="user-menu-btn text-decoration-none d-flex align-items-center justify-content-center" title="Đăng xuất" style="color: #ff4d4f !important;">
+        <!-- Lớp phủ bây giờ sẽ bị khóa chặt bên trong khung .sidebar-user nhờ thuộc tính relative ở trên -->
+        <a href="<?= BASE_URL ?>/user/profile" class="stretched-link" title="Cài đặt tài khoản"></a>
+
+        <a href="<?= BASE_URL ?>/auth/logout" class="user-menu-btn text-decoration-none d-flex align-items-center justify-content-center" title="Đăng xuất" style="color: #ff4d4f !important; z-index: 2; position: relative;">
             <i class="bi bi-box-arrow-right" style="font-size: 1.2rem;"></i>
         </a>
     </div>
