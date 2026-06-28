@@ -17,7 +17,7 @@ class Admin extends Controller
         $data['task_frequency'] = $taskModel->getTaskFrequency();
         $data['new_users_stats'] = $taskModel->getNewUsersStats();
         
-        $this->view('pages/dashboard/index', $data);
+        $this->view('pages/dashboard/admin', $data);
     }
 
     // Trang danh sách nhân viên (admin/users)

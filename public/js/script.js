@@ -523,6 +523,52 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
+  // LẮNG NGHE SỰ KIỆN CLICK NÚT XÓA TASK TRONG MODAL CHI TIẾT
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "btnDeleteTask" || e.target.closest("#btnDeleteTask")) {
+      const statusSelect = document.getElementById("modalStatusSelect");
+      const taskId = statusSelect
+        ? statusSelect.getAttribute("data-task-id")
+        : null;
+
+      if (
+        taskId &&
+        confirm(
+          "CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn công việc này? Hành động này không thể hoàn tác!",
+        )
+      ) {
+        fetch(`${baseUrl}/task/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({ task_id: taskId }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              console.log(`[TaskSync] Đã xóa thành công Task ${taskId}`);
+
+              // Đóng modal chi tiết công việc lại
+              const modalElement = document.getElementById("taskDetailModal");
+              const modalInstance = bootstrap.Modal.getInstance(modalElement);
+              if (modalInstance) modalInstance.hide();
+
+              // Xóa nóng thẻ Card trên màn hình hoặc reload nhẹ lại trang
+              location.reload();
+            } else {
+              alert("Không thể xóa công việc này lúc này.");
+            }
+          })
+          .catch((error) => {
+            console.error("[TaskSync] Delete Fetch error:", error);
+            alert("Lỗi kết nối mạng khi thực hiện xóa.");
+          });
+      }
+    }
+  });
+
   // ==============================================================
   // 5. BỘ LỌC KANBAN DỰA TRÊN THÀNH VIÊN, ĐỘ ƯU TIÊN, LOẠI HÌNH
   // ==============================================================

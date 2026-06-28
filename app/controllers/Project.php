@@ -37,7 +37,7 @@ class Project extends Controller
         $data['page_title'] = "Dự án của tôi";
         // Gọi model lấy danh sách dự án mà user này tham gia
         $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
-        
+
         $this->view('pages/workspace/my_projects', $data);
     }
 
@@ -79,6 +79,14 @@ class Project extends Controller
     // Bảng Kanban của dự án
     public function kanban($projectId = null)
     {
+        $isMember = $this->projectModel->isProjectMember($projectId, $_SESSION['user']['id']);
+        $isAdmin = ($_SESSION['user']['role'] === 'admin');
+
+        if (!$isMember && !$isAdmin) {
+            redirect('workspace/dashboard'); // Đẩy ngược về trang chủ
+            exit();
+        }
+
         if (!$projectId) {
             redirect('project/myProjects');
         }
@@ -92,11 +100,14 @@ class Project extends Controller
 
         // Lấy danh sách thành viên tham gia dự án
         $members = $this->projectModel->getProjectMembers($projectId);
-
+        // Lọc các member đang active để đưa cho kanban
+        $activeMembers = array_filter($members ?? [], function ($m) {
+            return ($m['status'] ?? 'active') === 'active';
+        });
         $data['page_title'] = "Bảng Kanban - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
         $data['tasks'] = $tasks;
-        $data['members'] = $members;
+        $data['members'] = $activeMembers;
 
         $this->view('pages/projects/kanban', $data);
     }
@@ -128,14 +139,23 @@ class Project extends Controller
     public function members($projectId = null)
     {
         if (!$projectId) {
-            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            redirect('project/myProjects');
             exit();
         }
 
         $project = $this->projectModel->getProjectById($projectId);
 
         if (!$project) {
-            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            redirect('project/myProjects');
+            exit();
+        }
+
+        // Người dùng phải là thành viên dự án (hoặc Admin) mới được quyền xem danh sách này [4]
+        $isMember = $this->projectModel->isProjectMember($projectId, $_SESSION['user']['id']);
+        $isAdmin = ($_SESSION['user']['role'] === 'admin');
+
+        if (!$isMember && !$isAdmin) {
+            redirect('project/myProjects');
             exit();
         }
 
@@ -145,16 +165,34 @@ class Project extends Controller
         // Lấy nhân sự chưa có trong dự án (để đưa vào ô Select thêm thành viên)
         $nonMembers = $this->projectModel->getNonMembersOfProject($projectId);
 
-        // Lấy thống kê của riêng dự án này (Nhiệm vụ 2 - Phần Dự án)
+        // Lấy thống kê của riêng dự án này
         $projectStats = $this->projectModel->getProjectStats($projectId);
 
+        // Kiểm tra quyền xóa thành viên
+        $isManager = $this->projectModel->isProjectManager($projectId, $_SESSION['user']['id']);
+        $isAuthorizedToDelete = ($isManager || $isAdmin);
+
         $this->view('pages/projects/members', [
-            'page_title'  => $project['name'] . ' - Thành viên',
-            'project'     => $project,
-            'members'     => $members,
-            'non_members' => $nonMembers,
-            'stats'       => $projectStats
+            'page_title'              => $project['name'] . ' - Thành viên',
+            'project'                 => $project,
+            'members'                 => $members,
+            'non_members'             => $nonMembers,
+            'stats'                   => $projectStats,
+            'is_authorized_to_delete' => $isAuthorizedToDelete // Truyền quyền quyết định xóa sang View
         ]);
+    }
+
+    public function searchNonMembers($projectId)
+    {
+        // Lấy từ khóa tìm kiếm qua tham số GET, ví dụ: ?q=nguyen
+        $searchTerm = trim($_GET['q'] ?? '');
+
+        $projectModel = $this->model('ProjectModel');
+        $results = $projectModel->searchNonMembersOfProject($projectId, $searchTerm);
+
+        header('Content-Type: application/json');
+        echo json_encode($results);
+        exit();
     }
 
     // Thêm thành viên dự án
@@ -165,15 +203,96 @@ class Project extends Controller
             $userId    = $_POST['user_id'] ?? null;
             $role      = $_POST['role'] ?? 'member';
 
+            // Lấy ID của người đang thực hiện hành động mời
+            $senderId  = $_SESSION['user']['id'];
+
             if ($projectId && $userId) {
-                $this->projectModel->addMemberToProject($projectId, $userId, $role);
+                $projectModel = $this->model('ProjectModel');
+
+                // Chỉ Manager của dự án hoặc Admin hệ thống mới được mời
+                $isAuthorized = ($_SESSION['user']['role'] === 'admin' || $projectModel->isProjectManager($projectId, $senderId));
+
+                if ($isAuthorized) {
+                    // Truyền thêm $senderId vào làm tham số thứ 4 (invited_by)
+                    $projectModel->addMemberToProject($projectId, $userId, $role, $senderId);
+                    $_SESSION['flash_success'] = "Đã gửi lời mời tham gia dự án thành công!";
+                } else {
+                    $_SESSION['flash_error'] = "Bạn không có quyền mời thành viên vào dự án này.";
+                }
             }
-            // Thêm xong, đẩy quay lại đúng trang thành viên của dự án đó
             header('Location: ' . BASE_URL . '/project/members/' . $projectId);
             exit();
         }
     }
 
+    public function removeMember($projectId, $userId)
+    {
+        // Kiểm tra bảo mật: Chỉ Manager của dự án hoặc Admin hệ thống mới được quyền xóa thành viên
+        $isAuthorized = ($_SESSION['user']['role'] === 'admin' || $this->projectModel->isProjectManager($projectId, $_SESSION['user']['id']));
+
+        if ($isAuthorized) {
+            $this->projectModel->removeMemberFromProject($projectId, $userId);
+        }
+
+        redirect('/project/members/' . $projectId);
+        exit();
+    }
+
+    // Thay đổi vai trò thành viên (Bổ nhiệm / Bãi nhiệm Manager)
+    public function changeRole()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $projectId = $_POST['project_id'] ?? null;
+            $userId    = $_POST['user_id'] ?? null;
+            $role      = $_POST['role'] ?? 'member'; // Vai trò mới muốn thay đổi
+            $senderId  = $_SESSION['user']['id'];
+
+            if ($projectId && $userId) {
+                $projectModel = $this->model('ProjectModel');
+
+                // Bảo mật: Chỉ Manager gốc của dự án hoặc Admin hệ thống mới được đổi vai trò người khác
+                $isAuthorized = ($_SESSION['user']['role'] === 'admin' || $projectModel->isProjectManager($projectId, $senderId));
+
+                if ($isAuthorized) {
+                    // Gọi lại hàm addMemberToProject để kích hoạt ON DUPLICATE KEY UPDATE vai trò mới
+                    $projectModel->addMemberToProject($projectId, $userId, $role, $senderId);
+                    $_SESSION['flash_success'] = "Đã thay đổi vai trò thành viên thành công!";
+                } else {
+                    $_SESSION['flash_error'] = "Bạn không có quyền thực hiện hành động này.";
+                }
+            }
+            redirect('project/members/' . $projectId);
+            exit();
+        }
+    }
+
+    // Chấp nhận lời mời tham gia dự án
+    public function acceptInvite($projectId)
+    {
+        $userId = $_SESSION['user']['id'];
+        $projectModel = $this->model('ProjectModel');
+
+        $success = $projectModel->acceptInvitation($projectId, $userId);
+        if ($success) {
+            $_SESSION['flash_success'] = "Bạn đã chính thức tham gia dự án!";
+            redirect('project/kanban/' . $projectId); // Nhảy thẳng vào bảng Kanban
+            exit();
+        }
+        redirect('/dashboard/member');
+    }
+
+    // Từ chối lời mời tham gia dự án
+    public function declineInvite($projectId)
+    {
+        $userId = $_SESSION['user']['id'];
+        $projectModel = $this->model('ProjectModel');
+
+        $success = $projectModel->declineInvitation($projectId, $userId);
+        if ($success) {
+            $_SESSION['flash_success'] = "Đã từ chối lời mời tham gia dự án.";
+        }
+        redirect('/dashboard/member');
+    }
     public function memberStats($userId)
     {
         // Lấy ID dự án từ URL gửi lên bằng tham số GET
@@ -194,25 +313,24 @@ class Project extends Controller
     public function settings($projectId = null)
     {
         if (!$projectId) {
-            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            header('Location: ' . BASE_URL . 'project/myProjects');
             exit();
         }
 
         $projectModel = $this->model('ProjectModel');
 
-        // Kiểm tra quyền Manager thực tế từ Database
-        $isManager = $projectModel->isProjectManager($projectId, $_SESSION['user']['id']);
+        $isManager = $this->projectModel->isProjectManager($projectId, $_SESSION['user']['id']);
+        $isAdmin = ($_SESSION['user']['role'] === 'admin');
 
-        if (!$isManager) {
-            // Nếu cố tình truy cập trái phép, chặn lại và đẩy ngược về bảng Kanban
-            header('Location: ' . BASE_URL . '/project/kanban/' . $projectId);
+        if (!$isManager && !$isAdmin) {
+            redirect('project/kanban/' . $projectId); // Đẩy về trang Kanban của chính dự án đó
             exit();
         }
 
         $project = $projectModel->getProjectById($projectId);
 
         if (!$project) {
-            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            header('Location: ' . BASE_URL . 'project/myProjects');
             exit();
         }
 

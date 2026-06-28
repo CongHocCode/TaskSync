@@ -5,11 +5,11 @@ class Workspace extends Controller {
             redirect('auth');
         }
 
-        // Nếu là admin thì chuyển hướng sang dashboard của admin
-        if ($_SESSION['user']['role'] === 'admin') {
-            redirect('admin/dashboard');
-            exit();
-        }
+        // // Nếu là admin thì chuyển hướng sang dashboard của admin
+        // if ($_SESSION['user']['role'] === 'admin') {
+        //     redirect('admin/dashboard');
+        //     exit();
+        // }
 
         $userId = $_SESSION['user']['id'];
         $taskModel = $this->model('TaskModel');
