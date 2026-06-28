@@ -79,6 +79,14 @@ class Project extends Controller
     // Bảng Kanban của dự án
     public function kanban($projectId = null)
     {
+        $isMember = $this->projectModel->isProjectMember($projectId, $_SESSION['user']['id']);
+        $isAdmin = ($_SESSION['user']['role'] === 'admin');
+
+        if (!$isMember && !$isAdmin) {
+            redirect('workspace/dashboard'); // Đẩy ngược về trang chủ
+            exit();
+        }
+
         if (!$projectId) {
             redirect('project/myProjects');
         }
@@ -308,12 +316,11 @@ class Project extends Controller
 
         $projectModel = $this->model('ProjectModel');
 
-        // Kiểm tra quyền Manager thực tế từ Database
-        $isManager = $projectModel->isProjectManager($projectId, $_SESSION['user']['id']);
+        $isManager = $this->projectModel->isProjectManager($projectId, $_SESSION['user']['id']);
+        $isAdmin = ($_SESSION['user']['role'] === 'admin');
 
-        if (!$isManager) {
-            // Nếu cố tình truy cập trái phép, chặn lại và đẩy ngược về bảng Kanban
-            header('Location: ' . BASE_URL . '/project/kanban/' . $projectId);
+        if (!$isManager && !$isAdmin) {
+            redirect('project/kanban/' . $projectId); // Đẩy về trang Kanban của chính dự án đó
             exit();
         }
 

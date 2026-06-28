@@ -130,6 +130,14 @@ class TaskModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Lấy ID dự án của một Task cụ thể
+    public function getProjectIdByTaskId($taskId) {
+        $sql = "SELECT project_id FROM issues WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $taskId]);
+        return $stmt->fetchColumn(); // Trả về con số ID dự án
+    }
+
     // Lấy tần suất xử lý công việc của các thành viên (Số lượng task được giao)
     public function getTaskFrequency()
     {

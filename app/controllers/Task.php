@@ -2,12 +2,13 @@
 class Task extends Controller
 {
     private $taskModel;
-
+    //Nạp thêm projectModel cho các chức năng liên quan
+    private $projectModel;
     public function __construct()
     {
         // Tự động nạp TaskModel
         $this->taskModel = $this->model('TaskModel');
-
+        $this->projectModel = $this->model('ProjectModel');
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -145,6 +146,19 @@ class Task extends Controller
             http_response_code(404);
             echo json_encode(['error' => 'Không tìm thấy công việc']);
             exit;
+        }
+
+        // 1. Lấy ID dự án thực tế của Task này
+        $projectId = $this->taskModel->getProjectIdByTaskId($id);
+
+        // 2. Kiểm tra tư cách thành viên dự án
+        $isMember = $this->projectModel->isProjectMember($projectId, $_SESSION['user']['id']);
+        $isAdmin = ($_SESSION['user']['role'] === 'admin');
+
+        if (!$isMember && !$isAdmin) {
+            header('HTTP/1.1 403 Forbidden');
+            echo json_encode(['success' => false, 'error' => 'Bạn không có quyền truy cập công việc này.']);
+            exit();
         }
 
         // Lấy danh sách subtasks
