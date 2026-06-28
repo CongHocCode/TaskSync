@@ -94,7 +94,7 @@ class Task extends Controller
                 }
 
                 // Nếu lỗi, đẩy ngược về danh sách dự án
-                redirect('workspace/my_projects');
+                redirect('project/myProjects');
                 exit();
             }
         }

@@ -128,14 +128,14 @@ class Project extends Controller
     public function members($projectId = null)
     {
         if (!$projectId) {
-            redirect('workspace/my_projects');
+            redirect('project/myProjects');
             exit();
         }
 
-        $project = $this->projectModel->getProjectById($projectId);
+        $project = $this->projectModel->getProjectById($projectId);        
 
         if (!$project) {
-            redirect('workspace/my_projects');
+            redirect('project/myProjects');
             exit();
         }
 
@@ -144,7 +144,7 @@ class Project extends Controller
         $isAdmin = ($_SESSION['user']['role'] === 'admin');
 
         if (!$isMember && !$isAdmin) {
-            redirect('workspace/my_projects');
+            redirect('project/myProjects');
             exit();
         }
 
@@ -302,7 +302,7 @@ class Project extends Controller
     public function settings($projectId = null)
     {
         if (!$projectId) {
-            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            header('Location: ' . BASE_URL . 'project/myProjects');
             exit();
         }
 
@@ -320,7 +320,7 @@ class Project extends Controller
         $project = $projectModel->getProjectById($projectId);
 
         if (!$project) {
-            header('Location: ' . BASE_URL . '/workspace/my_projects');
+            header('Location: ' . BASE_URL . 'project/myProjects');
             exit();
         }
 

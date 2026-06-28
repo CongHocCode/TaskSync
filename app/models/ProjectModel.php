@@ -96,7 +96,7 @@ class ProjectModel
                        (SELECT COUNT(*) FROM issues WHERE project_id = p.id) AS issue_count
                 FROM projects p 
                 JOIN project_members pm ON p.id = pm.project_id 
-                WHERE pm.user_id = :user_id
+                WHERE pm.user_id = :user_id AND pm.status = 'active'
                 ORDER BY p.created_at DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['user_id' => $userId]);
@@ -185,7 +185,7 @@ class ProjectModel
     {
         $sql = "SELECT p.*, COUNT(i.id) AS user_task_count
                 FROM projects p
-                LEFT JOIN project_members pm ON p.id = pm.project_id
+                LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.status = 'active'
                 LEFT JOIN issues i ON p.id = i.project_id AND i.assignee_id = :user_id
                 WHERE pm.user_id = :user_id_member OR p.owner_id = :owner_id
                 GROUP BY p.id
@@ -246,17 +246,24 @@ class ProjectModel
         return $result && strtolower($result['role']) === 'manager';
     }
 
-    //TODO
     public function isProjectMember($projectId, $userId)
     {
-        $sql = "SELECT role FROM project_members WHERE project_id = :project_id AND user_id = :user_id LIMIT 1";
+        // Chỉ cần chọn 1 cột bất kỳ và check xem có dòng active nào tồn tại không
+        // Một user đã được xem là member nếu đã tồn tại trong bảng này và trạng thái là active
+        $sql = "SELECT 1 FROM project_members 
+                WHERE project_id = :project_id AND user_id = :user_id AND status = 'active' 
+                LIMIT 1";
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             'project_id' => $projectId,
-            'user_id' => $userId
+            'user_id'    => $userId
         ]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result && strtolower($result['role']) === 'member';
+
+        $result = $stmt->fetch();
+
+        // Trả về true nếu $result là mảng (tìm thấy), trả về false nếu $result là false (không tìm thấy)
+        return (bool)$result;
     }
 
     // Cập nhật thông tin dự án và đồng bộ key công việc cascade
