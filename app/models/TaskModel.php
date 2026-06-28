@@ -215,4 +215,54 @@ class TaskModel
             'id' => $taskId
         ]);
     }
+
+    // Lấy danh sách bình luận của một task kèm thông tin user
+    public function getCommentsByTaskId($taskId)
+    {
+        $sql = "SELECT c.*, 
+                       CONCAT(u.first_name, ' ', u.last_name) AS user_full_name,
+                       u.username AS username,
+                       u.avatar_url AS avatar_url
+                FROM comments c
+                LEFT JOIN users u ON c.user_id = u.id
+                WHERE c.issue_id = :task_id
+                ORDER BY c.created_at ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['task_id' => $taskId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Thêm bình luận mới cho task
+    public function addComment($taskId, $userId, $content)
+    {
+        $sql = "INSERT INTO comments (issue_id, user_id, content, created_at) VALUES (:task_id, :user_id, :content, NOW())";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'task_id' => $taskId,
+            'user_id' => $userId,
+            'content' => $content
+        ]);
+    }
+
+    // Lấy chi tiết một bình luận vừa tạo
+    public function getCommentById($id)
+    {
+        $sql = "SELECT c.*, 
+                       CONCAT(u.first_name, ' ', u.last_name) AS user_full_name,
+                       u.username AS username,
+                       u.avatar_url AS avatar_url
+                FROM comments c
+                LEFT JOIN users u ON c.user_id = u.id
+                WHERE c.id = :id 
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy ID tự tăng của bình luận vừa chèn
+    public function getLastInsertedId()
+    {
+        return $this->db->lastInsertId();
+    }
 }
