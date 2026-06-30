@@ -2,7 +2,7 @@
     <!-- TIÊU ĐỀ TRANG -->
     <div class="page-header mb-4">
         <div>
-            <h2 style="font-weight: 800; font-size: 1.75rem; color: #0f172a; margin-bottom: 4px;">Project Workspace Administration</h2>
+            <h2 style="font-weight: 800; font-size: 1.75rem; color: #0f172a; margin-bottom: 4px;">Quản lý các dự án</h2>
             <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 0;">Giám sát các workspace, chuyển đổi quyền sở hữu hoặc xóa các dự án không hoạt động.</p>
         </div>
     </div>
@@ -120,6 +120,14 @@
                                 <!-- Hành động quản lý -->
                                 <td style="padding: 20px 24px; text-align: right;">
                                     <div style="display: inline-flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                                        <!-- Nút Cấu hình -->
+                                        <a href="<?= BASE_URL ?>/project/settings/<?= $p['id'] ?>"
+                                           class="btn btn-sm"
+                                           style="font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #0284c7; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                            <i class="bi bi-gear" style="font-size: 0.95rem; color: #0284c7;"></i>
+                                            <span>Cấu hình</span>
+                                        </a>
+
                                         <!-- Nút Đổi Owner -->
                                         <button type="button" class="btn btn-sm" 
                                                 data-bs-toggle="modal" 
