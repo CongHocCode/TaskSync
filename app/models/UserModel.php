@@ -29,6 +29,33 @@ class UserModel
         ]);
     }
 
+    // Cập nhật mật khẩu mới (Bảo mật bằng cách kiểm tra mật khẩu cũ)
+    public function updatePassword($userId, $currentPassword, $newPassword)
+    {
+        // Lấy hash mật khẩu hiện tại từ CSDL để so sánh
+        $sqlSelect = "SELECT password_hash FROM users WHERE id = :id";
+        $stmtSelect = $this->db->pdo->prepare($sqlSelect);
+        $stmtSelect->execute(['id' => $userId]);
+        $user = $stmtSelect->fetch();
+
+        // Nếu mật khẩu cũ nhập vào khớp với CSDL
+        if ($user && password_verify($currentPassword, $user['password_hash'])) {
+            // Băm mật khẩu mới và cập nhật
+            $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+            $sqlUpdate = "UPDATE users SET password_hash = :password_hash WHERE id = :id";
+            $stmtUpdate = $this->db->pdo->prepare($sqlUpdate);
+            return $stmtUpdate->execute([
+                'id' => $userId,
+                'password_hash' => $newPasswordHash
+            ]);
+        }
+        return false; // Trả về false nếu mật khẩu cũ không khớp
+    }
+
+    public function updateAvatar($id, $avatarUrl) {
+        $stmt = $this->db->pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?");
+        return $stmt->execute([$avatarUrl, $id]);
+    }
 
     public function updateStatus($id, $status)
     {

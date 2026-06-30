@@ -2,7 +2,16 @@
 // Khởi tạo Model để tính toán dự án kích hoạt
 require_once __DIR__ . '/../../models/ProjectModel.php';
 $projectModel = new ProjectModel();
-$userId = $_SESSION['user']['id'] ?? null;
+$userSession = $_SESSION['user'] ?? [];
+$userId = $userSession['id'] ?? null;
+
+// Lấy ảnh đại diện và thông tin của user
+$displayName = $userSession['display_name'] ?? ($userSession['username'] ?? 'User');
+$avatarFile = $userSession['avatar_url'] ?? '';
+// Nếu có file ảnh trên máy chủ, lấy ảnh thật. Ngược lại, lấy ảnh chữ tự động làm dự phòng
+$sidebarAvatarUrl = (!empty($avatarFile) && $avatarFile !== 'default-avatar.png')
+    ? BASE_URL . '/uploads/avatars/' . $avatarFile
+    : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=7c3aed&color=fff";
 
 //Lấy toàn bộ project của user (Chỉ chạy đúng 1 lần)
 $userProjects = $userId ? $projectModel->getProjectsOrderedForSidebar($userId) : [];
@@ -32,9 +41,9 @@ if ($activeProject) {
     });
 
     // Thiết lập các liên kết động trỏ về dự án đó
-    $kanbanUrl   = BASE_URL . "/project/kanban/" . $currentProjId;
-    $listUrl     = BASE_URL . "/project/list/" . $currentProjId;
-    $membersUrl  = BASE_URL . "/project/members/" . $currentProjId;
+    $kanbanUrl = BASE_URL . "/project/kanban/" . $currentProjId;
+    $listUrl = BASE_URL . "/project/list/" . $currentProjId;
+    $membersUrl = BASE_URL . "/project/members/" . $currentProjId;
     $settingsUrl = BASE_URL . "/project/settings/" . $currentProjId;
     $projectNameDisplay = htmlspecialchars($activeProject['key'] . ' - ' . $activeProject['name']);
 } else {
@@ -263,16 +272,19 @@ if ($activeProject) {
         </div>
     </div>
 
-    <div class="sidebar-user">
+    <div class="sidebar-user" style="position: relative;">
         <!-- Avatar lấy động từ Session -->
-        <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user']['display_name'] ?? 'User') ?>&background=7c3aed&color=fff" alt="Avatar" class="user-avatar">
+        <img src="<?= $sidebarAvatarUrl ?>" alt="Avatar" class="user-avatar" style="object-fit: cover;">
         <div class="user-info">
             <!-- Tên User thực tế đang đăng nhập -->
             <div class="user-name"><?= htmlspecialchars($_SESSION['user']['display_name'] ?? 'User') ?></div>
             <div class="user-role"><?= strtoupper(htmlspecialchars($_SESSION['user']['role'] ?? 'MEMBER')) ?></div>
         </div>
 
-        <a href="<?= BASE_URL ?>/auth/logout" class="user-menu-btn text-decoration-none d-flex align-items-center justify-content-center" title="Đăng xuất" style="color: #ff4d4f !important;">
+        <!-- Lớp phủ bây giờ sẽ bị khóa chặt bên trong khung .sidebar-user nhờ thuộc tính relative ở trên -->
+        <a href="<?= BASE_URL ?>/user/profile" class="stretched-link" title="Cài đặt tài khoản"></a>
+
+        <a href="<?= BASE_URL ?>/auth/logout" class="user-menu-btn text-decoration-none d-flex align-items-center justify-content-center" title="Đăng xuất" style="color: #ff4d4f !important; z-index: 2; position: relative;">
             <i class="bi bi-box-arrow-right" style="font-size: 1.2rem;"></i>
         </a>
     </div>
