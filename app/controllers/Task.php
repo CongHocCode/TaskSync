@@ -165,7 +165,40 @@ class Task extends Controller
         $subtasks = $this->taskModel->getSubtasksByTaskId($id);
         $task['subtasks'] = $subtasks;
 
+        // Lấy danh sách bình luận (Comments)
+        $comments = $this->taskModel->getCommentsByTaskId($id);
+        $task['comments'] = $comments;
+
         echo json_encode($task);
+        exit;
+    }
+
+    // API thêm bình luận mới
+    public function addComment()
+    {
+        header('Content-Type: application/json');
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $taskId = $_POST['task_id'] ?? $input['task_id'] ?? null;
+        $content = $_POST['content'] ?? $input['content'] ?? null;
+        $userId = $_SESSION['user']['id'];
+
+        if (!$taskId || empty(trim($content))) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Thiếu ID công việc hoặc nội dung bình luận']);
+            exit;
+        }
+
+        $success = $this->taskModel->addComment($taskId, $userId, $content);
+
+        if ($success) {
+            $commentId = $this->taskModel->getLastInsertedId();
+            $comment = $this->taskModel->getCommentById($commentId);
+            echo json_encode(['success' => true, 'comment' => $comment]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Không thể lưu bình luận vào cơ sở dữ liệu']);
+        }
         exit;
     }
 
