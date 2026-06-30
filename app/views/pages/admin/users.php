@@ -62,13 +62,12 @@
                                         <i class="bi <?= $u['status'] === 'active' ? 'bi-lock-fill' : 'bi-unlock-fill' ?>"></i>
                                         <span><?= $u['status'] === 'active' ? 'Khóa' : 'Mở khóa' ?></span>
                                     </a>
+
+                                    <!-- NÚT SỬA -->
+                                    <a href="<?= BASE_URL ?>/admin/editUser/<?= $u['id'] ?>" class="app-btn app-btn-sm app-btn-ghost" title="Sửa thông tin">
+                                        <i class="bi bi-pencil-square" style="color: var(--primary);"></i>
+                                    </a>
                                 </div>
-                            </td>
-                            <td style="padding: 16px 24px; text-align: right; display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                                <!--  NÚT SỬA -->
-                                <a href="<?= BASE_URL ?>/admin/editUser/<?= $u['id'] ?>" class="app-btn app-btn-sm app-btn-ghost" title="Sửa thông tin">
-                                    <i class="bi bi-pencil-square" style="color: var(--primary);"></i>
-                                </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

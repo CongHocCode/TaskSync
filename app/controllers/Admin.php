@@ -140,4 +140,30 @@ class Admin extends Controller
         $data['page_title'] = "Quản lý toàn bộ dự án";
         $this->view('pages/admin/projects', $data);
     }
+
+    // Xóa nhân sự (admin/deleteUser/ID)
+    public function deleteUser($id = null)
+    {
+        if (!$id) {
+            redirect('admin/users');
+            exit;
+        }
+
+        // Không cho phép tự xóa bản thân
+        if ($id == $_SESSION['user']['id']) {
+            redirect('admin/users');
+            exit;
+        }
+
+        $userModel = $this->model('UserModel');
+        $user = $userModel->getById($id);
+
+        if ($user) {
+            $adminId = $_SESSION['user']['id'];
+            $userModel->delete($id, $adminId);
+        }
+
+        redirect('admin/users');
+        exit;
+    }
 }
