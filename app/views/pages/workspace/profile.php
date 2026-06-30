@@ -32,17 +32,34 @@
     <?php endif; ?>
 
     <div class="row g-4">
-        <!-- CỘT 1 (35%): AVATAR & THÔNG TIN CHUNG -->
+        <!-- CỘT 1 (35%): AVATAR & FORM UPLOAD ĐỘNG -->
         <div class="col-12 col-md-4">
             <div class="card border-0 shadow-sm p-4 text-center bg-white" style="border-radius: 12px;">
                 <?php
                 $displayName = trim(($data['user']['first_name'] ?? '') . ' ' . ($data['user']['last_name'] ?? ''));
                 $displayName = !empty($displayName) ? $displayName : $data['user']['username'];
-                $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=7c3aed&color=fff&size=100";
+
+                // Kiểm tra xem người dùng đã tải ảnh đại diện lên chưa, nếu chưa thì tự tạo Avatar chữ
+                $avatarUrl = (!empty($data['user']['avatar_url']) && $data['user']['avatar_url'] !== 'default-avatar.png')
+                    ? BASE_URL . '/uploads/avatars/' . $data['user']['avatar_url']
+                    : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=7c3aed&color=fff&size=100";
                 ?>
                 <div class="position-relative d-inline-block mx-auto mb-3">
-                    <img src="<?= $avatarUrl ?>" class="rounded-circle shadow-sm" width="100" height="100" alt="Avatar">
+                    <img id="avatarPreview" src="<?= $avatarUrl ?>" class="rounded-circle shadow-sm" width="100" height="100" alt="Avatar" style="object-fit: cover;">
                 </div>
+
+                <form action="<?= BASE_URL ?>/user/uploadAvatar" method="POST" enctype="multipart/form-data" class="mb-3">
+                    <label for="avatarInput" class="btn btn-sm btn-outline-secondary rounded-pill px-3 mb-2 cursor-pointer" style="font-size: 0.75rem;">
+                        <i class="bi bi-camera-fill me-1"></i>Chọn ảnh mới
+                    </label>
+                    <!-- Input ẩn để giữ thẩm mỹ, kích hoạt bằng thuộc tính 'for' của thẻ label ở trên -->
+                    <input type="file" id="avatarInput" name="avatar" accept="image/*" class="d-none" onchange="previewSelectedImage(this)">
+
+                    <!-- Nút submit chỉ hiển thị hoặc mở khóa khi đã chọn file -->
+                    <button type="submit" id="saveAvatarBtn" class="btn btn-sm btn-primary rounded-pill px-3 d-none" style="font-size: 0.75rem;">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i>Lưu ảnh
+                    </button>
+                </form>
 
                 <h5 class="fw-bold text-dark mb-1"><?= htmlspecialchars($displayName) ?></h5>
                 <span class="badge bg-secondary-subtle text-secondary text-uppercase mb-3 px-3 py-1.5 small">
@@ -131,3 +148,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Xem trước ảnh ngay lập tức sau khi chọn tệp từ máy tính
+    function previewSelectedImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                // Thay đổi src của ảnh trên giao diện tạm thời để xem trước
+                document.getElementById('avatarPreview').src = e.target.result;
+                // Hiện nút "Lưu ảnh" ra để người dùng bấm xác nhận cập nhật
+                document.getElementById('saveAvatarBtn').classList.remove('d-none');
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

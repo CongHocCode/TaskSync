@@ -1,4 +1,16 @@
 <!-- Sidebar của admin -->
+<?php
+// Thông tin admin và ảnh đại diện
+$userSession = $_SESSION['user'] ?? [];
+$displayName = $userSession['display_name'] ?? ($userSession['username'] ?? 'Admin');
+$avatarFile = $userSession['avatar_url'] ?? '';
+
+// Nếu có file ảnh thật, lấy ảnh thật. Ngược lại, lấy ảnh chữ với nền đỏ #f16565
+$adminAvatarUrl = (!empty($avatarFile) && $avatarFile !== 'default-avatar.png')
+    ? BASE_URL . '/uploads/avatars/' . $avatarFile
+    : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=f16565&color=fff";
+?>
+
 <style>
     @media (min-width: 992px) {
         .app-sidebar {
@@ -9,19 +21,28 @@
             transition: width 0.05s ease;
             overflow-x: hidden;
         }
+
         .sidebar-resizer {
             position: absolute;
-            top: 0; right: 0;
-            width: 8px; height: 100%;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
             cursor: col-resize;
             background: transparent;
             z-index: 10;
             transition: background 0.2s;
         }
-        .sidebar-resizer:hover, .sidebar-resizer.active {
+
+        .sidebar-resizer:hover,
+        .sidebar-resizer.active {
             background: rgba(255, 255, 255, 0.15);
         }
-        .app-sidebar.collapsed { width: 75px !important; }
+
+        .app-sidebar.collapsed {
+            width: 75px !important;
+        }
+
         .app-sidebar.collapsed h1,
         .app-sidebar.collapsed .sidebar-section-label,
         .app-sidebar.collapsed .sidebar-link span,
@@ -33,35 +54,48 @@
         .app-sidebar.collapsed .sidebar-project-nav {
             display: none !important;
         }
+
         .app-sidebar.collapsed .app-btn-create-issue {
             font-size: 0 !important;
             padding: 10px 0;
             justify-content: center;
         }
+
         .app-sidebar.collapsed .app-btn-create-issue i {
             font-size: 1.5rem !important;
             margin: 0;
         }
+
         .app-sidebar.collapsed .sidebar-collapse i {
             transform: rotate(180deg);
             display: inline-block;
         }
     }
-    .sidebar-link, .sidebar-project-toggle, .sidebar-brand, .sidebar-user {
+
+    .sidebar-link,
+    .sidebar-project-toggle,
+    .sidebar-brand,
+    .sidebar-user {
         display: flex;
         align-items: center;
         white-space: nowrap;
         width: 100%;
         min-width: 0;
     }
-    .sidebar-link span, .sidebar-project-toggle span, .user-info .user-name {
+
+    .sidebar-link span,
+    .sidebar-project-toggle span,
+    .user-info .user-name {
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         text-align: left;
     }
-    .app-sidebar i { min-width: 20px; }
+
+    .app-sidebar i {
+        min-width: 20px;
+    }
 </style>
 
 <aside class="app-sidebar">
@@ -117,17 +151,18 @@
     </div>
 
     <!-- THÔNG TIN ADMIN LẤY ĐỘNG TỪ SESSION -->
-    <div class="sidebar-user">
+    <div class="sidebar-user" style="position: relative;">
         <!-- Avatar lấy động từ Session -->
-        <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user']['display_name'] ?? 'Admin') ?>&background=f16565&color=fff" alt="Avatar" class="user-avatar">
+        <img src="<?= $adminAvatarUrl ?>" alt="Avatar" class="user-avatar" style="object-fit: cover;">
         <div class="user-info">
-            <!-- Tên Admin thực tế đang đăng nhập -->
             <div class="user-name"><?= $_SESSION['user']['display_name'] ?? 'Admin' ?></div>
             <div class="user-role"><?= $_SESSION['user']['role'] ?? 'ADMIN' ?></div>
         </div>
-        <!-- Nút ĐĂNG XUẤT thực tế (Gọi đến hàm logout() của Auth.php) -->
-        <a href="<?= BASE_URL ?>/auth/logout" class="user-menu-btn" title="Đăng xuất hệ thống" style="display: grid; place-items: center; text-decoration: none;">
-            <i class="bi bi-box-arrow-right" style="color: var(--danger);"></i>
+
+        <a href="<?= BASE_URL ?>/user/profile" class="stretched-link" title="Cài đặt tài khoản"></a>
+
+        <a href="<?= BASE_URL ?>/auth/logout" class="user-menu-btn text-decoration-none d-flex align-items-center justify-content-center" title="Đăng xuất" style="color: #ff4d4f !important; z-index: 2; position: relative;">
+            <i class="bi bi-box-arrow-right" style="font-size: 1.2rem;"></i>
         </a>
     </div>
 </aside>

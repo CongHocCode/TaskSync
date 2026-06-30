@@ -52,6 +52,11 @@ class UserModel
         return false; // Trả về false nếu mật khẩu cũ không khớp
     }
 
+    public function updateAvatar($id, $avatarUrl) {
+        $stmt = $this->db->pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?");
+        return $stmt->execute([$avatarUrl, $id]);
+    }
+
     public function updateStatus($id, $status)
     {
         $stmt = $this->db->pdo->prepare("UPDATE users SET status = ? WHERE id = ?");

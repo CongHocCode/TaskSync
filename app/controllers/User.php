@@ -16,7 +16,7 @@ class User extends Controller
         $this->userModel = $this->model('UserModel');
     }
 
-   
+
     // Hiển thị trang Hồ sơ cá nhân (Profile)
     public function profile()
     {
@@ -74,6 +74,76 @@ class User extends Controller
             }
         }
         redirect('user/profile');
+    }
+
+    public function uploadAvatar()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
+            $userId = $_SESSION['user']['id'];
+            $file = $_FILES['avatar'];
+
+            // Kiểm tra xem có lỗi khi upload không
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['flash_error'] = "Đã xảy ra lỗi trong quá trình tải tệp lên.";
+                redirect('user/profile');
+                exit();
+            }
+
+            // Khống chế dung lượng ảnh tối đa (2MB)
+            $maxSize = 2 * 1024 * 1024;
+            if ($file['size'] > $maxSize) {
+                $_SESSION['flash_error'] = "Dung lượng ảnh tải lên không được vượt quá 2MB.";
+                redirect('user/profile');
+                exit();
+            }
+
+            // Khống chế định dạng tệp tin (chỉ cho phép các định dạng ảnh phổ biến)
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+            $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+            if (!in_array($fileExtension, $allowedExtensions)) {
+                $_SESSION['flash_error'] = "Chỉ chấp nhận các định dạng tệp tin ảnh: " . implode(', ', $allowedExtensions);
+                redirect('user/profile');
+                exit();
+            }
+
+            // Tạo tên tệp độc nhất dựa trên timestamp và ID để tránh trùng lặp
+            $newFileName = 'avatar_' . $userId . '_' . time() . '.' . $fileExtension;
+
+            // Xác định thư mục lưu trữ thực tế trên máy chủ
+            // Đường dẫn đích: /public/uploads/avatars/
+            $uploadDir = __DIR__ . '/../../public/uploads/avatars/';
+
+            // Tự động tạo thư mục nếu chưa có sẵn
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            $destination = $uploadDir . $newFileName;
+
+            // Di chuyển tệp tin từ thư mục tạm của PHP sang thư mục lưu trữ thực tế
+            if (move_uploaded_file($file['tmp_name'], $destination)) {
+
+                // Xóa file ảnh cũ
+                $currentUser = $this->userModel->getById($userId);
+                if ($currentUser && !empty($currentUser['avatar_url']) && $currentUser['avatar_url'] !== 'default-avatar.png') {
+                    $oldFile = $uploadDir . $currentUser['avatar_url'];
+                    if (file_exists($oldFile)) {
+                        unlink($oldFile); // Tiến hành xóa
+                    }
+                }
+
+                // Cập nhật tên tệp mới vào CSDL và cập nhật lại thông tin Session
+                $this->userModel->updateAvatar($userId, $newFileName);
+                $_SESSION['user']['avatar_url'] = $newFileName;
+
+                $_SESSION['flash_success'] = "Cập nhật ảnh đại diện thành công!";
+            } else {
+                $_SESSION['flash_error'] = "Không thể lưu tệp ảnh lên máy chủ.";
+            }
+        }
+        redirect('user/profile');
+        exit();
     }
 
     // Xử lý yêu cầu đổi mật khẩu mới (Có kiểm tra mật khẩu cũ)
