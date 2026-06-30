@@ -137,9 +137,61 @@ class Admin extends Controller
     // Trang xem toàn bộ dự án hệ thống (admin/projects)
     public function projects()
     {
+        $projectModel = $this->model('ProjectModel');
+        $userModel = $this->model('UserModel');
+
         $data['page_title'] = "Quản lý toàn bộ dự án";
+        $data['projects'] = $projectModel->getAllProjectsWithCounts();
+        $data['project_members'] = $projectModel->getAllActiveProjectMembersGrouped();
+        $data['users'] = $userModel->getAll();
+
         $this->view('pages/admin/projects', $data);
     }
+
+    // Đổi Owner của dự án (admin/changeProjectOwner)
+    public function changeProjectOwner()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $projectId = $_POST['project_id'] ?? null;
+            $newOwnerId = $_POST['new_owner_id'] ?? null;
+
+            if ($projectId && $newOwnerId) {
+                $projectModel = $this->model('ProjectModel');
+                $success = $projectModel->changeProjectOwner($projectId, $newOwnerId);
+                if ($success) {
+                    $_SESSION['flash_success'] = "Thay đổi trưởng dự án thành công!";
+                } else {
+                    $_SESSION['flash_error'] = "Thay đổi trưởng dự án thất bại.";
+                }
+            } else {
+                $_SESSION['flash_error'] = "Thông tin không đầy đủ.";
+            }
+        }
+        redirect('admin/projects');
+        exit;
+    }
+
+    // Xóa dự án (admin/deleteProject/ID)
+    public function deleteProject($id = null)
+    {
+        if (!$id) {
+            redirect('admin/projects');
+            exit;
+        }
+
+        $projectModel = $this->model('ProjectModel');
+        $success = $projectModel->deleteProject($id);
+
+        if ($success) {
+            $_SESSION['flash_success'] = "Xóa dự án thành công!";
+        } else {
+            $_SESSION['flash_error'] = "Xóa dự án thất bại.";
+        }
+
+        redirect('admin/projects');
+        exit;
+    }
+
 
     // Xóa nhân sự (admin/deleteUser/ID)
     public function deleteUser($id = null)

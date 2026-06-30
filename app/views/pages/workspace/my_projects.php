@@ -134,7 +134,7 @@ $projects = $data['projects'] ?? [];
         <?php endforeach; ?>
     <?php else: ?>
         <div class="col-12">
-            <div class="text-center py-5 bg-white border border-light-subtle rounded-3">
+            <div class="text-center py-5 bg-white border border-light-subtle rounded-3 project-empty-box">
                 <p class="text-muted mb-3">Bạn chưa tham gia hoặc sở hữu dự án nào.</p>
                 <button type="button" class="btn text-white btn-sm" data-bs-toggle="modal" data-bs-target="#createProjectModal" style="background-color: #4f46e5;">
                     Tạo dự án ngay
@@ -229,6 +229,20 @@ $projects = $data['projects'] ?? [];
     .form-control::placeholder {
         color: #9ca3af;
         opacity: 0.8;
+    }
+    .col-12{
+        display: flex;
+        justify-content: center;   
+        align-items: center;       
+        min-height: 350px;   
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+    .project-empty-box {
+        width: 100%;
+        max-width: 500px;          
+        padding: 3rem 2rem !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); 
     }
 </style>
 
