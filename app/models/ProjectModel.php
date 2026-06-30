@@ -96,7 +96,7 @@ class ProjectModel
                        (SELECT COUNT(*) FROM issues WHERE project_id = p.id) AS issue_count
                 FROM projects p 
                 JOIN project_members pm ON p.id = pm.project_id 
-                WHERE pm.user_id = :user_id
+                WHERE pm.user_id = :user_id AND pm.status = 'active'
                 ORDER BY p.created_at DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['user_id' => $userId]);
@@ -106,7 +106,7 @@ class ProjectModel
     // Lấy danh sách thành viên tham gia dự án
     public function getProjectMembers($projectId)
     {
-        $sql = "SELECT pm.role, u.id, u.username, u.first_name, u.last_name, u.avatar_url , u.email
+        $sql = "SELECT pm.role, pm.status, u.id, u.username, u.first_name, u.last_name, u.avatar_url , u.email
                 FROM project_members pm
                 JOIN users u ON pm.user_id = u.id
                 WHERE pm.project_id = :project_id
@@ -130,17 +130,53 @@ class ProjectModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function addMemberToProject($projectId, $userId, $role = 'member')
+    public function searchNonMembersOfProject($projectId, $searchTerm)
     {
-        $sql = "INSERT INTO project_members(project_id, user_id, role)
-                VALUE (:project_id, :user_id, :role)
-                ON DUPLICATE KEY UPDATE role = :role_update";
+        $sql = "SELECT id, username, first_name, last_name, avatar_url, email 
+                FROM users 
+                WHERE status = 'active' 
+                  AND (username LIKE :q1 OR email LIKE :q2 OR first_name LIKE :q3 OR last_name LIKE :q4)
+                  AND id NOT IN (
+                      SELECT user_id FROM project_members WHERE project_id = :project_id
+                  )
+                ORDER BY first_name ASC 
+                LIMIT 10"; // Giới hạn 10 kết quả để bảo vệ tối đa hiệu năng máy chủ và trình duyệt
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'q1' => "%$searchTerm%",
+            'q2' => "%$searchTerm%",
+            'q3' => "%$searchTerm%",
+            'q4' => "%$searchTerm%",
+            'project_id' => $projectId
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function addMemberToProject($projectId, $userId, $role = 'member', $invitedBy = null)
+    {
+        $sql = "INSERT INTO project_members (project_id, user_id, role, invited_by) 
+                VALUES (:project_id, :user_id, :role, :invited_by)
+                ON DUPLICATE KEY UPDATE role = :role_update, invited_by = :invited_by_update";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'project_id'         => $projectId,
+            'user_id'            => $userId,
+            'role'               => $role,
+            'invited_by'         => $invitedBy,
+            'role_update'        => $role,
+            'invited_by_update'  => $invitedBy
+        ]);
+    }
+
+    // Xóa thành viên ra khỏi dự án (member chỉ mất tư cách tham gia dự án các issue cũ được gán sẽ vẫn còn)
+    public function removeMemberFromProject($projectId, $userId)
+    {
+        $sql = "DELETE FROM project_members WHERE project_id = :project_id AND user_id = :user_id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'project_id' => $projectId,
-            'user_id' => $userId,
-            'role' => $role,
-            'role_update' => $role
+            'user_id'    => $userId
         ]);
     }
 
@@ -149,7 +185,7 @@ class ProjectModel
     {
         $sql = "SELECT p.*, COUNT(i.id) AS user_task_count
                 FROM projects p
-                LEFT JOIN project_members pm ON p.id = pm.project_id
+                LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.status = 'active'
                 LEFT JOIN issues i ON p.id = i.project_id AND i.assignee_id = :user_id
                 WHERE pm.user_id = :user_id_member OR p.owner_id = :owner_id
                 GROUP BY p.id
@@ -208,6 +244,26 @@ class ProjectModel
         ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result && strtolower($result['role']) === 'manager';
+    }
+
+    public function isProjectMember($projectId, $userId)
+    {
+        // Chỉ cần chọn 1 cột bất kỳ và check xem có dòng active nào tồn tại không
+        // Một user đã được xem là member nếu đã tồn tại trong bảng này và trạng thái là active
+        $sql = "SELECT 1 FROM project_members 
+                WHERE project_id = :project_id AND user_id = :user_id AND status = 'active' 
+                LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'project_id' => $projectId,
+            'user_id'    => $userId
+        ]);
+
+        $result = $stmt->fetch();
+
+        // Trả về true nếu $result là mảng (tìm thấy), trả về false nếu $result là false (không tìm thấy)
+        return (bool)$result;
     }
 
     // Cập nhật thông tin dự án và đồng bộ key công việc cascade
@@ -281,5 +337,47 @@ class ProjectModel
         } catch (Exception $e) {
             return false;
         }
+    }
+
+    //CÁC HÀM XỬ LÝ LỜI MỜI VÀO DỰ ÁN
+
+    // Lấy danh sách lời mời dự án đang chờ của một User
+    public function getPendingInvitations($userId)
+    {
+        $sql = "SELECT pm.project_id, p.name as project_name, p.key as project_key,
+                       CONCAT(u.first_name, ' ', u.last_name) as sender_name, u.avatar_url as sender_avatar
+                FROM project_members pm
+                JOIN projects p ON pm.project_id = p.id
+                JOIN users u ON pm.invited_by = u.id -- Lấy chính xác người gửi lời mời thật
+                WHERE pm.user_id = :user_id AND pm.status = 'pending'
+                ORDER BY p.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Chấp nhận lời mời tham gia dự án
+    public function acceptInvitation($projectId, $userId)
+    {
+        $sql = "UPDATE project_members 
+                SET status = 'active' 
+                WHERE project_id = :project_id AND user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'project_id' => $projectId,
+            'user_id'    => $userId
+        ]);
+    }
+
+    // Từ chối lời mời (Xóa bản ghi khỏi bảng trung gian)
+    public function declineInvitation($projectId, $userId)
+    {
+        $sql = "DELETE FROM project_members 
+                WHERE project_id = :project_id AND user_id = :user_id AND status = 'pending'";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'project_id' => $projectId,
+            'user_id'    => $userId
+        ]);
     }
 }

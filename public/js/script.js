@@ -1,7 +1,8 @@
+// File script.js - Mã xử lý JavaScript tương tác động hệ thống TaskSync
 document.addEventListener("DOMContentLoaded", function () {
   // Hàm helper lấy url
   const getBaseUrl = () => {
-    // Ưu tiên lấy biến baseUrl đã được PHP định nghĩa sẵn từ file layout.php
+    //  Ưu tiên lấy biến baseUrl đã được PHP định nghĩa sẵn từ file layout.php
     if (window.baseUrl) {
       return window.baseUrl;
     }
@@ -9,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Dự phòng
     const pathParts = window.location.pathname.split("/");
     if (pathParts[1] === "TaskSync") {
-      return window.location.origin + "/TaskSync/public";
+      return window.location.origin + "/TaskSync/public"; // Thêm /public vào đây
     }
     return window.location.origin;
   };
@@ -160,6 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
+// <<<<<<< HEAD
     columns.forEach((column) => {
       // Dragover: thay đổi giao diện vùng thả
       column.addEventListener("dragover", function (e) {
@@ -221,9 +223,6 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log(
             `[TaskSync] Đã cập nhật thành công Task ${taskId} sang ${status}`,
           );
-          if (!document.querySelector(".kanban-board-wrapper")) {
-            location.reload();
-          }
         } else {
           console.error("[TaskSync] Lỗi cập nhật:", data.error);
           alert("Không thể lưu trạng thái mới, vui lòng thử lại.");
@@ -325,7 +324,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 3. CLICK THẺ TASK - FETCH API - HIỂN THỊ OFFCANVAS MODAL
   // ==============================================================
   if (kanbanBoard) {
-    // Lắng nghe sự kiện click thẻ Card
+    // Lắng nghe sự kiện click thẻ Card (sử dụng Event Delegation)
     document.addEventListener("click", function (e) {
       const card = e.target.closest(".kanban-item-card");
       if (!card) return;
@@ -345,70 +344,134 @@ document.addEventListener("DOMContentLoaded", function () {
     // Khóa card đang tương tác vào window
     window.targetKanbanCard = card;
 
+    // Lấy tất cả các selector form đúng chuẩn của Quyền
     const titleTextarea = document.getElementById("modalTaskTitle");
-    const descTextarea = modalElement.querySelector(
-      "textarea:not(#modalTaskTitle)",
-    ); // Ô mô tả (textarea còn lại)
     const statusSelect = document.getElementById("modalStatusSelect");
+    const descTextarea = modalElement.querySelector(
+      ".mb-4 textarea:not(#modalTaskTitle)",
+    );
     const assigneeSelect = modalElement.querySelector(
       "select:not(#modalStatusSelect)",
-    );
-    const projectHeader = modalElement.querySelector(
-      ".modal-header .text-muted",
     );
     const githubInput =
       modalElement.querySelector(
         'input[type="text"][placeholder*="github" i]',
       ) || modalElement.querySelector('.col-lg-4 input[type="text"]');
+    const projectHeader = modalElement.querySelector(
+      ".modal-header .text-muted",
+    );
+    const subtaskList = modalElement.querySelector(".subtask-list");
+    const subtaskBadgeCount = document.getElementById("subtaskBadgeCount");
+    const subtaskProgressBar = document.getElementById("subtaskProgressBar");
 
-    // Tạm thời hiển thị trạng thái đang tải
+    // Reset dữ liệu cũ để tạo hiệu ứng chuyển tiếp mượt mà
     if (titleTextarea) titleTextarea.value = "Đang tải...";
-    if (descTextarea) descTextarea.value = "Đang tải dữ liệu...";
+    if (descTextarea) descTextarea.value = "Đang tải mô tả...";
+    if (githubInput) githubInput.value = "";
+    if (subtaskList)
+      subtaskList.innerHTML =
+        '<div class="text-center py-2"><span class="spinner-border spinner-border-sm text-secondary" role="status"></span></div>';
+    if (subtaskBadgeCount) subtaskBadgeCount.innerText = "0 / 0";
+    if (subtaskProgressBar) subtaskProgressBar.style.width = "0%";
 
-    // Thực hiện gọi API lấy dữ liệu chi tiết
-    fetch(`${baseUrl}/task/detail/${taskId}`)
+    // Thực thi Fetch API lấy JSON chi tiết của task
+    fetch(`${baseUrl}/task/detail/${taskId}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    })
       .then((response) => {
         if (!response.ok) throw new Error("Không thể tải chi tiết công việc");
         return response.json();
       })
       .then((task) => {
-        // Điền dữ liệu thật từ Database vào form Modal
-        if (titleTextarea) {
-          titleTextarea.value = task.title;
+        // Điền dữ liệu động vào đúng chuẩn form có sẵn của Quyền
+        if (projectHeader) {
+          projectHeader.textContent = `${task.issue_key} / Chi tiết công việc`;
         }
 
-        if (descTextarea) {
-          descTextarea.value = task.description || "";
+        const projectNameSpan = document.getElementById("modalProjectName");
+        if (projectNameSpan) {
+          projectNameSpan.textContent = task.project_name || "WEB";
         }
 
+        // Reset input và nạp danh sách bình luận
+        const commentInput = document.getElementById("newCommentInput");
+        if (commentInput) commentInput.value = "";
+
+        const commentsList = document.getElementById("modalCommentsList");
+        if (commentsList) {
+          commentsList.innerHTML = "";
+          if (task.comments && task.comments.length > 0) {
+            task.comments.forEach((c) => {
+              commentsList.appendChild(createCommentElement(c));
+            });
+            // Cuộn xuống cuối
+            setTimeout(() => {
+              commentsList.scrollTop = commentsList.scrollHeight;
+            }, 100);
+          } else {
+            commentsList.innerHTML = `<div class="text-muted small ps-1 py-2">Chưa có bình luận nào. Hãy trao đổi về công việc này!</div>`;
+          }
+        }
+
+        if (titleTextarea) titleTextarea.value = task.title || "";
+        if (descTextarea) descTextarea.value = task.description || "";
         if (statusSelect) {
           statusSelect.value = task.status;
           statusSelect.setAttribute("data-task-id", task.id);
         }
-
-        // Gán Assignee động trực tiếp từ ID Database
         if (assigneeSelect) {
+          // Gán trực tiếp bằng ID (số nguyên) của người dùng được lưu trong Database (ví dụ: 1, 2)
+          // Nếu công việc chưa được gán cho ai, tự động chọn option đầu tiên (Unassigned)
           assigneeSelect.value = task.assignee_id || "";
         }
-
         if (githubInput) {
-          githubInput.value = task.github_repo_url || "";
+          githubInput.value = task.github_branch_url || "";
         }
 
-        if (projectHeader) {
-          projectHeader.textContent = `${task.issue_key} / Chi tiết công việc`;
+        // Nạp checklist subtasks
+        let subtasksHtml = "";
+        let completedCount = 0;
+
+        if (task.subtasks && task.subtasks.length > 0) {
+          task.subtasks.forEach((sub) => {
+            const isDone = sub.status === "done";
+            if (isDone) completedCount++;
+
+            subtasksHtml += `
+                        <div class="d-flex align-items-center mb-2">
+                            <input class="form-check-input me-2 shadow-none" type="checkbox" ${isDone ? "checked" : ""} disabled>
+                            <span class="${isDone ? "text-secondary text-decoration-line-through" : "text-dark fw-medium"}" style="font-size: 0.9rem;">${sub.title}</span>
+                        </div>
+                    `;
+          });
+
+          // Cập nhật badge và thanh tiến trình
+          if (subtaskBadgeCount)
+            subtaskBadgeCount.innerText = `${completedCount} / ${task.subtasks.length}`;
+          if (subtaskProgressBar)
+            subtaskProgressBar.style.width = `${(completedCount / task.subtasks.length) * 100}%`;
+        } else {
+          subtasksHtml =
+            '<div class="text-muted small py-1">Không có sub-task nào.</div>';
+          if (subtaskBadgeCount) subtaskBadgeCount.innerText = "0 / 0";
+          if (subtaskProgressBar) subtaskProgressBar.style.width = "0%";
         }
+        if (subtaskList) subtaskList.innerHTML = subtasksHtml;
 
         // Kích hoạt hiển thị Modal Bootstrap 5
         const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
         modalInstance.show();
       })
-      .catch((error) => {
-        console.error("[TaskSync] Error loading details:", error);
-        alert("Có lỗi xảy ra khi tải dữ liệu công việc.");
+      .catch((err) => {
+        console.error("[TaskSync] Error loading details:", err);
+        if (titleTextarea) titleTextarea.value = "Lỗi tải thông tin!";
+        if (descTextarea)
+          descTextarea.value = "Không thể kết nối đến server để lấy mô tả.";
+        if (subtaskList)
+          subtaskList.innerHTML =
+            '<div class="text-danger small py-1">Lỗi tải danh sách sub-tasks.</div>';
       });
   }
-  window.openTaskDetailModal = openTaskDetailModal;
 
   // Lắng nghe sự kiện thay đổi Trạng thái (Status) ngay trong Modal
   document.addEventListener("change", function (e) {
@@ -429,13 +492,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Đồng bộ thay đổi lên máy chủ
         updateTaskStatus(taskId, newStatus);
-      } else {
-        // Cập nhật lên máy chủ và reload nếu ở trang danh sách
-        updateTaskStatus(taskId, newStatus);
       }
     }
   });
-
   // ==============================================================
   // 4. LẮNG NGHE SỰ KIỆN THAY ĐỔI NGƯỜI GÁN TRONG MODAL & LƯU DB
   // ==============================================================
@@ -506,10 +565,6 @@ document.addEventListener("DOMContentLoaded", function () {
               "data-assignee",
               assigneeId ? cleanedName : "Unassigned",
             );
-          } else {
-            if (!document.querySelector(".kanban-board-wrapper")) {
-              location.reload();
-            }
           }
         } else {
           alert("Không thể lưu người thực hiện mới, vui lòng thử lại.");
@@ -523,8 +578,54 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
+  // LẮNG NGHE SỰ KIỆN CLICK NÚT XÓA TASK TRONG MODAL CHI TIẾT
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "btnDeleteTask" || e.target.closest("#btnDeleteTask")) {
+      const statusSelect = document.getElementById("modalStatusSelect");
+      const taskId = statusSelect
+        ? statusSelect.getAttribute("data-task-id")
+        : null;
+
+      if (
+        taskId &&
+        confirm(
+          "CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn công việc này? Hành động này không thể hoàn tác!",
+        )
+      ) {
+        fetch(`${baseUrl}/task/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({ task_id: taskId }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              console.log(`[TaskSync] Đã xóa thành công Task ${taskId}`);
+
+              // Đóng modal chi tiết công việc lại
+              const modalElement = document.getElementById("taskDetailModal");
+              const modalInstance = bootstrap.Modal.getInstance(modalElement);
+              if (modalInstance) modalInstance.hide();
+
+              // Xóa nóng thẻ Card trên màn hình hoặc reload nhẹ lại trang
+              location.reload();
+            } else {
+              alert("Không thể xóa công việc này lúc này.");
+            }
+          })
+          .catch((error) => {
+            console.error("[TaskSync] Delete Fetch error:", error);
+            alert("Lỗi kết nối mạng khi thực hiện xóa.");
+          });
+      }
+    }
+  });
+
   // ==============================================================
-  // 5. BỘ LỌC KANBAN DỰA TRÊN THÀNH VIÊN, ĐỘ ƯU TIÊN, LOẠI HÌNH
+  // 5. BỘ LỌC THÔNG TIN (FILTER) TRÊN BẢNG KANBAN
   // ==============================================================
   const filterAssignee = document.getElementById("filterAssignee");
   const filterPriority = document.getElementById("filterPriority");
@@ -532,20 +633,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function applyKanbanFilters() {
     const selectedAssignee = filterAssignee ? filterAssignee.value : "all";
-    const selectedPriority = filterPriority
-      ? filterPriority.value.toUpperCase()
-      : "all";
-    const selectedType = filterType ? filterType.value.toLowerCase() : "all";
+    const selectedPriority = filterPriority ? filterPriority.value : "all";
+    const selectedType = filterType ? filterType.value : "all";
     const kanbanCards = document.querySelectorAll(".kanban-item-card");
 
     kanbanCards.forEach((card) => {
       const cardAssignee = card.getAttribute("data-assignee") || "Unassigned";
-      const cardPriority = (
-        card.getAttribute("data-priority") || ""
-      ).toUpperCase();
-      const cardType = (card.getAttribute("data-type") || "").toLowerCase();
+      const cardPriority = card.getAttribute("data-priority") || "";
+      const cardType = card.getAttribute("data-type") || "";
 
-      // Kiểm tra điều kiện so khớp (Đã xử lý chữ hoa/thường tránh Silent Bug)
+      // Kiểm tra điều kiện so khớp
       const matchAssignee =
         selectedAssignee === "all" || cardAssignee === selectedAssignee;
       const matchPriority =
@@ -553,10 +650,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const matchType = selectedType === "all" || cardType === selectedType;
 
       if (matchAssignee && matchPriority && matchType) {
-        card.style.setProperty("display", "block", "important");
+        card.style.display = "block";
         card.classList.remove("d-none");
       } else {
-        card.style.setProperty("display", "none", "important");
+        card.style.display = "none";
         card.classList.add("d-none");
       }
     });
@@ -583,11 +680,13 @@ document.addEventListener("DOMContentLoaded", function () {
     mobileToggleBtn.addEventListener("click", function () {
       mobileSidebar.classList.add("show-mobile");
       mobileOverlay.classList.add("show");
+      document.body.style.overflow = "hidden"; // Khóa cuộn trang
     });
 
     mobileOverlay.addEventListener("click", function () {
       mobileSidebar.classList.remove("show-mobile");
       mobileOverlay.classList.remove("show");
+      document.body.style.overflow = ""; // Mở khóa cuộn trang
     });
 
     // Đóng sidebar khi click nút mũi tên thu gọn bên trong
@@ -596,7 +695,118 @@ document.addEventListener("DOMContentLoaded", function () {
       sidebarCloseBtn.addEventListener("click", function () {
         mobileSidebar.classList.remove("show-mobile");
         mobileOverlay.classList.remove("show");
+        document.body.style.overflow = ""; // Mở khóa cuộn trang nền
       });
     }
+  }
+
+  // ==============================================================
+  // 7. XỬ LÝ GỬI VÀ NHẬN BÌNH LUẬN TRONG CHI TIẾT CÔNG VIỆC
+  // ==============================================================
+  const submitCommentBtn = document.getElementById("submitCommentBtn");
+  const newCommentInput = document.getElementById("newCommentInput");
+
+  if (submitCommentBtn && newCommentInput) {
+    submitCommentBtn.addEventListener("click", function () {
+      sendComment();
+    });
+
+    newCommentInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendComment();
+      }
+    });
+  }
+
+  function sendComment() {
+    const statusSelect = document.getElementById("modalStatusSelect");
+    const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
+    const content = newCommentInput.value.trim();
+
+    if (!taskId || !content) return;
+
+    submitCommentBtn.disabled = true;
+
+    fetch(`${baseUrl}/task/addComment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: JSON.stringify({
+        task_id: taskId,
+        content: content,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Không thể gửi bình luận");
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success && data.comment) {
+          newCommentInput.value = "";
+          
+          const commentsList = document.getElementById("modalCommentsList");
+          if (commentsList) {
+            if (commentsList.innerHTML.includes("Chưa có bình luận nào")) {
+              commentsList.innerHTML = "";
+            }
+            commentsList.appendChild(createCommentElement(data.comment));
+            commentsList.scrollTop = commentsList.scrollHeight;
+          }
+        } else {
+          alert("Lỗi khi gửi bình luận, vui lòng thử lại.");
+        }
+      })
+      .catch((error) => {
+        console.error("[TaskSync] Send comment error:", error);
+        alert("Lỗi kết nối mạng khi gửi bình luận.");
+      })
+      .finally(() => {
+        submitCommentBtn.disabled = false;
+      });
+  }
+
+  function createCommentElement(c) {
+    const div = document.createElement("div");
+    div.className = "p-3 rounded-3";
+    div.style.backgroundColor = "#f8fafc";
+    div.style.border = "1px solid #e2e8f0";
+    
+    let timeStr = "";
+    if (c.created_at) {
+      const date = new Date(c.created_at);
+      if (!isNaN(date.getTime())) {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        timeStr = `${hours}:${minutes} ${day}/${month}`;
+      } else {
+        timeStr = c.created_at.substring(11, 16) || "";
+      }
+    }
+
+    const name = c.user_full_name ? c.user_full_name.trim() : c.username;
+    
+    div.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="fw-bold text-dark" style="font-size: 0.88rem;">${escapeHtml(name)}</span>
+        <span class="text-muted" style="font-size: 0.75rem;">${timeStr}</span>
+      </div>
+      <div class="text-secondary" style="font-size: 0.85rem; white-space: pre-wrap; word-break: break-word;">${escapeHtml(c.content)}</div>
+    `;
+    return div;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 });

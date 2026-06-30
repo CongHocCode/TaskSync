@@ -27,16 +27,17 @@
         <!-- Overlay cho Sidebar di động -->
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-        <!-- Sidebar chung -->
-        <?php 
-        // Nếu là Admin thì nạp menu Admin, ngược lại nạp menu làm việc thường
-        if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin') {
+        <?php
+        $normalizedView = isset($view) ? str_replace('\\', '/', $view) : '';
+        // Nhận diện chuẩn xác cả trường hợp nằm trong thư mục admin/ hoặc file cụ thể là dashboard/admin
+        $isAdminPage = (strpos($normalizedView, 'admin/') !== false || strpos($normalizedView, 'dashboard/admin') !== false);
+
+        if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin' && $isAdminPage) {
             require_once __DIR__ . '/partials/sidebar_admin.php';
         } else {
             require_once __DIR__ . '/partials/sidebar.php';
-        } 
+        }
         ?>
-
         <!-- Main area uses a light theme to match screenshot */ -->
         <div class="app-main light">
             <!-- Header chung -->

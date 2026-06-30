@@ -1,10 +1,14 @@
 <div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <div class="modal-header border-bottom-0 pt-4 px-4 pb-2">
-                <div class="text-muted fw-medium small">DỰ ÁN / <span class="text-dark fw-bold">WEB-V2</span></div>
-                <button type="button" class="btn text-secondary fw-semibold seamless-input w-auto" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg"></i> Close
+            <div class="modal-header border-bottom-0 pt-4 px-4 pb-2 position-relative">
+                <div class="text-muted fw-medium small">DỰ ÁN / <span class="text-dark fw-bold" id="modalProjectName">WEB-V2</span></div>
+                <button type="button" class="btn d-flex align-items-center justify-content-center p-0 rounded-circle border shadow-sm" data-bs-dismiss="modal" 
+                        style="width: 36px; height: 36px; background-color: #fff; border-color: #cbd5e1 !important; transition: all 0.2s; position: absolute; right: 24px; top: 20px; z-index: 1051;"
+                        onmouseover="this.style.backgroundColor='#f1f5f9'; this.style.transform='scale(1.08)';" 
+                        onmouseout="this.style.backgroundColor='#fff'; this.style.transform='scale(1)';"
+                        title="Đóng chi tiết công việc">
+                    <i class="bi bi-x-lg" style="color: #4b5563; font-size: 1.1rem; -webkit-text-stroke: 0.5px;"></i>
                 </button>
             </div>
             <div class="modal-body p-4 pt-2">
@@ -39,6 +43,25 @@
                             <div class="mt-2 input-group">
                                 <input type="text" id="newSubtaskInput" class="form-control seamless-input py-2" style="border: 1px solid #cbd5e1 !important;" placeholder="Thêm sub-task mới và bấm Enter...">
                                 <button id="addSubtaskBtn" class="btn btn-light border text-secondary fw-semibold px-3">+ Thêm</button>
+                            </div>
+                        </div>
+
+                        <!-- BÌNH LUẬN TRAO ĐỔI -->
+                        <hr class="border-secondary-subtle my-4 opacity-50">
+                        <div class="mb-4">
+                            <label class="text-muted fw-bold small mb-3 ps-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">BÌNH LUẬN TRAO ĐỔI</label>
+                            
+                            <!-- Danh sách bình luận -->
+                            <div id="modalCommentsList" class="mb-3" style="max-height: 320px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 12px;">
+                                <!-- Được nạp động từ JS -->
+                            </div>
+
+                            <!-- Nhập bình luận mới -->
+                            <div class="d-flex gap-2 mt-3 align-items-center">
+                                <textarea id="newCommentInput" class="form-control py-2 px-3 bg-white" rows="1" style="border: 1px solid #cbd5e1 !important; border-radius: 8px; resize: none;" placeholder="Viết bình luận hoặc trao đổi..."></textarea>
+                                <button id="submitCommentBtn" class="btn btn-outline-primary fw-bold px-3 py-2 d-flex align-items-center gap-2" style="border-radius: 8px; height: 38px;">
+                                    <i class="bi bi-send-fill"></i> <span>Gửi</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -85,7 +108,7 @@
                             </div>
 
                             <hr class="border-secondary-subtle my-4 opacity-50">
-                            <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" style="background-color: #fff1f2; color: #e11d48; border-radius: 8px;">
+                            <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" id="btnDeleteTask" style="background-color: #fff1f2; color: #e11d48; border-radius: 8px;">
                                 <i class="bi bi-trash3"></i> XÓA CÔNG VIỆC
                             </button>
                         </div>

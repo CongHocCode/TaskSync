@@ -72,4 +72,32 @@ class UserModel
         $stmt = $this->db->pdo->query("SELECT * FROM users ORDER BY id DESC");
         return $stmt->fetchAll();
     }
+
+    // Xóa nhân sự và giải quyết các khóa ngoại liên quan
+    public function delete($id, $adminId)
+    {
+        try {
+            $this->db->pdo->beginTransaction();
+
+            // 1. Cập nhật assignee_id của các task được giao cho user này thành NULL
+            $stmt1 = $this->db->pdo->prepare("UPDATE issues SET assignee_id = NULL WHERE assignee_id = ?");
+            $stmt1->execute([$id]);
+
+            // 2. Cập nhật reporter_id của các task do user này tạo thành Admin thực hiện xóa
+            $stmt2 = $this->db->pdo->prepare("UPDATE issues SET reporter_id = ? WHERE reporter_id = ?");
+            $stmt2->execute([$adminId, $id]);
+
+            // 3. Xóa user (nút cascade sẽ tự động xóa các bản ghi liên quan ở projects, project_members, comments)
+            $stmt3 = $this->db->pdo->prepare("DELETE FROM users WHERE id = ?");
+            $result = $stmt3->execute([$id]);
+
+            $this->db->pdo->commit();
+            return $result;
+        } catch (Exception $e) {
+            if ($this->db->pdo->inTransaction()) {
+                $this->db->pdo->rollBack();
+            }
+            return false;
+        }
+    }
 }
