@@ -380,4 +380,71 @@ class ProjectModel
             'user_id'    => $userId
         ]);
     }
+
+    // Lấy danh sách toàn bộ dự án kèm thông tin Owner, số thành viên, số tasks (cho admin)
+    public function getAllProjectsWithCounts()
+    {
+        $sql = "SELECT p.*, 
+                       u.first_name, u.last_name, u.username, u.avatar_url,
+                       (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) AS member_count,
+                       (SELECT COUNT(*) FROM issues WHERE project_id = p.id) AS task_count
+                FROM projects p
+                LEFT JOIN users u ON p.owner_id = u.id
+                ORDER BY p.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Đổi chủ sở hữu (Owner) của dự án
+    public function changeProjectOwner($projectId, $newOwnerId)
+    {
+        try {
+            $this->db->beginTransaction();
+
+            // 1. Cập nhật owner_id trong bảng projects
+            $sql = "UPDATE projects SET owner_id = :new_owner_id WHERE id = :project_id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'new_owner_id' => $newOwnerId,
+                'project_id'   => $projectId
+            ]);
+
+            // 2. Đảm bảo new owner là member của dự án với vai trò 'manager' và status 'active'
+            $sqlMember = "INSERT INTO project_members (project_id, user_id, role, status) 
+                          VALUES (:project_id, :user_id, 'manager', 'active')
+                          ON DUPLICATE KEY UPDATE role = 'manager', status = 'active'";
+            $stmtMember = $this->db->prepare($sqlMember);
+            $stmtMember->execute([
+                'project_id' => $projectId,
+                'user_id'    => $newOwnerId
+            ]);
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+    // Lấy tất cả thành viên hoạt động của tất cả các dự án, gom nhóm theo project_id
+    public function getAllActiveProjectMembersGrouped()
+    {
+        $sql = "SELECT pm.project_id, u.id as user_id, u.username, u.first_name, u.last_name, u.role
+                FROM project_members pm
+                JOIN users u ON pm.user_id = u.id
+                WHERE pm.status = 'active'
+                ORDER BY u.first_name ASC, u.last_name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[$row['project_id']][] = $row;
+        }
+        return $grouped;
+    }
 }
+
