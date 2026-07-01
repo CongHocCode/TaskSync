@@ -29,18 +29,6 @@ class Project extends Controller
         $this->view('pages/projects/index', $data);
     }
 
-    // Dự án của người dùng hiện tại
-    public function myProjects()
-    {
-        $userId = $_SESSION['user']['id']; // Lấy ID của user đang đăng nhập từ Session
-
-        $data['page_title'] = "Dự án của tôi";
-        // Gọi model lấy danh sách dự án mà user này tham gia
-        $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
-
-        $this->view('pages/workspace/my_projects', $data);
-    }
-
     // Hàm tạo dự án mới (Cả hiển thị form và xử lý lưu data)
     public function create()
     {

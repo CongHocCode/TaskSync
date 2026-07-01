@@ -182,9 +182,10 @@ class TaskModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy TẤT CẢ công việc của user (kể cả done - dùng cho trang My Tasks đầy đủ)
-    public function getAllIssuesByUserId($userId)
+    // Lấy TẤT CẢ công việc của user (kể cả done - có tích hợp Tìm kiếm động)
+    public function getAllIssuesByUserId($userId, $search = '')
     {
+        // Khai báo phần khung truy vấn cơ bản
         $sql = "SELECT i.*, 
                        p.key AS project_key,
                        p.name AS project_name,
@@ -195,8 +196,18 @@ class TaskModel
                 FROM issues i
                 LEFT JOIN projects p ON i.project_id = p.id
                 LEFT JOIN users u2 ON i.reporter_id = u2.id
-                WHERE i.assignee_id = :user_id
-                ORDER BY CASE i.status
+                WHERE i.assignee_id = :user_id";
+
+        $params = ['user_id' => $userId];
+
+        // Nếu có từ khóa tìm kiếm, tự động nối thêm điều kiện lọc trong SQL [210]
+        if (!empty($search)) {
+            $sql .= " AND (i.title LIKE :search OR i.issue_key LIKE :search OR i.description LIKE :search)";
+            $params['search'] = "%$search%";
+        }
+
+        // Ghép nối mệnh đề sắp xếp ưu tiên nâng cao
+        $sql .= " ORDER BY CASE i.status
                             WHEN 'in_progress' THEN 1
                             WHEN 'in_review' THEN 2
                             WHEN 'todo' THEN 3
@@ -211,8 +222,9 @@ class TaskModel
                             ELSE 5 
                          END,
                          i.due_date ASC, i.created_at DESC";
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['user_id' => $userId]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
