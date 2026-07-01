@@ -36,27 +36,6 @@ class Task extends Controller
         $this->view('pages/tasks/kanban', $data);
     }
 
-    public function myTasks()
-    {
-        $userId = $_SESSION['user']['id'];
-
-        // Lấy tất cả công việc được gán cho user hiện tại
-        $tasks = $this->taskModel->getAllIssuesByUserId($userId);
-
-        // Thống kê nhanh
-        $stats = [
-            'total'       => count($tasks),
-            'todo'        => count(array_filter($tasks, fn($t) => $t['status'] === 'todo')),
-            'in_progress' => count(array_filter($tasks, fn($t) => $t['status'] === 'in_progress')),
-            'in_review'   => count(array_filter($tasks, fn($t) => $t['status'] === 'in_review')),
-            'done'        => count(array_filter($tasks, fn($t) => $t['status'] === 'done')),
-        ];
-
-        $data['page_title'] = "Công việc của tôi";
-        $data['tasks']      = $tasks;
-        $data['stats']      = $stats;
-        $this->view('pages/workspace/my_tasks', $data);
-    }
 
     public function create()
     {

@@ -299,14 +299,14 @@ button {
 /* Slight spacing and typography tweaks to match screenshot */
 .header-actions .app-btn span { font-weight: 700; }
 .app-card { border-radius: 16px; }
-.app-header { padding: 18px 28px; }
+.app-header { padding: 8px 20px; }
 .sidebar-brand h1 { font-size: 1.15rem; }
 
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 32px;
+    padding: 8px 20px;
     background: var(--surface);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
@@ -323,24 +323,24 @@ button {
 .header-session {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem; 
     color: var(--text);
 }
 
 .header-session i {
-    font-size: 1.3rem;
+    font-size: 1.15rem; 
     color: var(--accent);
 }
 
 .session-label {
-    font-size: 0.85rem;
+    font-size: 0.65rem; 
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
 
 .session-user {
-    font-size: 1rem;
+    font-size: 0.82rem; 
     font-weight: 600;
 }
 
@@ -363,15 +363,19 @@ button {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 999px;
-    padding: 0.3rem 0.75rem;
+    padding: 0.2rem 0.75rem;
+    height: 34px;
+    max-width: 250px;
 }
 
 .app-input {
-    min-width: 220px;
+    min-width: unset !important;
+    width: 100%;
     background: transparent;
     border: none;
     color: var(--text);
-    padding: 0.72rem 0.7rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.82rem;
     outline: none;
 }
 
@@ -636,11 +640,12 @@ button {
 }
 
 .app-footer {
-    padding: 18px 32px;
+    padding: 10px 24px;
     text-align: center;
     color: var(--muted);
     background: var(--surface-alt);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.8rem;
 }
 
 .app-form-group {
@@ -951,6 +956,57 @@ textarea {
 /* 📱 Điểm bẻ Responsive: Thiết bị di động dưới 768px */
 @media (max-width: 767.98px) {
     /* Thu nhỏ các thành phần trên header để không bị tràn màn hình */
+    .sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        margin-top: auto;
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .user-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .user-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .user-role {
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .user-menu-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 1rem;
+        transition: color 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .user-menu-btn:hover {
+        color: var(--accent);
+    }
+
     .session-label {
         display: none !important; /* Ẩn chữ Admin Session */
     }
@@ -1125,4 +1181,65 @@ textarea {
 
 .user-menu-btn:hover {
     color: var(--accent);
+}
+
+/* ==============================================================
+   BỔ SUNG HIỆU ỨNG TƯƠNG TÁC CHO TRANG DASHBOARD & KANBAN 
+   ============================================================== */
+.interactive-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.interactive-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(112, 126, 174, 0.18) !important;
+}
+
+.interactive-item {
+    transition: background-color 0.2s ease, padding-left 0.2s ease;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+.interactive-item:hover {
+    background-color: rgba(67, 24, 255, 0.04) !important;
+    padding-left: 8px !important;
+}
+
+/* Thu nhỏ padding và cỡ chữ của ô nhập liệu bên trong thanh tìm kiếm */
+.search-wrapper .app-input {
+    padding: 2px 4px !important;
+    height: 100% !important;
+    font-size: 0.8rem !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    color: #0b1220 !important;
+}
+
+/* Ép nút tìm kiếm (mang class app-btn) thu nhỏ bên trong khung */
+.search-wrapper .app-btn,
+.search-wrapper button {
+    padding: 0 !important; /* Loại bỏ padding lớn mặc định */
+    width: 26px !important; /* Khống chế kích thước nhỏ gọn */
+    height: 26px !important;
+    min-height: unset !important;
+    border-radius: 50% !important;
+    background: transparent !important; /* Trong suốt */
+    border: none !important;
+    color: var(--muted) !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none !important;
+    transform: none !important;
+    flex-shrink: 0;
+}
+
+/* Hiệu ứng khi rê chuột vào nút tìm kiếm */
+.search-wrapper .app-btn:hover,
+.search-wrapper button:hover {
+    color: var(--text) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
 }

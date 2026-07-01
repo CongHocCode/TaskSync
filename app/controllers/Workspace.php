@@ -1,42 +1,68 @@
 <?php
 class Workspace extends Controller {
-    public function index() {
+    private $taskModel;
+    private $projectModel;
+
+    public function __construct()
+    {
+        // Yêu cầu đăng nhập mới được vào
         if (!isset($_SESSION['user'])) {
             redirect('auth');
+            exit();
         }
 
-        // // Nếu là admin thì chuyển hướng sang dashboard của admin
-        // if ($_SESSION['user']['role'] === 'admin') {
-        //     redirect('admin/dashboard');
-        //     exit();
-        // }
+        $this->projectModel = $this->model('ProjectModel');
+        $this->taskModel = $this->model('TaskModel');
+    }
 
+    // Dashboard tổng hợp cá nhân
+    public function index() {
         $userId = $_SESSION['user']['id'];
-        $taskModel = $this->model('TaskModel');
-        $projectModel = $this->model('ProjectModel');
 
         $data['page_title'] = "Dashboard tổng hợp";
-        $data['assigned_issues'] = $taskModel->getAssignedIssuesByUserId($userId);
-        $data['my_projects'] = $projectModel->getProjectsWithCountsByUserId($userId);
+        $data['assigned_issues'] = $this->taskModel->getAssignedIssuesByUserId($userId);
+        $data['my_projects'] = $this->projectModel->getProjectsWithCountsByUserId($userId);
 
         $this->view('pages/dashboard/member', $data);
     }
 
-    public function overview() {
-        if (!isset($_SESSION['user'])) {
-            redirect('auth');
-        }
+    // Danh sách công việc cá nhân có tìm kiếm động
+    public function myTasks()
+    {
+        $userId = $_SESSION['user']['id'];
 
-        $data['page_title'] = "Tổng quan Workspace";
-        $this->view('pages/workspace/overview', $data);
+        //  Đọc từ khóa 'q' trước khi gọi Model để thực hiện chức năng tìm kiếm
+        $search = trim($_GET['q'] ?? ''); 
+
+        $tasks = $this->taskModel->getAllIssuesByUserId($userId, $search);
+
+        // Thống kê nhanh tự động tính theo danh sách sau khi đã lọc từ khóa
+        $stats = [
+            'total'       => count($tasks),
+            'todo'        => count(array_filter($tasks, fn($t) => $t['status'] === 'todo')),
+            'in_progress' => count(array_filter($tasks, fn($t) => $t['status'] === 'in_progress')),
+            'in_review'   => count(array_filter($tasks, fn($t) => $t['status'] === 'in_review')),
+            'done'        => count(array_filter($tasks, fn($t) => $t['status'] === 'done')),
+        ];
+
+        $data = [
+            'page_title' => "Công việc của tôi",
+            'tasks'      => $tasks,
+            'stats'      => $stats,
+            'search'     => $search // Truyền từ khóa sang View
+        ];
+
+        $this->view('pages/workspace/my_tasks', $data);
     }
 
-    public function settings() {
-        if (!isset($_SESSION['user'])) {
-            redirect('auth');
-        }
+    // Dự án của người dùng hiện tại
+    public function myProjects()
+    {
+        $userId = $_SESSION['user']['id']; 
 
-        $data['page_title'] = "Cài đặt Workspace";
-        $this->view('pages/workspace/settings', $data);
+        $data['page_title'] = "Dự án của tôi";
+        $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
+
+        $this->view('pages/workspace/my_projects', $data);
     }
 }
