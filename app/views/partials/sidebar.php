@@ -18,6 +18,7 @@ $userProjects = $userId ? $projectModel->getProjectsOrderedForSidebar($userId) :
 
 $activeProject = null;
 $isManager = false;
+$isAdmin = $userSession['role'] === 'admin';
 $otherProjects = [];
 
 // Xác định dự án đang được hiển thị chính trên sidebar
@@ -262,7 +263,7 @@ if ($activeProject) {
                     <span>Thành viên Dự án</span>
                 </a>
                 <!-- Chỉ hiển thị nút Cấu hình nếu là Manager -->
-                <?php if ($isManager): ?>
+                <?php if ($isManager || $isAdmin): ?>
                     <a href="<?= $settingsUrl ?>" class="sidebar-link">
                         <i class="bi bi-gear-fill"></i>
                         <span>Cấu hình dự án</span>
