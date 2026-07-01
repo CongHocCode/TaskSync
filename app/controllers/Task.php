@@ -63,6 +63,29 @@ class Task extends Controller
         // Tạo task mới
         $data['page_title'] = "Tạo Issue mới";
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $projectId = $_POST['project_id'] ?? null;
+            $type = $_POST['type'] ?? 'task';
+            $userId = $_SESSION['user']['id'];
+
+            // Kiểm tra quyền hạn trước khi tạo task
+            $projectModel = $this->model('ProjectModel');
+            $userProjectRole = $projectModel->getProjectUserRole($projectId, $userId);
+            $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+
+            // Viewer hoặc không thuộc dự án -> không có quyền
+            if (!$isAdmin && $userProjectRole !== 'manager' && $userProjectRole !== 'member') {
+                $_SESSION['flash_error'] = "Bạn không có quyền tạo công việc trong dự án này.";
+                redirect('project/myProjects');
+                exit();
+            }
+
+            // Member chỉ được tạo task thường và bug
+            if (!$isAdmin && $userProjectRole === 'member' && !in_array($type, ['task', 'bug'])) {
+                $_SESSION['flash_error'] = "Thành viên thường chỉ được quyền tạo task thường và bug.";
+                redirect('project/kanban/' . $projectId);
+                exit();
+            }
+
             // Xử lý due_date: chỉ lưu nếu hợp lệ và lớn hơn thời điểm hiện tại
             $dueDateRaw = trim($_POST['due_date'] ?? '');
             $dueDate = null;
@@ -74,14 +97,14 @@ class Task extends Controller
             }
 
             $data = [
-                'project_id'  => $_POST['project_id'] ?? null,
+                'project_id'  => $projectId,
                 'title'       => trim($_POST['title'] ?? ''),
                 'description' => trim($_POST['description'] ?? ''),
-                'type'        => $_POST['type'] ?? 'task',
+                'type'        => $type,
                 'priority'    => $_POST['priority'] ?? 'MEDIUM',
                 'assignee_id' => $_POST['assignee_id'] ?? null,
                 'due_date'    => $dueDate,
-                'reporter_id' => $_SESSION['user']['id'] // Người tạo chính là người đang login
+                'reporter_id' => $userId // Người tạo chính là người đang login
             ];
 
             if ($data['project_id'] && !empty($data['title'])) {
@@ -109,6 +132,18 @@ class Task extends Controller
             $taskId = $input['task_id'] ?? null;
 
             if ($taskId) {
+                // Phân quyền xóa Task
+                $userId = $_SESSION['user']['id'];
+                $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+                $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
+                $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
+
+                if (!$isAdmin && $userProjectRole !== 'manager') {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'error' => 'Bạn không có quyền xóa công việc này.']);
+                    exit();
+                }
+
                 $taskModel = $this->model('TaskModel');
                 $success = $taskModel->deleteTask($taskId);
 
@@ -152,14 +187,16 @@ class Task extends Controller
         $projectId = $this->taskModel->getProjectIdByTaskId($id);
 
         // 2. Kiểm tra tư cách thành viên dự án
-        $isMember = $this->projectModel->isProjectMember($projectId, $_SESSION['user']['id']);
+        $userRoleInProject = $this->projectModel->getProjectUserRole($projectId, $_SESSION['user']['id']);
         $isAdmin = ($_SESSION['user']['role'] === 'admin');
 
-        if (!$isMember && !$isAdmin) {
+        if (!$userRoleInProject && !$isAdmin) {
             header('HTTP/1.1 403 Forbidden');
             echo json_encode(['success' => false, 'error' => 'Bạn không có quyền truy cập công việc này.']);
             exit();
         }
+        
+        $task['current_user_role'] = $isAdmin ? 'admin' : $userRoleInProject;
 
         // Lấy danh sách subtasks
         $subtasks = $this->taskModel->getSubtasksByTaskId($id);
@@ -168,6 +205,13 @@ class Task extends Controller
         // Lấy danh sách bình luận (Comments)
         $comments = $this->taskModel->getCommentsByTaskId($id);
         $task['comments'] = $comments;
+
+        // Lấy danh sách thành viên dự án để gán Assignee động
+        $members = $this->projectModel->getProjectMembers($projectId);
+        $activeMembers = array_filter($members ?? [], function ($m) {
+            return ($m['status'] ?? 'active') === 'active';
+        });
+        $task['project_members'] = array_values($activeMembers);
 
         echo json_encode($task);
         exit;
@@ -225,6 +269,30 @@ class Task extends Controller
             exit;
         }
 
+        // Phân quyền kéo thả
+        $userId = $_SESSION['user']['id'];
+        $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+        
+        $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
+        $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
+
+        if (!$isAdmin && $userProjectRole !== 'manager') {
+            if ($userProjectRole === 'viewer' || !$userProjectRole) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'error' => 'Bạn không có quyền thay đổi trạng thái công việc này.']);
+                exit;
+            }
+            
+            if ($userProjectRole === 'member') {
+                $taskDetails = $this->taskModel->getById($taskId);
+                if ($taskDetails['assignee_id'] != $userId) {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'error' => 'Thành viên chỉ được quyền thay đổi trạng thái của công việc được giao cho mình.']);
+                    exit;
+                }
+            }
+        }
+
         $success = $this->taskModel->updateStatus($taskId, $status);
 
         if ($success) {
@@ -245,8 +313,97 @@ class Task extends Controller
             $assigneeId = $input['assignee_id'] ?? null; // Có thể là null nếu chọn "Unassigned"
 
             if ($taskId) {
+                // Phân quyền sửa Assignee
+                $userId = $_SESSION['user']['id'];
+                $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+                $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
+                $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
+
+                if (!$isAdmin && $userProjectRole !== 'manager') {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'error' => 'Bạn không có quyền thay đổi người thực hiện.']);
+                    exit();
+                }
+
                 $taskModel = $this->model('TaskModel');
                 $success = $taskModel->updateTaskAssignee($taskId, $assigneeId);
+
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $success]);
+                exit();
+            }
+        }
+        header('HTTP/1.1 400 Bad Request');
+        echo json_encode(['success' => false, 'error' => 'Yêu cầu không hợp lệ']);
+        exit();
+    }
+
+    public function updateDueDate()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            $taskId = $input['task_id'] ?? null;
+            $dueDate = $input['due_date'] ?? null;
+
+            if ($taskId) {
+                // Phân quyền sửa Due Date
+                $userId = $_SESSION['user']['id'];
+                $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+                $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
+                $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
+
+                if (!$isAdmin && $userProjectRole !== 'manager') {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'error' => 'Bạn không có quyền thay đổi hạn hoàn thành.']);
+                    exit();
+                }
+
+                $taskModel = $this->model('TaskModel');
+                $success = $taskModel->updateDueDate($taskId, $dueDate);
+
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $success]);
+                exit();
+            }
+        }
+        header('HTTP/1.1 400 Bad Request');
+        echo json_encode(['success' => false, 'error' => 'Yêu cầu không hợp lệ']);
+        exit();
+    }
+
+    public function updateType()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            $taskId = $input['task_id'] ?? null;
+            $type = $input['type'] ?? null;
+
+            $validTypes = ['epic', 'story', 'task', 'bug'];
+            if ($taskId && in_array($type, $validTypes)) {
+                // Phân quyền sửa Type
+                $userId = $_SESSION['user']['id'];
+                $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+                $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
+                $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
+
+                if (!$isAdmin && $userProjectRole !== 'manager') {
+                    if ($userProjectRole === 'viewer' || !$userProjectRole) {
+                        http_response_code(403);
+                        echo json_encode(['success' => false, 'error' => 'Bạn không có quyền thay đổi loại công việc.']);
+                        exit();
+                    }
+                    if ($userProjectRole === 'member') {
+                        if ($type !== 'task' && $type !== 'bug') {
+                            http_response_code(403);
+                            echo json_encode(['success' => false, 'error' => 'Thành viên chỉ được quyền đổi sang loại Task hoặc Bug.']);
+                            exit();
+                        }
+                    }
+                }
+
+                $success = $this->taskModel->updateType($taskId, $type);
 
                 header('Content-Type: application/json');
                 echo json_encode(['success' => $success]);

@@ -246,6 +246,19 @@ class ProjectModel
         return $result && strtolower($result['role']) === 'manager';
     }
 
+    // Lấy vai trò của user trong dự án
+    public function getProjectUserRole($projectId, $userId)
+    {
+        $sql = "SELECT role FROM project_members WHERE project_id = :project_id AND user_id = :user_id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'project_id' => $projectId,
+            'user_id' => $userId
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? strtolower($result['role']) : null;
+    }
+
     public function isProjectMember($projectId, $userId)
     {
         // Chỉ cần chọn 1 cột bất kỳ và check xem có dòng active nào tồn tại không

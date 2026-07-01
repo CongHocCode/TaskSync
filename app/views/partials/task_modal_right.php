@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
             <div class="modal-header border-bottom-0 pt-4 px-4 pb-2 position-relative">
-                <div class="text-muted fw-medium small">DỰ ÁN / <span class="text-dark fw-bold" id="modalProjectName">WEB-V2</span></div>
+                <div class="text-muted fw-medium small">DỰ ÁN / <a href="#" class="text-dark fw-bold text-decoration-none" id="modalProjectName" style="transition: color 0.2s;" onmouseover="this.style.color='#4f46e5';" onmouseout="this.style.color='inherit';">WEB-V2</a></div>
                 <button type="button" class="btn d-flex align-items-center justify-content-center p-0 rounded-circle border shadow-sm" data-bs-dismiss="modal" 
                         style="width: 36px; height: 36px; background-color: #fff; border-color: #cbd5e1 !important; transition: all 0.2s; position: absolute; right: 24px; top: 20px; z-index: 1051;"
                         onmouseover="this.style.backgroundColor='#f1f5f9'; this.style.transform='scale(1.08)';" 
@@ -41,11 +41,15 @@
                             <div class="subtask-list"></div>
 
                             <div class="mt-2 input-group">
-                                <input type="text" id="newSubtaskInput" class="form-control seamless-input py-2" style="border: 1px solid #cbd5e1 !important;" placeholder="Thêm sub-task mới và bấm Enter...">
+                                <input type="text" id="newSubtaskInput" class="form-control seamless-input py-2" style="border: 1px solid #cbd5e1 !important; color:black !important;" placeholder="Thêm sub-task mới và bấm Enter...">
                                 <button id="addSubtaskBtn" class="btn btn-light border text-secondary fw-semibold px-3">+ Thêm</button>
                             </div>
                         </div>
-
+                        <style>
+                            #newSubtaskInput {
+                                color: black !important;
+                            }
+                        </style>
                         <!-- BÌNH LUẬN TRAO ĐỔI -->
                         <hr class="border-secondary-subtle my-4 opacity-50">
                         <div class="mb-4">
@@ -79,8 +83,18 @@
                             </div>
 
                             <div class="mb-4">
+                                <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">LOẠI CÔNG VIỆC (TYPE)</label>
+                                <select id="modalTypeSelect" class="form-select seamless-input text-dark fw-semibold" style="background-color: #fff; border: 1px solid #cbd5e1 !important;">
+                                    <option value="task">Task (Công việc thường)</option>
+                                    <option value="bug">Bug (Sửa lỗi)</option>
+                                    <option value="story">Story (Nghiệp vụ)</option>
+                                    <option value="epic">Epic (Tính năng lớn)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
                                 <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">NGƯỜI XỬ LÝ (ASSIGNEE)</label>
-                                <select class="form-select border-0 bg-transparent fw-bold text-dark" style="box-shadow: none;">
+                                <select id="modalAssigneeSelect" class="form-select border-0 bg-transparent fw-bold text-dark" style="box-shadow: none;">
                                     <option value="">Chưa phân công (Unassigned)</option>
                                     <!-- Do là một phần của trang kanban nên cũng sẽ có được ds members của kanban khi load -->
                                     <?php if (!empty($data['members'])): ?>
@@ -100,6 +114,16 @@
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">NGÀY TẠO (CREATED AT)</label>
+                                <input type="text" id="modalCreatedAtInput" class="form-control seamless-input text-dark fw-semibold bg-white border border-secondary-subtle" readonly style="border-color: #cbd5e1 !important; border-radius: 8px;" placeholder="Đang tải...">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">HẠN HOÀN THÀNH (DUE DATE)</label>
+                                <input type="datetime-local" id="modalDueDateInput" class="form-control seamless-input text-dark fw-semibold bg-white border border-secondary-subtle" style="border-color: #cbd5e1 !important; border-radius: 8px;">
                             </div>
 
                             <div class="mb-4">

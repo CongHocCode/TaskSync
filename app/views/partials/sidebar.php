@@ -18,6 +18,9 @@ $userProjects = $userId ? $projectModel->getProjectsOrderedForSidebar($userId) :
 
 $activeProject = null;
 $isManager = false;
+$userProjectRole = null;
+$isAdmin = ($userSession['role'] ?? '') === 'admin';
+$canCreateTask = $isAdmin; // Admin luôn có quyền tạo
 $otherProjects = [];
 
 // Xác định dự án đang được hiển thị chính trên sidebar
@@ -32,8 +35,10 @@ if (isset($data['project']) && !empty($data['project'])) {
 if ($activeProject) {
     $currentProjId = $activeProject['id'];
 
-    // Gọi CSDL kiểm tra quyền Manager
-    $isManager = $projectModel->isProjectManager($currentProjId, $userId);
+    // Gọi CSDL lấy vai trò thực tế của user trong dự án
+    $userProjectRole = $projectModel->getProjectUserRole($currentProjId, $userId);
+    $isManager = ($userProjectRole === 'manager');
+    $canCreateTask = $isAdmin || ($userProjectRole === 'manager' || $userProjectRole === 'member');
 
     // Lọc các dự án còn lại để đưa vào dropdown chuyển dự án
     $otherProjects = array_filter($userProjects, function ($p) use ($currentProjId) {
@@ -181,17 +186,19 @@ if ($activeProject) {
 
     <!-- Nút tạo issue mới -->
     <?php
-    // Nếu có dự án hiện hành, mở modal. Nếu chưa có, đẩy về trang tạo dự án
-    if ($activeProject) {
-        $issueTriggerAttr = 'data-bs-toggle="modal" data-bs-target="#createIssueModal" href="#"';
-    } else {
-        $issueTriggerAttr = 'href="' . BASE_URL . '/project/create"';
-    }
+    $showCreateBtn = !$activeProject || $canCreateTask;
+    if ($showCreateBtn):
+        // Nếu có dự án hiện hành, mở modal. Nếu chưa có, đẩy về trang tạo dự án
+        if ($activeProject) {
+            $issueTriggerAttr = 'data-bs-toggle="modal" data-bs-target="#createIssueModal" href="#"';
+        } else {
+            $issueTriggerAttr = 'href="' . BASE_URL . '/project/create"';
+        }
     ?>
-
-    <a <?= $issueTriggerAttr ?> class="app-btn app-btn-create-issue d-flex align-items-center justify-content-center gap-1 text-decoration-none">
-        <i class="bi bi-plus-lg"></i> Tạo Issue mới
-    </a>
+        <a <?= $issueTriggerAttr ?> class="app-btn app-btn-create-issue d-flex align-items-center justify-content-center gap-1 text-decoration-none">
+            <i class="bi bi-plus-lg"></i> Tạo Issue mới
+        </a>
+    <?php endif; ?>
 
     <div class="sidebar-section">
         <div class="sidebar-section-label">CÁ NHÂN</div>
@@ -291,7 +298,7 @@ if ($activeProject) {
 </aside>
 
 <!-- MODAL TẠO ISSUE MỚI -->
-<?php if ($activeProject):
+<?php if ($activeProject && $canCreateTask):
     // Lấy danh sách thành viên thực tế của dự án hiện tại để làm danh sách Assignee
     $projectMembers = $projectModel->getProjectMembers($activeProject['id']);
 ?>
@@ -319,8 +326,10 @@ if ($activeProject) {
                                 <select class="form-select border-secondary-subtle" name="type" required>
                                     <option value="task" selected>Task (Công việc thường)</option>
                                     <option value="bug">Bug (Sửa lỗi)</option>
-                                    <option value="story">Story (Nghiệp vụ)</option>
-                                    <option value="epic">Epic (Tính năng lớn)</option>
+                                    <?php if ($isAdmin || $userProjectRole === 'manager'): ?>
+                                        <option value="story">Story (Nghiệp vụ)</option>
+                                        <option value="epic">Epic (Tính năng lớn)</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div class="col-12 col-md-6">

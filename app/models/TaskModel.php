@@ -232,6 +232,17 @@ class TaskModel
         ]);
     }
 
+    // Cập nhật hạn hoàn thành của task
+    public function updateDueDate($taskId, $dueDate)
+    {
+        $sql = "UPDATE issues SET due_date = :due_date, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'due_date' => $dueDate ?: null,
+            'id' => $taskId
+        ]);
+    }
+
     // Lấy danh sách bình luận của một task kèm thông tin user
     public function getCommentsByTaskId($taskId)
     {
@@ -280,5 +291,16 @@ class TaskModel
     public function getLastInsertedId()
     {
         return $this->db->lastInsertId();
+    }
+
+    // Cập nhật loại công việc (type)
+    public function updateType($taskId, $type)
+    {
+        $sql = "UPDATE issues SET type = :type, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'type' => $type,
+            'id' => $taskId
+        ]);
     }
 }
