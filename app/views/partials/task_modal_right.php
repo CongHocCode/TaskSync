@@ -15,6 +15,12 @@
                 <div class="row g-5">
 
                     <div class="col-lg-8">
+                        <div id="modalMotherTaskDisplay" class="mb-2 d-none">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                <i class="bi bi-diagram-3-fill me-1"></i> Mother Task: 
+                                <a href="#" id="modalMotherTaskRef" class="text-primary text-decoration-none fw-bold"></a>
+                            </span>
+                        </div>
                         <div class="mb-4">
                             <textarea id="modalTaskTitle" class="form-control fw-bold text-dark seamless-input" rows="2" style="font-size: 1.4rem; resize: none;" placeholder="Nhập tên công việc..."></textarea>
                         </div>
@@ -40,16 +46,12 @@
 
                             <div class="subtask-list"></div>
 
-                            <div class="mt-2 input-group">
-                                <input type="text" id="newSubtaskInput" class="form-control seamless-input py-2" style="border: 1px solid #cbd5e1 !important; color:black !important;" placeholder="Thêm sub-task mới và bấm Enter...">
-                                <button id="addSubtaskBtn" class="btn btn-light border text-secondary fw-semibold px-3">+ Thêm</button>
+                            <div class="mt-2">
+                                <button type="button" id="openCreateSubtaskModalBtn" class="btn btn-outline-primary btn-sm w-100 fw-bold border-dashed" style="border-style: dashed; border-width: 1.5px;">
+                                    <i class="bi bi-plus-circle"></i> Tạo sub-task
+                                </button>
                             </div>
                         </div>
-                        <style>
-                            #newSubtaskInput {
-                                color: black !important;
-                            }
-                        </style>
                         <!-- BÌNH LUẬN TRAO ĐỔI -->
                         <hr class="border-secondary-subtle my-4 opacity-50">
                         <div class="mb-4">

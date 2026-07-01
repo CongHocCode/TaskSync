@@ -98,11 +98,12 @@ class Task extends Controller
 
             $data = [
                 'project_id'  => $projectId,
+                'parent_issue_id' => !empty($_POST['parent_issue_id']) ? $_POST['parent_issue_id'] : null,
                 'title'       => trim($_POST['title'] ?? ''),
                 'description' => trim($_POST['description'] ?? ''),
                 'type'        => $type,
                 'priority'    => $_POST['priority'] ?? 'MEDIUM',
-                'assignee_id' => $_POST['assignee_id'] ?? null,
+                'assignee_id' => !empty($_POST['assignee_id']) ? $_POST['assignee_id'] : null,
                 'due_date'    => $dueDate,
                 'reporter_id' => $userId // Người tạo chính là người đang login
             ];

@@ -434,10 +434,28 @@ document.addEventListener("DOMContentLoaded", function () {
           projectNameEl.href = `${baseUrl}/project/kanban/${task.project_id_ref || task.project_id}`;
         }
 
+        const motherTaskDisplay = document.getElementById("modalMotherTaskDisplay");
+        const motherTaskRef = document.getElementById("modalMotherTaskRef");
+        if (motherTaskDisplay && motherTaskRef) {
+          if (task.parent_issue_id && task.parent_issue_key) {
+            motherTaskRef.textContent = `#${task.parent_issue_key} - ${task.parent_title}`;
+            motherTaskRef.onclick = (e) => {
+              e.preventDefault();
+              openTaskDetailModal(task.parent_issue_id, null);
+            };
+            motherTaskDisplay.classList.remove("d-none");
+          } else {
+            motherTaskDisplay.classList.add("d-none");
+          }
+        }
+
         // Reset input và nạp danh sách bình luận
         const commentInput = document.getElementById("newCommentInput");
         if (commentInput) commentInput.value = "";
+        // Lưu dữ liệu task đang active để dùng cho các chức năng khác (như tạo subtask)
+        window.currentActiveTaskData = task;
 
+        // Đổ dữ liệu bình luận
         const commentsList = document.getElementById("modalCommentsList");
         if (commentsList) {
           commentsList.innerHTML = "";
@@ -952,6 +970,66 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("[TaskSync] Delete Fetch error:", error);
             alert("Lỗi kết nối mạng khi thực hiện xóa.");
           });
+      }
+    }
+  });
+
+  // LẮNG NGHE SỰ KIỆN TẠO SUB-TASK TỪ MODAL CHI TIẾT
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "openCreateSubtaskModalBtn" || e.target.closest("#openCreateSubtaskModalBtn")) {
+      const statusSelect = document.getElementById("modalStatusSelect");
+      const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
+      const titleTextarea = document.getElementById("modalTaskTitle");
+      const taskTitle = titleTextarea ? titleTextarea.value : "Unknown Task";
+      
+      if (taskId) {
+        // Đóng modal chi tiết
+        const detailModalEl = document.getElementById("taskDetailModal");
+        if (detailModalEl) {
+          const detailModal = bootstrap.Modal.getInstance(detailModalEl) || new bootstrap.Modal(detailModalEl);
+          detailModal.hide();
+        }
+        
+        // Chờ modal cũ đóng xong rồi mới mở modal mới để tránh lỗi Bootstrap backdrop
+        setTimeout(() => {
+          const parentInput = document.getElementById("parentIssueIdInput");
+          const motherTaskInfo = document.getElementById("motherTaskInfo");
+          const motherTaskName = document.getElementById("motherTaskName");
+          
+          if (parentInput) parentInput.value = taskId;
+          if (motherTaskInfo) motherTaskInfo.classList.remove("d-none");
+          if (motherTaskName) motherTaskName.innerHTML = `<span class="badge bg-secondary me-2">#${taskId}</span> <strong>${taskTitle}</strong>`;
+          
+          // Điền thông tin project từ task đang active
+          const taskData = window.currentActiveTaskData;
+          if (taskData) {
+            const projInput = document.getElementById("createIssueProjectId");
+            if (projInput) projInput.value = taskData.project_id;
+            
+            const titleText = document.getElementById("createIssueModalTitleText");
+            if (titleText) titleText.innerHTML = `Tạo Sub-task cho dự án: <span class="text-primary">${taskData.project_name || 'Không rõ'}</span>`;
+            
+            const assigneeSelect = document.getElementById("createIssueAssigneeSelect");
+            if (assigneeSelect && taskData.project_members) {
+              assigneeSelect.innerHTML = '<option value="" selected>Chưa phân công (Unassigned)</option>';
+              taskData.project_members.forEach(member => {
+                const fullName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim();
+                const displayName = fullName ? fullName : member.username;
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = `${displayName} (${member.role || 'member'})`;
+                assigneeSelect.appendChild(option);
+              });
+            }
+          }
+
+          // Mở modal tạo mới
+          const createModalEl = document.getElementById("createIssueModal");
+          if (createModalEl) {
+            const createModal = bootstrap.Modal.getOrCreateInstance(createModalEl);
+            createModal.show();
+          }
+        }, 400); // 400ms delay cho animation đóng modal cũ
       }
     }
   });
