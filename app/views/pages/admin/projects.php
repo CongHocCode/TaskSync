@@ -99,7 +99,7 @@
                             </td>
                             <!-- Tên dự án liên kết trỏ trực tiếp đến trang cấu hình dự án -->
                             <td style="padding: 16px 24px; font-weight: 600;">
-                                <a href="<?= BASE_URL ?>/project/settings/<?= $p['id'] ?>" class="text-decoration-none" style="color: #0b1220; display: inline-flex; align-items: center; gap: 4px;" title="Đi đến cấu hình dự án">
+                                <a href="<?= BASE_URL ?>/project/kanban/<?= $p['id'] ?>" class="text-decoration-none" style="color: #0b1220; display: inline-flex; align-items: center; gap: 4px;" title="Đi đến cấu hình dự án">
                                     <span><?= htmlspecialchars($p['name']) ?></span>
                                     <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.72rem;"></i>
                                 </a>
