@@ -131,35 +131,29 @@ class TaskModel
     }
 
     // Lấy ID dự án của một Task cụ thể
-    public function getProjectIdByTaskId($taskId) {
+    public function getProjectIdByTaskId($taskId)
+    {
         $sql = "SELECT project_id FROM issues WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $taskId]);
         return $stmt->fetchColumn(); // Trả về con số ID dự án
     }
 
-    // Lấy tần suất xử lý công việc của các thành viên (Số lượng task được giao)
-    public function getTaskFrequency()
+    // Lấy tổng số task
+    public function getTotalTasksCount()
     {
-        $sql = "SELECT u.username AS member_name, COUNT(i.id) AS task_count
-                FROM users u
-                LEFT JOIN issues i ON u.id = i.assignee_id
-                GROUP BY u.id, u.username
-                ORDER BY task_count DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->db->query("SELECT COUNT(*) FROM issues");
+        return $stmt->fetchColumn();
     }
 
-    // Lấy thống kê số lượng người dùng đăng ký theo ngày
-    public function getNewUsersStats()
+    // Lấy số task theo người thực hiện
+    public function getSystemTaskFrequency()
     {
-        $sql = "SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS reg_date, COUNT(*) AS user_count
-                FROM users
-                GROUP BY reg_date
-                ORDER BY reg_date ASC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+        $sql = "SELECT CONCAT(u.first_name, ' ', u.last_name) as member_name, COUNT(i.id) as task_count 
+                FROM issues i 
+                JOIN users u ON i.assignee_id = u.id 
+                GROUP BY i.assignee_id";
+        $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

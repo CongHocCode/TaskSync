@@ -64,21 +64,23 @@
                             <td colspan="7" style="padding: 48px; text-align: center; color: #64748b; font-size: 0.95rem;">Chưa có dự án nào trên hệ thống.</td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($data['projects'] as $p): 
+                        <?php foreach ($data['projects'] as $p):
                             $ownerName = trim(($p['first_name'] ?? '') . ' ' . ($p['last_name'] ?? ''));
                             if (empty($ownerName)) {
                                 $ownerName = $p['username'] ?? 'Chưa có Owner';
                             }
-                            $avatarUrl = !empty($p['avatar_url']) ? $p['avatar_url'] : "https://ui-avatars.com/api/?name=" . urlencode($ownerName) . "&background=7c3aed&color=fff";
+                            $avatarUrl = (!empty($p['avatar_url']) && $p['avatar_url'] !== 'default-avatar.png')
+                                ? BASE_URL . '/uploads/avatars/' . $p['avatar_url']
+                                : "https://ui-avatars.com/api/?name=" . urlencode($ownerName) . "&background=7c3aed&color=fff";
                             $createdDate = date('Y-m-d', strtotime($p['created_at']));
                         ?>
-                            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" 
-                                onmouseover="this.style.background='#f8fafc'" 
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;"
+                                onmouseover="this.style.background='#f8fafc'"
                                 onmouseout="this.style.background='transparent'"
                                 data-project-name="<?= htmlspecialchars($p['name']) ?>"
                                 data-project-key="<?= htmlspecialchars($p['key']) ?>"
                                 data-project-owner="<?= htmlspecialchars($ownerName) ?>">
-                                
+
                                 <!-- Tên dự án & Mô tả -->
                                 <td style="padding: 20px 24px; max-width: 320px;">
                                     <div style="font-weight: 700; color: #0f172a; font-size: 0.98rem;"><?= htmlspecialchars($p['name']) ?></div>
@@ -122,29 +124,29 @@
                                     <div style="display: inline-flex; gap: 8px; justify-content: flex-end; align-items: center;">
                                         <!-- Nút Cấu hình -->
                                         <a href="<?= BASE_URL ?>/project/settings/<?= $p['id'] ?>"
-                                           class="btn btn-sm"
-                                           style="font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #0284c7; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                            class="btn btn-sm"
+                                            style="font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #0284c7; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                                             <i class="bi bi-gear" style="font-size: 0.95rem; color: #0284c7;"></i>
                                             <span>Cấu hình</span>
                                         </a>
 
                                         <!-- Nút Đổi Owner -->
-                                        <button type="button" class="btn btn-sm" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#changeOwnerModal"
-                                                data-project-id="<?= $p['id'] ?>"
-                                                data-project-name="<?= htmlspecialchars($p['name']) ?>"
-                                                data-owner-id="<?= $p['owner_id'] ?>"
-                                                style="font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                        <button type="button" class="btn btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#changeOwnerModal"
+                                            data-project-id="<?= $p['id'] ?>"
+                                            data-project-name="<?= htmlspecialchars($p['name']) ?>"
+                                            data-owner-id="<?= $p['owner_id'] ?>"
+                                            style="font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                                             <i class="bi bi-person-gear" style="font-size: 0.95rem; color: #64748b;"></i>
                                             <span>Đổi Owner</span>
                                         </button>
 
                                         <!-- Nút Xóa -->
                                         <a href="<?= BASE_URL ?>/admin/deleteProject/<?= $p['id'] ?>"
-                                           class="btn btn-sm"
-                                           onclick="return confirm('Bạn có chắc chắn muốn xóa dự án này? Thao tác này sẽ xóa toàn bộ công việc và thành viên thuộc dự án.')"
-                                           style="font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #fee2e2; background: #fef2f2; color: #ef4444; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                            class="btn btn-sm"
+                                            onclick="return confirm('Bạn có chắc chắn muốn xóa dự án này? Thao tác này sẽ xóa toàn bộ công việc và thành viên thuộc dự án.')"
+                                            style="font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #fee2e2; background: #fef2f2; color: #ef4444; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                                             <i class="bi bi-trash" style="font-size: 0.95rem;"></i>
                                             <span>Xóa</span>
                                         </a>
@@ -177,7 +179,7 @@
                 <input type="hidden" name="project_id" id="modal-project-id" value="">
                 <div class="modal-body px-4 py-3">
                     <p class="text-secondary small mb-3">Bạn đang thay đổi trưởng dự án cho dự án <strong id="modal-project-name" class="text-dark"></strong>. Người sở hữu mới phải là thành viên hiện tại của dự án.</p>
-                    
+
                     <div class="mb-2">
                         <label class="form-label small fw-bold text-secondary">Chọn trưởng dự án mới</label>
                         <select class="form-select border-secondary-subtle" name="new_owner_id" required style="border-radius: 8px; padding: 10px; font-size: 0.92rem; box-shadow: none;">
@@ -196,114 +198,114 @@
 
 <!-- SCRIPTS XỬ LÝ TÌM KIẾM VÀ POPULATE MODAL -->
 <script>
-// Dữ liệu thành viên hoạt động của từng dự án nạp từ PHP
-const projectMembers = <?= json_encode($data['project_members'] ?? []) ?>;
+    // Dữ liệu thành viên hoạt động của từng dự án nạp từ PHP
+    const projectMembers = <?= json_encode($data['project_members'] ?? []) ?>;
 
-document.addEventListener("DOMContentLoaded", function() {
-    // 1. Live Search phía Client
-    const searchInput = document.getElementById('project-search-input');
-    const tableRows = document.querySelectorAll('#project-table-body tr:not(.empty-row)');
-    const displayCountSpan = document.getElementById('display-count');
-    const emptyRows = document.querySelectorAll('#project-table-body .empty-row');
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase().trim();
-            let visibleCount = 0;
-            
-            tableRows.forEach(row => {
-                const name = row.getAttribute('data-project-name').toLowerCase();
-                const key = row.getAttribute('data-project-key').toLowerCase();
-                const owner = row.getAttribute('data-project-owner').toLowerCase();
-                
-                if (name.includes(query) || key.includes(query) || owner.includes(query)) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Live Search phía Client
+        const searchInput = document.getElementById('project-search-input');
+        const tableRows = document.querySelectorAll('#project-table-body tr:not(.empty-row)');
+        const displayCountSpan = document.getElementById('display-count');
+        const emptyRows = document.querySelectorAll('#project-table-body .empty-row');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                tableRows.forEach(row => {
+                    const name = row.getAttribute('data-project-name').toLowerCase();
+                    const key = row.getAttribute('data-project-key').toLowerCase();
+                    const owner = row.getAttribute('data-project-owner').toLowerCase();
+
+                    if (name.includes(query) || key.includes(query) || owner.includes(query)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Cập nhật số lượng đếm hiển thị
+                if (displayCountSpan) {
+                    displayCountSpan.textContent = visibleCount;
+                }
+
+                // Xử lý dòng rỗng khi không có kết quả
+                if (emptyRows.length > 0) {
+                    if (visibleCount === 0 && tableRows.length > 0) {
+                        // Nếu không có dự án nào khớp từ khóa, hiện thông báo "Không tìm thấy"
+                        emptyRows.forEach(el => {
+                            if (el.innerText.includes('Không tìm thấy')) {
+                                el.style.display = '';
+                            } else {
+                                el.style.display = 'none';
+                            }
+                        });
+                    } else if (tableRows.length === 0) {
+                        // Nếu hệ thống thực sự rỗng
+                        emptyRows.forEach(el => {
+                            if (el.innerText.includes('Chưa có dự án')) {
+                                el.style.display = '';
+                            } else {
+                                el.style.display = 'none';
+                            }
+                        });
+                    } else {
+                        emptyRows.forEach(el => el.style.display = 'none');
+                    }
                 }
             });
-            
-            // Cập nhật số lượng đếm hiển thị
-            if (displayCountSpan) {
-                displayCountSpan.textContent = visibleCount;
-            }
-            
-            // Xử lý dòng rỗng khi không có kết quả
-            if (emptyRows.length > 0) {
-                if (visibleCount === 0 && tableRows.length > 0) {
-                    // Nếu không có dự án nào khớp từ khóa, hiện thông báo "Không tìm thấy"
-                    emptyRows.forEach(el => {
-                        if (el.innerText.includes('Không tìm thấy')) {
-                            el.style.display = '';
-                        } else {
-                            el.style.display = 'none';
-                        }
-                    });
-                } else if (tableRows.length === 0) {
-                    // Nếu hệ thống thực sự rỗng
-                    emptyRows.forEach(el => {
-                        if (el.innerText.includes('Chưa có dự án')) {
-                            el.style.display = '';
-                        } else {
-                            el.style.display = 'none';
-                        }
-                    });
-                } else {
-                    emptyRows.forEach(el => el.style.display = 'none');
-                }
-            }
-        });
-    }
+        }
 
-    // 2. Gán dữ liệu động vào Modal đổi Owner
-    const changeOwnerModal = document.getElementById('changeOwnerModal');
-    if (changeOwnerModal) {
-        changeOwnerModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const projectId = button.getAttribute('data-project-id');
-            const projectName = button.getAttribute('data-project-name');
-            const currentOwnerId = button.getAttribute('data-owner-id');
-            
-            const modalProjectIdInput = changeOwnerModal.querySelector('#modal-project-id');
-            const modalProjectNameSpan = changeOwnerModal.querySelector('#modal-project-name');
-            const selectElement = changeOwnerModal.querySelector('select[name="new_owner_id"]');
-            
-            modalProjectIdInput.value = projectId;
-            modalProjectNameSpan.textContent = projectName;
-            
-            // Nạp động các thành viên của dự án này vào dropdown
-            if (selectElement) {
-                selectElement.innerHTML = '';
-                const members = projectMembers[projectId] || [];
-                
-                if (members.length === 0) {
-                    const opt = document.createElement('option');
-                    opt.value = '';
-                    opt.textContent = 'Không có thành viên nào hoạt động';
-                    opt.disabled = true;
-                    selectElement.appendChild(opt);
-                } else {
-                    members.forEach(m => {
+        // 2. Gán dữ liệu động vào Modal đổi Owner
+        const changeOwnerModal = document.getElementById('changeOwnerModal');
+        if (changeOwnerModal) {
+            changeOwnerModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const projectId = button.getAttribute('data-project-id');
+                const projectName = button.getAttribute('data-project-name');
+                const currentOwnerId = button.getAttribute('data-owner-id');
+
+                const modalProjectIdInput = changeOwnerModal.querySelector('#modal-project-id');
+                const modalProjectNameSpan = changeOwnerModal.querySelector('#modal-project-name');
+                const selectElement = changeOwnerModal.querySelector('select[name="new_owner_id"]');
+
+                modalProjectIdInput.value = projectId;
+                modalProjectNameSpan.textContent = projectName;
+
+                // Nạp động các thành viên của dự án này vào dropdown
+                if (selectElement) {
+                    selectElement.innerHTML = '';
+                    const members = projectMembers[projectId] || [];
+
+                    if (members.length === 0) {
                         const opt = document.createElement('option');
-                        opt.value = m.user_id;
-                        
-                        let displayName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
-                        if (!displayName) {
-                            displayName = m.username;
-                        }
-                        
-                        opt.textContent = displayName + ' (@' + m.username + ')';
-                        
-                        if (m.user_id == currentOwnerId) {
-                            opt.selected = true;
-                        }
-                        
+                        opt.value = '';
+                        opt.textContent = 'Không có thành viên nào hoạt động';
+                        opt.disabled = true;
                         selectElement.appendChild(opt);
-                    });
+                    } else {
+                        members.forEach(m => {
+                            const opt = document.createElement('option');
+                            opt.value = m.user_id;
+
+                            let displayName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
+                            if (!displayName) {
+                                displayName = m.username;
+                            }
+
+                            opt.textContent = displayName + ' (@' + m.username + ')';
+
+                            if (m.user_id == currentOwnerId) {
+                                opt.selected = true;
+                            }
+
+                            selectElement.appendChild(opt);
+                        });
+                    }
                 }
-            }
-        });
-    }
-});
+            });
+        }
+    });
 </script>

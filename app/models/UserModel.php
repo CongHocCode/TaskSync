@@ -52,7 +52,8 @@ class UserModel
         return false; // Trả về false nếu mật khẩu cũ không khớp
     }
 
-    public function updateAvatar($id, $avatarUrl) {
+    public function updateAvatar($id, $avatarUrl)
+    {
         $stmt = $this->db->pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?");
         return $stmt->execute([$avatarUrl, $id]);
     }
@@ -79,17 +80,20 @@ class UserModel
         return $stmt->fetch() ? true : false;
     }
 
-    // Hàm tạo tài khoản mới (Mặc định đăng ký mới là role 'user')
+    // Hàm tạo tài khoản mới
     public function create($data)
     {
-        $sql = "INSERT INTO users (username, email, password_hash, first_name, last_name, role) VALUES (?, ?, ?, ?, ?, 'user')";
+        $sql = "INSERT INTO users (username, email, password_hash, first_name, last_name, role) VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->pdo->prepare($sql);
+
+        $role = $data['role'] ?? 'user'; //Chỉ tự gán role là user nếu không được cấp sẵn (phục vụ đăng ký tự do)
         return $stmt->execute([
             $data['username'],
             $data['email'],
             $data['password_hash'],
             $data['first_name'],
-            $data['last_name']
+            $data['last_name'],
+            $role,
         ]);
     }
 
@@ -126,5 +130,28 @@ class UserModel
             }
             return false;
         }
+    }
+
+    public function getTotalUsersCount()
+    {
+        $stmt = $this->db->pdo->query("SELECT COUNT(*) FROM users");
+        return $stmt->fetchColumn();
+    }
+
+    public function getBlockedUsersCount()
+    {
+        $stmt = $this->db->pdo->query("SELECT COUNT(*) FROM users WHERE status = 'inactive'");
+        return $stmt->fetchColumn();
+    }
+
+    public function getNewUsersStats()
+    {
+        $sql = "SELECT DATE(created_at) as reg_date, COUNT(*) as user_count 
+            FROM users 
+            GROUP BY DATE(created_at) 
+            ORDER BY reg_date ASC 
+            LIMIT 7";
+        $stmt = $this->db->pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

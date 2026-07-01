@@ -38,11 +38,11 @@ document.addEventListener("DOMContentLoaded", function () {
           {
             label: "Số lượng Task đang xử lý",
             data: dataValues.length > 0 ? dataValues : [0],
-            backgroundColor: "rgba(99, 102, 241, 0.75)", // Màu Indigo hiện đại
-            borderColor: "rgb(99, 102, 241)",
+            backgroundColor: "rgba(67, 24, 255, 0.75)",
+            borderColor: "rgb(67, 24, 255)",
             borderWidth: 1.5,
             borderRadius: 6,
-            hoverBackgroundColor: "rgba(79, 70, 229, 0.9)",
+            hoverBackgroundColor: "rgba(67, 24, 255, 0.95)",
           },
         ],
       },
@@ -97,15 +97,15 @@ document.addEventListener("DOMContentLoaded", function () {
             label: "Người dùng mới",
             data: dataValues,
             fill: true,
-            backgroundColor: "rgba(168, 85, 247, 0.15)", // Màu Tím mịn màng
-            borderColor: "rgb(168, 85, 247)",
+            backgroundColor: "rgba(1, 181, 116, 0.12)",
+            borderColor: "rgb(1, 181, 116)",
             borderWidth: 3,
-            pointBackgroundColor: "rgb(168, 85, 247)",
+            pointBackgroundColor: "rgb(1, 181, 116)",
             pointBorderColor: "#fff",
             pointBorderWidth: 2,
             pointRadius: 6,
             pointHoverRadius: 8,
-            tension: 0.4, // Bo góc mềm mại
+            tension: 0.4, // Bo góc
           },
         ],
       },
@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
-// <<<<<<< HEAD
+    // <<<<<<< HEAD
     columns.forEach((column) => {
       // Dragover: thay đổi giao diện vùng thả
       column.addEventListener("dragover", function (e) {
@@ -721,7 +721,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function sendComment() {
     const statusSelect = document.getElementById("modalStatusSelect");
-    const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
+    const taskId = statusSelect
+      ? statusSelect.getAttribute("data-task-id")
+      : null;
     const content = newCommentInput.value.trim();
 
     if (!taskId || !content) return;
@@ -746,7 +748,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         if (data.success && data.comment) {
           newCommentInput.value = "";
-          
+
           const commentsList = document.getElementById("modalCommentsList");
           if (commentsList) {
             if (commentsList.innerHTML.includes("Chưa có bình luận nào")) {
@@ -773,15 +775,15 @@ document.addEventListener("DOMContentLoaded", function () {
     div.className = "p-3 rounded-3";
     div.style.backgroundColor = "#f8fafc";
     div.style.border = "1px solid #e2e8f0";
-    
+
     let timeStr = "";
     if (c.created_at) {
       const date = new Date(c.created_at);
       if (!isNaN(date.getTime())) {
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
         timeStr = `${hours}:${minutes} ${day}/${month}`;
       } else {
         timeStr = c.created_at.substring(11, 16) || "";
@@ -789,7 +791,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const name = c.user_full_name ? c.user_full_name.trim() : c.username;
-    
+
     div.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-1">
         <span class="fw-bold text-dark" style="font-size: 0.88rem;">${escapeHtml(name)}</span>

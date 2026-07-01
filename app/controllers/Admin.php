@@ -1,30 +1,59 @@
 <?php
 class Admin extends Controller
 {
+    // Khai báo các thuộc tính lớp để quản lý các Model dùng chung
+    private $userModel;
+    private $projectModel;
+    private $taskModel;
+
     public function __construct()
     {
+        // Chốt chặn bảo mật hệ thống
         if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             redirect('auth');
             exit();
         }
+
+        // Khởi tạo các Model duy nhất một lần tại đây
+        $this->userModel = $this->model('UserModel');
+        $this->projectModel = $this->model('ProjectModel');
+        $this->taskModel = $this->model('TaskModel');
     }
 
-    // Trang Dashboard thống kê hệ thống (admin/dashboard)
     public function dashboard()
     {
-        $taskModel = $this->model('TaskModel');
-        $data['page_title'] = "Thống kê hệ thống";
-        $data['task_frequency'] = $taskModel->getTaskFrequency();
-        $data['new_users_stats'] = $taskModel->getNewUsersStats();
-        
+        // Lấy các con số đếm tổng quan hệ thống từ DB
+        $totalUsers    = $this->userModel->getTotalUsersCount();
+        $blockedUsers  = $this->userModel->getBlockedUsersCount();
+        $totalProjects = $this->projectModel->getTotalProjectsCount();
+        $totalTasks    = $this->taskModel->getTotalTasksCount();
+
+        // Lấy dữ liệu thống kê cho 2 biểu đồ Chart.js
+        $taskFrequency = $this->taskModel->getSystemTaskFrequency();
+        $newUsersStats = $this->userModel->getNewUsersStats();
+
+        // Đóng gói dữ liệu vào mảng $data truyền sang View
+        $data = [
+            'total_users'    => $totalUsers,
+            'blocked_users'  => $blockedUsers,
+            'total_projects' => $totalProjects,
+            'total_tasks'    => $totalTasks,
+            'task_frequency' => $taskFrequency,
+            'new_users'      => $newUsersStats
+        ];
+
+        // Bổ sung dữ liệu động cho 2 widget danh sách phía dưới của Admin
+        $userId = $_SESSION['user']['id'];
+        $data['assigned_issues'] = $this->taskModel->getAllIssuesByUserId($userId); // Lấy công việc của riêng Admin
+        $data['projects']        = $this->projectModel->getAllProjects(); // Lấy các dự án hoạt động trên máy chủ
+
         $this->view('pages/dashboard/admin', $data);
     }
 
     // Trang danh sách nhân viên (admin/users)
     public function users()
     {
-        $userModel = $this->model('UserModel');
-        $users = $userModel->getAll();
+        $users = $this->userModel->getAll();
 
         $data['page_title'] = "Quản lý nhân sự";
         $data['users'] = $users;
@@ -45,15 +74,13 @@ class Admin extends Controller
             $password  = trim($_POST['password'] ?? '');
             $role      = trim($_POST['role'] ?? 'user');
 
-            $userModel = $this->model('UserModel');
-
             if (empty($firstName) || empty($lastName) || empty($email) || empty($username) || empty($password)) {
                 $data['error'] = "Vui lòng điền đầy đủ thông tin.";
-            } elseif ($userModel->checkExists($username, $email)) {
+            } elseif ($this->userModel->checkExists($username, $email)) {
                 $data['error'] = "Username hoặc Email này đã tồn tại.";
             } else {
                 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $success = $userModel->create([
+                $success = $this->userModel->create([
                     'username'      => $username,
                     'email'         => $email,
                     'password_hash' => $hashedPassword,
@@ -71,21 +98,38 @@ class Admin extends Controller
             }
         }
 
-        $this->view('pages/admin/create_user', $data); // Form tạo nằm trong admin
+        $this->view('pages/admin/create_user', $data);
     }
 
     // Khóa/Mở khóa tài khoản (admin/toggleUserStatus)
     public function toggleUserStatus($id)
     {
-        $userModel = $this->model('UserModel');
-        $user = $userModel->getById($id);
+        // Không cho phép Admin tự khóa tài khoản của chính mình
+        if ($id == $_SESSION['user']['id']) {
+            $_SESSION['flash_error'] = "Bảo mật hệ thống: Bạn không thể tự khóa tài khoản của chính mình!";
+            redirect('admin/users');
+            exit();
+        }
+
+        $user = $this->userModel->getById($id);
 
         if ($user) {
+            //Ngăn Admin thường khóa tài khoản của Admin khác
+            /*
+            if ($user['role'] === 'admin') {
+                $_SESSION['flash_error'] = "Bảo mật hệ thống: Không thể khóa tài khoản của quản trị viên khác!";
+                redirect('admin/users');
+                exit();
+            }
+            */
+
             $newStatus = ($user['status'] === 'active') ? 'inactive' : 'active';
-            $userModel->updateStatus($id, $newStatus);
+            $this->userModel->updateStatus($id, $newStatus);
+            $_SESSION['flash_success'] = "Đã cập nhật trạng thái hoạt động tài khoản thành công.";
         }
 
         redirect('admin/users');
+        exit();
     }
 
     // Sửa thông tin nhân viên (admin/editUser/ID)
@@ -95,8 +139,7 @@ class Admin extends Controller
             redirect('admin/users');
         }
 
-        $userModel = $this->model('UserModel');
-        $user = $userModel->getById($id);
+        $user = $this->userModel->getById($id);
 
         if (!$user) {
             die("Nhân sự không tồn tại");
@@ -114,8 +157,10 @@ class Admin extends Controller
 
             if (empty($firstName) || empty($lastName) || empty($email) || empty($username)) {
                 $data['error'] = "Vui lòng điền đầy đủ thông tin.";
+            } elseif ($id == $_SESSION['user']['id'] && $role !== 'admin') {
+                $data['error'] = "Bảo mật hệ thống: Bạn không thể tự hạ vai trò Admin của chính mình!";
             } else {
-                $success = $userModel->update($id, [
+                $success = $this->userModel->update($id, [
                     'username'   => $username,
                     'email'      => $email,
                     'first_name' => $firstName,
@@ -137,13 +182,10 @@ class Admin extends Controller
     // Trang xem toàn bộ dự án hệ thống (admin/projects)
     public function projects()
     {
-        $projectModel = $this->model('ProjectModel');
-        $userModel = $this->model('UserModel');
-
         $data['page_title'] = "Quản lý toàn bộ dự án";
-        $data['projects'] = $projectModel->getAllProjectsWithCounts();
-        $data['project_members'] = $projectModel->getAllActiveProjectMembersGrouped();
-        $data['users'] = $userModel->getAll();
+        $data['projects'] = $this->projectModel->getAllProjectsWithCounts();
+        $data['project_members'] = $this->projectModel->getAllActiveProjectMembersGrouped();
+        $data['users'] = $this->userModel->getAll();
 
         $this->view('pages/admin/projects', $data);
     }
@@ -156,8 +198,7 @@ class Admin extends Controller
             $newOwnerId = $_POST['new_owner_id'] ?? null;
 
             if ($projectId && $newOwnerId) {
-                $projectModel = $this->model('ProjectModel');
-                $success = $projectModel->changeProjectOwner($projectId, $newOwnerId);
+                $success = $this->projectModel->changeProjectOwner($projectId, $newOwnerId);
                 if ($success) {
                     $_SESSION['flash_success'] = "Thay đổi trưởng dự án thành công!";
                 } else {
@@ -179,8 +220,7 @@ class Admin extends Controller
             exit;
         }
 
-        $projectModel = $this->model('ProjectModel');
-        $success = $projectModel->deleteProject($id);
+        $success = $this->projectModel->deleteProject($id);
 
         if ($success) {
             $_SESSION['flash_success'] = "Xóa dự án thành công!";
@@ -191,7 +231,6 @@ class Admin extends Controller
         redirect('admin/projects');
         exit;
     }
-
 
     // Xóa nhân sự (admin/deleteUser/ID)
     public function deleteUser($id = null)
@@ -207,12 +246,11 @@ class Admin extends Controller
             exit;
         }
 
-        $userModel = $this->model('UserModel');
-        $user = $userModel->getById($id);
+        $user = $this->userModel->getById($id);
 
         if ($user) {
             $adminId = $_SESSION['user']['id'];
-            $userModel->delete($id, $adminId);
+            $this->userModel->delete($id, $adminId);
         }
 
         redirect('admin/users');

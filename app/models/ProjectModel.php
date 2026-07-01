@@ -396,6 +396,13 @@ class ProjectModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Chỉ thuần lấy số lượng cho dashboard của admin
+    public function getTotalProjectsCount()
+    {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM projects");
+        return $stmt->fetchColumn();
+    }
+
     // Đổi chủ sở hữu (Owner) của dự án
     public function changeProjectOwner($projectId, $newOwnerId)
     {
@@ -447,4 +454,3 @@ class ProjectModel
         return $grouped;
     }
 }
-
