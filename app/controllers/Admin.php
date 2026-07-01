@@ -53,14 +53,40 @@ class Admin extends Controller
     // Trang danh sách nhân viên (admin/users)
     public function users()
     {
-        $users = $this->userModel->getAll();
+        // 1. Nhận từ khóa tìm kiếm và số trang hiện tại từ URL (mặc định là trang 1)
+        $search = trim($_GET['q'] ?? '');
+        $currentPage = (int)($_GET['page'] ?? 1);
+        if ($currentPage < 1) $currentPage = 1;
 
-        $data['page_title'] = "Quản lý nhân sự";
-        $data['users'] = $users;
+        $limit = 10; // Khống chế chỉ hiển thị đúng 10 nhân sự trên một trang để bảo vệ hiệu năng
+        $offset = ($currentPage - 1) * $limit;
+
+        // Gọi Model lấy dữ liệu phân trang
+        $users = $this->userModel->getPaginatedAndSearched($search, $limit, $offset);
+        $totalUsersFiltered = $this->userModel->getCountForSearch($search);
+
+        // Tính toán tổng số trang
+        $totalPages = ceil($totalUsersFiltered / $limit);
+        if ($totalPages < 1) $totalPages = 1;
+
+        // Lấy số liệu tổng quan toàn hệ thống để hiển thị trên 3 hộp Thống kê nhanh
+        $globalTotal = $this->userModel->getTotalUsersCount();
+        $globalBlocked = $this->userModel->getBlockedUsersCount();
+        $globalActive = $globalTotal - $globalBlocked;
+
+        $data = [
+            'page_title'     => "Quản lý nhân sự",
+            'users'          => $users,
+            'search'         => $search,
+            'current_page'   => $currentPage,
+            'total_pages'    => $totalPages,
+            'global_total'   => $globalTotal,
+            'global_active'  => $globalActive,
+            'global_blocked' => $globalBlocked
+        ];
 
         $this->view('pages/admin/users', $data);
     }
-
     //  Trang tạo nhân viên mới (admin/createUser)
     public function createUser()
     {
@@ -182,10 +208,41 @@ class Admin extends Controller
     // Trang xem toàn bộ dự án hệ thống (admin/projects)
     public function projects()
     {
-        $data['page_title'] = "Quản lý toàn bộ dự án";
-        $data['projects'] = $this->projectModel->getAllProjectsWithCounts();
-        $data['project_members'] = $this->projectModel->getAllActiveProjectMembersGrouped();
-        $data['users'] = $this->userModel->getAll();
+        // Nhận từ khóa tìm kiếm và trang hiện tại từ URL (GET)
+        $search = trim($_GET['q'] ?? '');
+        $currentPage = (int)($_GET['page'] ?? 1);
+        if ($currentPage < 1) $currentPage = 1;
+
+        $limit = 10; // Giới hạn chỉ hiển thị đúng 10 dự án trên một trang để bảo vệ tài nguyên
+        $offset = ($currentPage - 1) * $limit;
+
+        // Gọi Model lấy danh sách dự án phân trang
+        $projects = $this->projectModel->getProjectsPaginatedAndSearched($search, $limit, $offset);
+        $totalProjectsFiltered = $this->projectModel->getProjectsCountForSearch($search);
+
+        // Tính toán số trang
+        $totalPages = ceil($totalProjectsFiltered / $limit);
+        if ($totalPages < 1) $totalPages = 1;
+
+        // Lấy các số liệu tổng quan toàn hệ thống cho 3 Card thống kê nhanh của Admin
+        $globalProjects = $this->projectModel->getTotalProjectsCount();
+        $globalTasks    = $this->taskModel->getTotalTasksCount();
+        $globalUsers    = $this->userModel->getTotalUsersCount();
+
+        // Lấy danh sách toàn bộ Users phục vụ cho tính năng Đổi Owner dự án
+        $users = $this->userModel->getAll();
+
+        $data = [
+            'page_title'             => "Quản lý toàn bộ dự án",
+            'projects'               => $projects,
+            'users'                  => $users,
+            'search'                 => $search,
+            'current_page'           => $currentPage,
+            'total_pages'            => $totalPages,
+            'global_total_projects'  => $globalProjects,
+            'global_total_tasks'     => $globalTasks,
+            'global_total_users'     => $globalUsers
+        ];
 
         $this->view('pages/admin/projects', $data);
     }
