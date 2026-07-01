@@ -132,6 +132,8 @@
             <option value="all">Tất cả loại hình</option>
             <option value="Task">Task (Công việc)</option>
             <option value="Bug">Bug (Lỗi)</option>
+            <option value="Story">Story (Nghiệp vụ)</option>
+            <option value="Epic">Epic (Tính năng lớn)</option>
         </select>
     </div>
 
@@ -217,9 +219,13 @@
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="d-flex align-items-center gap-2">
                                             <?php if ($task['type'] === 'bug'): ?>
-                                                <i class="bi bi-bug-fill text-danger opacity-75" style="font-size: 0.85rem;"></i>
+                                                <i class="bi bi-bug-fill text-danger opacity-75" style="font-size: 0.85rem;" title="Bug"></i>
+                                            <?php elseif ($task['type'] === 'story'): ?>
+                                                <i class="bi bi-bookmark-star-fill text-success opacity-75" style="font-size: 0.85rem;" title="Story"></i>
+                                            <?php elseif ($task['type'] === 'epic'): ?>
+                                                <i class="bi bi-lightning-charge-fill text-warning opacity-75" style="font-size: 0.85rem;" title="Epic"></i>
                                             <?php else: ?>
-                                                <i class="bi bi-check-square-fill text-primary opacity-75" style="font-size: 0.85rem;"></i>
+                                                <i class="bi bi-check-square-fill text-primary opacity-75" style="font-size: 0.85rem;" title="Task"></i>
                                             <?php endif; ?>
                                             <span class="badge rounded px-2 py-1" style="background-color: <?= $priorityBg ?>; color: <?= $priorityColor ?>; font-size: 0.65rem;">
                                                 <i class="bi <?= $priorityIcon ?>"></i> <?= $priority ?>

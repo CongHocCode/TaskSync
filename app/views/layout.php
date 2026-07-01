@@ -43,6 +43,25 @@
             <!-- Header chung -->
             <?php require_once __DIR__ . '/partials/header.php'; ?>
 
+            <?php if (isset($_SESSION['flash_error'])): ?>
+                <div class="container-fluid px-4 mt-3">
+                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-0" role="alert" style="border-radius: 8px;">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <?= $_SESSION['flash_error']; unset($_SESSION['flash_error']); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_SESSION['flash_success'])): ?>
+                <div class="container-fluid px-4 mt-3">
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-0" role="alert" style="border-radius: 8px;">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <?= $_SESSION['flash_success']; unset($_SESSION['flash_success']); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <!-- Nội dung động -->
             <main class="app-content">
                 <div class="content-wrapper">

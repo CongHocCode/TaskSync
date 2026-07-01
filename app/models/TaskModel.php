@@ -19,11 +19,14 @@ class TaskModel
                        CONCAT(u2.first_name, ' ', u2.last_name) AS reporter_full_name,
                        u2.username AS reporter_username,
                        p.key AS project_key,
-                       p.name AS project_name
+                       p.name AS project_name,
+                       pi.issue_key AS parent_issue_key,
+                       pi.title AS parent_title
                 FROM issues i
                 LEFT JOIN users u1 ON i.assignee_id = u1.id
                 LEFT JOIN users u2 ON i.reporter_id = u2.id
                 LEFT JOIN projects p ON i.project_id = p.id
+                LEFT JOIN issues pi ON i.parent_issue_id = pi.id
                 WHERE i.id = :id 
                 LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -72,12 +75,13 @@ class TaskModel
             $issueKey = $project['key'] . '-' . $project['issue_counter'];
 
             // 3. Thực hiện lưu Task mới vào bảng issues
-            $sqlInsert = "INSERT INTO issues (project_id, issue_key, title, description, type, status, priority, reporter_id, assignee_id, due_date, created_at) 
-                      VALUES (:project_id, :issue_key, :title, :description, :type, 'todo', :priority, :reporter_id, :assignee_id, :due_date, NOW())";
+            $sqlInsert = "INSERT INTO issues (project_id, parent_issue_id, issue_key, title, description, type, status, priority, reporter_id, assignee_id, due_date, created_at) 
+                      VALUES (:project_id, :parent_issue_id, :issue_key, :title, :description, :type, 'todo', :priority, :reporter_id, :assignee_id, :due_date, NOW())";
 
             $stmtInsert = $this->db->prepare($sqlInsert);
             $stmtInsert->execute([
                 'project_id' => $data['project_id'],
+                'parent_issue_id' => $data['parent_issue_id'] ?? null,
                 'issue_key'  => $issueKey,
                 'title'      => $data['title'],
                 'description' => $data['description'],
@@ -94,6 +98,7 @@ class TaskModel
         } catch (Exception $e) {
             // Có lỗi xảy ra, hoàn tác lại toàn bộ để tránh sai lệch dữ liệu
             $this->db->rollBack();
+            file_put_contents('C:\xampp\htdocs\TaskSync\debug.log', date('Y-m-d H:i:s') . " - CreateIssue Error: " . $e->getMessage() . "\n", FILE_APPEND);
             return false;
         }
     }
@@ -226,6 +231,17 @@ class TaskModel
         ]);
     }
 
+    // Cập nhật hạn hoàn thành của task
+    public function updateDueDate($taskId, $dueDate)
+    {
+        $sql = "UPDATE issues SET due_date = :due_date, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'due_date' => $dueDate ?: null,
+            'id' => $taskId
+        ]);
+    }
+
     // Lấy danh sách bình luận của một task kèm thông tin user
     public function getCommentsByTaskId($taskId)
     {
@@ -274,5 +290,16 @@ class TaskModel
     public function getLastInsertedId()
     {
         return $this->db->lastInsertId();
+    }
+
+    // Cập nhật loại công việc (type)
+    public function updateType($taskId, $type)
+    {
+        $sql = "UPDATE issues SET type = :type, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'type' => $type,
+            'id' => $taskId
+        ]);
     }
 }

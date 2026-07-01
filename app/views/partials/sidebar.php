@@ -18,7 +18,9 @@ $userProjects = $userId ? $projectModel->getProjectsOrderedForSidebar($userId) :
 
 $activeProject = null;
 $isManager = false;
-$isAdmin = $userSession['role'] === 'admin';
+$userProjectRole = null;
+$isAdmin = ($userSession['role'] ?? '') === 'admin';
+$canCreateTask = $isAdmin; // Admin luôn có quyền tạo
 $otherProjects = [];
 
 // Xác định dự án đang được hiển thị chính trên sidebar
@@ -33,8 +35,10 @@ if (isset($data['project']) && !empty($data['project'])) {
 if ($activeProject) {
     $currentProjId = $activeProject['id'];
 
-    // Gọi CSDL kiểm tra quyền Manager
-    $isManager = $projectModel->isProjectManager($currentProjId, $userId);
+    // Gọi CSDL lấy vai trò thực tế của user trong dự án
+    $userProjectRole = $projectModel->getProjectUserRole($currentProjId, $userId);
+    $isManager = ($userProjectRole === 'manager');
+    $canCreateTask = $isAdmin || ($userProjectRole === 'manager' || $userProjectRole === 'member');
 
     // Lọc các dự án còn lại để đưa vào dropdown chuyển dự án
     $otherProjects = array_filter($userProjects, function ($p) use ($currentProjId) {
@@ -182,17 +186,19 @@ if ($activeProject) {
 
     <!-- Nút tạo issue mới -->
     <?php
-    // Nếu có dự án hiện hành, mở modal. Nếu chưa có, đẩy về trang tạo dự án
-    if ($activeProject) {
-        $issueTriggerAttr = 'data-bs-toggle="modal" data-bs-target="#createIssueModal" href="#"';
-    } else {
-        $issueTriggerAttr = 'href="' . BASE_URL . '/project/create"';
-    }
+    $showCreateBtn = !$activeProject || $canCreateTask;
+    if ($showCreateBtn):
+        // Nếu có dự án hiện hành, mở modal. Nếu chưa có, đẩy về trang tạo dự án
+        if ($activeProject) {
+            $issueTriggerAttr = 'data-bs-toggle="modal" data-bs-target="#createIssueModal" href="#"';
+        } else {
+            $issueTriggerAttr = 'href="' . BASE_URL . '/project/create"';
+        }
     ?>
-
-    <a <?= $issueTriggerAttr ?> class="app-btn app-btn-create-issue d-flex align-items-center justify-content-center gap-1 text-decoration-none">
-        <i class="bi bi-plus-lg"></i> Tạo Issue mới
-    </a>
+        <a <?= $issueTriggerAttr ?> class="app-btn app-btn-create-issue d-flex align-items-center justify-content-center gap-1 text-decoration-none">
+            <i class="bi bi-plus-lg"></i> Tạo Issue mới
+        </a>
+    <?php endif; ?>
 
     <div class="sidebar-section">
         <div class="sidebar-section-label">CÁ NHÂN</div>
@@ -292,9 +298,10 @@ if ($activeProject) {
 </aside>
 
 <!-- MODAL TẠO ISSUE MỚI -->
-<?php if ($activeProject):
-    // Lấy danh sách thành viên thực tế của dự án hiện tại để làm danh sách Assignee
-    $projectMembers = $projectModel->getProjectMembers($activeProject['id']);
+<?php 
+    $defaultProjectId = $activeProject['id'] ?? '';
+    $defaultProjectName = $activeProject['name'] ?? '';
+    $defaultMembers = !empty($defaultProjectId) && isset($projectModel) ? $projectModel->getProjectMembers($defaultProjectId) : [];
 ?>
     <div class="modal fade" id="createIssueModal" tabindex="-1" aria-labelledby="createIssueModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -302,26 +309,37 @@ if ($activeProject) {
                 <!-- Modal Header -->
                 <div class="modal-header bg-light border-bottom-0 py-3 px-4">
                     <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="createIssueModalLabel">
-                        <i class="bi bi-plus-circle-fill text-primary"></i> Tạo Issue mới cho dự án: <span class="text-primary"><?= htmlspecialchars($activeProject['name']) ?></span>
+                        <i class="bi bi-plus-circle-fill text-primary"></i> <span id="createIssueModalTitleText">Tạo Issue mới cho dự án: <span class="text-primary"><?= htmlspecialchars($defaultProjectName) ?></span></span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <!-- Modal Form -->
-                <form action="<?= BASE_URL ?>/task/create" method="POST">
+                <form action="<?= BASE_URL ?>/task/create" method="POST" id="createIssueFormObj">
                     <!-- ID Dự án ẩn (Tự động điền) -->
-                    <input type="hidden" name="project_id" value="<?= $activeProject['id'] ?>">
+                    <input type="hidden" name="project_id" id="createIssueProjectId" value="<?= $defaultProjectId ?>">
+                    
+                    <!-- ID Parent Task ẩn (Tự động điền nếu là subtask) -->
+                    <input type="hidden" name="parent_issue_id" id="parentIssueIdInput" value="">
 
                     <div class="modal-body py-3 px-4">
                         <div class="row g-3">
+                            <!-- Hiển thị Mother Task (Nếu có) -->
+                            <div class="col-12 d-none" id="motherTaskInfo">
+                                <label class="form-label small fw-bold text-secondary">Mother Task</label>
+                                <div class="alert alert-secondary py-2 mb-0 d-flex align-items-center" id="motherTaskName"></div>
+                            </div>
+
                             <!-- Loại hình công việc & Độ ưu tiên -->
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-bold text-secondary">Loại hình công việc</label>
                                 <select class="form-select border-secondary-subtle" name="type" required>
                                     <option value="task" selected>Task (Công việc thường)</option>
                                     <option value="bug">Bug (Sửa lỗi)</option>
-                                    <option value="story">Story (Nghiệp vụ)</option>
-                                    <option value="epic">Epic (Tính năng lớn)</option>
+                                    <?php if ($isAdmin || $userProjectRole === 'manager'): ?>
+                                        <option value="story">Story (Nghiệp vụ)</option>
+                                        <option value="epic">Epic (Tính năng lớn)</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div class="col-12 col-md-6">
@@ -343,9 +361,9 @@ if ($activeProject) {
                             <!-- Người thực hiện (Assignee) -->
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-secondary">Người được phân công (Assignee)</label>
-                                <select class="form-select border-secondary-subtle" name="assignee_id">
+                                <select class="form-select border-secondary-subtle" name="assignee_id" id="createIssueAssigneeSelect">
                                     <option value="" selected>Chưa phân công (Unassigned)</option>
-                                    <?php foreach ($projectMembers as $member):
+                                    <?php foreach ($defaultMembers as $member):
                                         $fullName = trim($member['first_name'] . ' ' . $member['last_name']);
                                         $displayName = !empty($fullName) ? $fullName : $member['username'];
                                     ?>
@@ -386,7 +404,6 @@ if ($activeProject) {
             </div>
         </div>
     </div>
-<?php endif; ?>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -397,7 +414,7 @@ if ($activeProject) {
             const createIssueForm = createIssueModal.querySelector('form');
 
             // Khi mở modal, set giá trị min là thời điểm hiện tại
-            createIssueModal.addEventListener('show.bs.modal', function() {
+            createIssueModal.addEventListener('show.bs.modal', function(e) {
                 if (dueDateInput) {
                     const now = new Date();
                     // Format: YYYY-MM-DDTHH:MM (datetime-local format)
@@ -411,6 +428,14 @@ if ($activeProject) {
                     dueDateInput.value = '';
                     dueDateInput.classList.remove('is-invalid');
                 }
+            });
+
+            // Reset trạng thái subtask khi đóng modal
+            createIssueModal.addEventListener('hidden.bs.modal', function() {
+                const parentInput = document.getElementById('parentIssueIdInput');
+                const motherTaskInfo = document.getElementById('motherTaskInfo');
+                if (parentInput) parentInput.value = '';
+                if (motherTaskInfo) motherTaskInfo.classList.add('d-none');
             });
 
             // Validate trước khi submit

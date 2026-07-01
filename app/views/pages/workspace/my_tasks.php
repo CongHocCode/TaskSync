@@ -233,7 +233,7 @@ $shortName = end($parts);
             if (!empty($dueDate)) {
                 $dueTs = strtotime($dueDate);
                 $now   = time();
-                $dueText = date('d/m/Y', $dueTs);
+                $dueText = date('d/m/Y H:i', $dueTs);
                 if ($dueTs < $now && $status !== 'done') {
                     $dueCssClass = 'due-overdue';
                 } elseif ($dueTs - $now < 86400 * 3 && $status !== 'done') {
@@ -250,7 +250,7 @@ $shortName = end($parts);
              data-status="<?= htmlspecialchars($status) ?>"
              data-title="<?= htmlspecialchars(strtolower($task['title'])) ?>"
              data-id="<?= $task['id'] ?>"
-             onclick="if(window.openTaskDetailModal) window.openTaskDetailModal(<?= $task['id'] ?>)">
+             onclick="window.openTaskDetailModal(<?= $task['id'] ?>)">
 
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
 
