@@ -1,7 +1,14 @@
 <?php
 $isAdmin = isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin';
 $user = $_SESSION['user'] ?? null;
-$displayName = $user['display_name'] ?? 'User';
+
+// Lấy ảnh đại diện và thông tin của user
+$displayName = $userSession['display_name'] ?? ($userSession['username'] ?? 'User');
+$avatarFile = $userSession['avatar_url'] ?? '';
+// Nếu có file ảnh trên máy chủ, lấy ảnh thật. Ngược lại, lấy ảnh chữ tự động làm dự phòng
+$sidebarAvatarUrl = (!empty($avatarFile) && $avatarFile !== 'default-avatar.png')
+    ? BASE_URL . '/uploads/avatars/' . $avatarFile
+    : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=7c3aed&color=fff";
 
 // Nạp ProjectModel để lấy danh sách lời mời chờ duyệt cho quả chuông
 $pendingInvites = [];
@@ -103,7 +110,7 @@ $inviteCount = count($pendingInvites);
         </div>
 
         <div class="user-chip">
-            <img src="https://ui-avatars.com/api/?name=<?= urlencode($displayName) ?>&background=7c3aed&color=fff" alt="Avatar" class="avatar-sm">
+            <img src="<?= $sidebarAvatarUrl ?>" alt="Avatar" class="user-avatar" style="object-fit: cover;">
         </div>
 
         <!-- Nút chuyển chế độ cho admin-->

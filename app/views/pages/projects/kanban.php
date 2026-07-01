@@ -134,6 +134,8 @@
             <option value="Story">Story (Nghiệp vụ)</option>
             <option value="Task">Task (Công việc)</option>
             <option value="Bug">Bug (Lỗi)</option>
+            <option value="Story">Story (Nghiệp vụ)</option>
+            <option value="Epic">Epic (Tính năng lớn)</option>
         </select>
     </div>
 
