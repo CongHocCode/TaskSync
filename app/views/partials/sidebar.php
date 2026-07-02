@@ -1,9 +1,14 @@
 <?php
 // Khởi tạo Model để tính toán dự án kích hoạt
 require_once __DIR__ . '/../../models/ProjectModel.php';
+require_once __DIR__ . '/../../models/TaskModel.php';
 $projectModel = new ProjectModel();
+$taskModel = new TaskModel();
 $userSession = $_SESSION['user'] ?? [];
 $userId = $userSession['id'] ?? null;
+
+$myTaskCount = $userId ? $taskModel->getTaskCountByUserId($userId) : 0;
+$myProjectCount = $userId ? $projectModel->getProjectCountByUserId($userId) : 0;
 
 // Lấy ảnh đại diện và thông tin của user
 $displayName = $userSession['display_name'] ?? ($userSession['username'] ?? 'User');
@@ -210,12 +215,12 @@ if ($activeProject) {
             <a href="<?= BASE_URL ?>/task/myTasks" class="sidebar-link">
                 <i class="bi bi-check-circle"></i>
                 <span>Task của tôi</span>
-                <span class="badge">2</span>
+                <span class="badge"><?= $myTaskCount ?></span>
             </a>
             <a href="<?= BASE_URL ?>/project/myProjects" class="sidebar-link">
                 <i class="bi bi-folder"></i>
                 <span>Dự án của tôi</span>
-                <span class="badge">3</span>
+                <span class="badge"><?= $myProjectCount ?></span>
             </a>
         </nav>
     </div>
