@@ -49,7 +49,7 @@
 
     <!-- THANH TÌM KIẾM DỰ ÁN -->
     <div class="mb-4">
-        <form action="<?= BASE_URL ?>/admin/projects" method="GET" class="d-flex gap-2" style="max-width: 500px;">
+        <form action="<?= BASE_URL ?>/admin/projects" method="GET" class="d-flex gap-2" style="max-width: 600px;">
             <div class="input-group">
                 <span class="input-group-text bg-white border-secondary-subtle text-secondary"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control border-secondary-subtle text-dark" name="q" value="<?= htmlspecialchars($data['search'] ?? '') ?>" placeholder="Tìm kiếm theo Tên, Key hoặc Trưởng dự án...">
