@@ -32,7 +32,7 @@ CREATE TABLE
     `project_id` INT,
     `user_id` INT,
     `role` ENUM ('manager', 'member', 'viewer') DEFAULT 'member',
-    `status` ENUM('pending', 'active') NOT NULL DEFAULT 'pending', -- Bổ sung cột Trạng thái lời mời
+    `status` ENUM ('pending', 'active') NOT NULL DEFAULT 'pending', -- Bổ sung cột Trạng thái lời mời
     `invited_by` INT DEFAULT NULL, -- Bổ sung ID người gửi lời mời
     PRIMARY KEY (`project_id`, `user_id`)
   );
@@ -64,6 +64,12 @@ CREATE TABLE
     `content` text,
     `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
     `updated_at` datetime ON UPDATE CURRENT_TIMESTAMP
+  );
+
+CREATE TABLE
+  `system_settings` (
+    `key` VARCHAR(50) NOT NULL PRIMARY KEY,
+    `value` VARCHAR(255) NULL
   );
 
 -- ==========================================

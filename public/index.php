@@ -35,5 +35,23 @@ require_once '../app/core/App.php';
 require_once '../app/core/Controller.php';
 require_once '../app/core/Database.php';
 
+try {
+    $dbObj = new Database();
+    $stmt = $dbObj->pdo->query("SELECT `value` FROM system_settings WHERE `key` = 'maintenance_mode' LIMIT 1");
+    $maintenanceMode = $stmt ? $stmt->fetchColumn() : 'off';
+
+    // Nếu đang bảo trì và tài khoản đăng nhập KHÔNG PHẢI là Admin -> Chặn
+    if ($maintenanceMode === 'on' && isset($_SESSION['user']) && $_SESSION['user']['role'] !== 'admin') {
+        unset($_SESSION['user']); // Hủy phiên hoạt động
+        $_SESSION['flash_error'] = "Hệ thống đang bảo trì nâng cấp định kỳ. Vui lòng quay lại sau!";
+        
+        // Đẩy về trang đăng nhập
+        header('Location: ' . BASE_URL . '/auth');
+        exit();
+    }
+} catch (Exception $e) {
+    // Bỏ qua nếu CSDL chưa nạp cấu hình
+}
+
 // Bật công tắc chạy hệ thống
 $app = new App();

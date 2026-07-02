@@ -20,8 +20,6 @@ if (isset($_SESSION['user']['id'])) {
 $inviteCount = count($pendingInvites);
 ?>
 
-
-
 <header class="app-header">
     <div class="header-brand">
         <button class="app-btn app-btn-ghost d-lg-none me-2" id="mobile-sidebar-toggle" type="button" style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(11, 18, 32, 0.1);" aria-label="Menu">
