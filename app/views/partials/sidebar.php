@@ -274,7 +274,7 @@ if ($activeProject) {
                     <span>Thành viên Dự án</span>
                 </a>
                 <!-- Chỉ hiển thị nút Cấu hình nếu là Manager -->
-                <?php if ($isManager): ?>
+                <?php if ($isManager || $isAdmin): ?>
                     <a href="<?= $settingsUrl ?>" class="sidebar-link">
                         <i class="bi bi-gear-fill"></i>
                         <span>Cấu hình dự án</span>

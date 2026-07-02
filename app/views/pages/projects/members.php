@@ -1,3 +1,8 @@
+<?php
+// Kiểm tra quyền quản trị/PM từ dữ liệu truyền xuống của Controller [179]
+$canManage = $data['is_authorized_to_delete'] ?? false;
+?>
+
 <div class="container-fluid py-4">
     <!-- Tiêu đề trang -->
     <div class="mb-4">
@@ -8,8 +13,8 @@
     </div>
 
     <div class="row g-4">
-        <!-- CỘT TRÁI (65%): DANH SÁCH THÀNH VIÊN HIỆN TẠI -->
-        <div class="col-12 col-xl-8">
+        <!-- CỘT TRÁI: DANH SÁCH THÀNH VIÊN HIỆN TẠI (Tự co giãn động 8 hoặc 12 cột) -->
+        <div class="col-12 <?= $canManage ? 'col-xl-8' : 'col-xl-12' ?>">
             <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
                 <h5 class="fw-bold mb-3 text-dark">Danh sách thành viên hiện tại (<?= count($data['members']) ?>)</h5>
 
@@ -109,52 +114,54 @@
             </div>
         </div>
 
-        <!-- CỘT PHẢI (35%): NÚT MỞ MODAL THÊM THÀNH VIÊN MỚI & SỨC KHỎE DỰ ÁN -->
-        <div class="col-12 col-xl-4">
-            <div class="d-flex flex-column gap-4">
+        <!-- 🚀 CỘT PHẢI (35%): CHỈ HIỂN THỊ CHO TÀI KHOẢN CÓ QUYỀN HẠN PHÙ HỢP (MANAGER/ADMIN) -->
+        <?php if ($canManage): ?>
+            <div class="col-12 col-xl-4">
+                <div class="d-flex flex-column gap-4">
 
-                <!-- KHỐI 1: NÚT KÍCH HOẠT MODAL THÊM THÀNH VIÊN ĐỘNG -->
-                <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
-                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-person-plus-fill text-success me-2"></i>Mời thành viên</h5>
-                    <p class="text-muted small">Mời thêm nhân sự mới tham gia thực thi công việc của dự án này.</p>
+                    <!-- KHỐI 1: NÚT KÍCH HOẠT MODAL THÊM THÀNH VIÊN ĐỘNG -->
+                    <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
+                        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-person-plus-fill text-success me-2"></i>Mời thành viên</h5>
+                        <p class="text-muted small">Mời thêm nhân sự mới tham gia thực thi công việc của dự án này.</p>
 
-                    <!-- Nút mở Modal tìm kiếm và chọn nhân sự chuyên nghiệp -->
-                    <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 rounded-pill"
-                        data-bs-toggle="modal"
-                        data-bs-target="#addMemberModal">
-                        <i class="bi bi-person-plus-fill fs-5"></i> Thêm thành viên mới
-                    </button>
-                </div>
-
-                <!-- KHỐI 2: SỨC KHỎE DỰ ÁN -->
-                <?php
-                $total = $data['stats']['total_tasks'] ?? 0;
-                $completed = $data['stats']['completed_tasks'] ?? 0;
-                $percent = $total ? round(($completed / $total) * 100) : 0;
-                ?>
-                <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
-                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-activity text-danger me-2"></i>Sức khỏe dự án</h5>
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-secondary small fw-medium">Tiến độ hoàn thành:</span>
-                        <span class="text-dark fw-bold"><?= $percent ?>%</span>
+                        <!-- Nút mở Modal tìm kiếm và chọn nhân sự chuyên nghiệp -->
+                        <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 rounded-pill"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addMemberModal">
+                            <i class="bi bi-person-plus-fill fs-5"></i> Thêm thành viên mới
+                        </button>
                     </div>
-                    <div class="progress mb-3" style="height: 10px; border-radius: 10px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: <?= $percent ?>%; border-radius: 10px;" aria-valuenow="<?= $percent ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                    <div class="row g-2 text-center mt-2">
-                        <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-primary">
-                            <small class="text-secondary d-block">Tổng Task</small>
-                            <span class="h4 fw-bold text-dark"><?= $total ?></span>
+
+                    <!-- KHỐI 2: SỨC KHỎE DỰ ÁN -->
+                    <?php
+                    $total = $data['stats']['total_tasks'] ?? 0;
+                    $completed = $data['stats']['completed_tasks'] ?? 0;
+                    $percent = $total ? round(($completed / $total) * 100) : 0;
+                    ?>
+                    <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 12px;">
+                        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-activity text-danger me-2"></i>Sức khỏe dự án</h5>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-secondary small fw-medium">Tiến độ hoàn thành:</span>
+                            <span class="text-dark fw-bold"><?= $percent ?>%</span>
                         </div>
-                        <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-success">
-                            <small class="text-secondary d-block">Đã xong</small>
-                            <span class="h4 fw-bold text-dark"><?= $completed ?></span>
+                        <div class="progress mb-3" style="height: 10px; border-radius: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: <?= $percent ?>%; border-radius: 10px;" aria-valuenow="<?= $percent ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="row g-2 text-center mt-2">
+                            <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-primary">
+                                <small class="text-secondary d-block">Tổng Task</small>
+                                <span class="h4 fw-bold text-dark"><?= $total ?></span>
+                            </div>
+                            <div class="col-6 py-2 bg-light rounded shadow-xs border-bottom border-3 border-success">
+                                <small class="text-secondary d-block">Đã xong</small>
+                                <span class="h4 fw-bold text-dark"><?= $completed ?></span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
+                </div>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
 </div>
 
