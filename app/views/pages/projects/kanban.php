@@ -1,3 +1,4 @@
+<!-- app/views/pages/projects/kanban.php -->
 <section class="kanban-page container-fluid py-4">
     <style>
         .quick-action-btn {
@@ -62,7 +63,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
             <h1 class="h3 mb-2 fw-bold text-dark d-flex align-items-center">
-                <?= htmlspecialchars($data['project']['name'] ?? 'Frontend Reconstruction') ?> 
+                <?= htmlspecialchars($data['project']['name'] ?? 'Frontend Reconstruction') ?>
                 <i class="bi bi-pin-angle ms-2 text-muted" style="font-size: 1.4rem;"></i>
             </h1>
             <p class="text-muted mb-0" style="font-size: 0.95rem;"><?= htmlspecialchars($data['project']['description'] ?? '') ?></p>
@@ -111,6 +112,63 @@
     </div>
 
     <div class="d-flex align-items-center gap-2 mb-4 py-3 border-bottom flex-wrap">
+        <!-- WIDGET GITHUB COMMIT CÓ THỂ THU GỌN-->
+        <?php if (!empty($data['github_commits'])): ?>
+            <div class="mb-3 d-flex align-items-center">
+                <!-- Nút bấm gập/mở tinh tế chuẩn style Bootstrap 5 -->
+                <button class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold d-flex align-items-center gap-1.5 shadow-sm"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#githubCommitsCollapse"
+                    aria-expanded="false"
+                    aria-controls="githubCommitsCollapse"
+                    style="font-size: 0.78rem; border-color: rgba(0,0,0,0.15);">
+                    <i class="bi bi-github"></i> <span>Xem hoạt động GitHub</span>
+                    <span class="badge bg-dark ms-1" style="font-size: 0.65rem;">Live</span>
+                    <i class="bi bi-chevron-down ms-1 small"></i>
+                </button>
+            </div>
+
+            <!-- Khối chứa dòng thời gian tự động gập/mở khi click nút ở trên -->
+            <div class="collapse mb-4" id="githubCommitsCollapse">
+                <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 4px solid #24292f;">
+                    <div class="d-flex flex-column gap-2" style="max-height: 200px; overflow-y: auto;">
+                        <?php foreach ($data['github_commits'] as $commit):
+                            $authorName = $commit['commit']['author']['name'] ?? 'Ẩn danh';
+                            $authorAvatar = $commit['author']['avatar_url'] ?? '';
+
+                            // 🚀 Nếu so khớp email thành công, lấy thông tin động từ hệ thống TaskSync
+                            if (!empty($commit['ts_user'])) {
+                                $authorName = trim(($commit['ts_user']['first_name'] ?? '') . ' ' . ($commit['ts_user']['last_name'] ?? '')) ?: $commit['ts_user']['username'];
+                                $authorAvatar = (!empty($commit['ts_user']['avatar_url']) && $commit['ts_user']['avatar_url'] !== 'default-avatar.png')
+                                    ? BASE_URL . '/uploads/avatars/' . $commit['ts_user']['avatar_url']
+                                    : "https://ui-avatars.com/api/?name=" . urlencode($authorName) . "&background=7c3aed&color=fff";
+                            } elseif (empty($authorAvatar)) {
+                                $authorAvatar = "https://ui-avatars.com/api/?name=" . urlencode($authorName) . "&background=7c3aed&color=fff";
+                            }
+
+                            // Định nghĩa các biến phụ trợ động tránh dội cảnh báo PHP [24]
+                            $message = $commit['commit']['message'] ?? 'No message';
+                            $date = isset($commit['commit']['author']['date']) ? date('d/m/Y H:i', strtotime($commit['commit']['author']['date'])) : 'Chưa rõ';
+                            $commitUrl = $commit['html_url'] ?? '#';
+                        ?>
+                            <div class="p-2.5 rounded-3 d-flex justify-content-between align-items-center hover-bg-light" style="background-color: #f8fafc; border: 1px solid #e2e8f0; transition: background-color 0.2s;">
+                                <div class="d-flex align-items-center gap-3" style="max-width: 85%;">
+                                    <img src="<?= $authorAvatar ?>" class="rounded-circle" width="28" height="28" style="object-fit: cover;">
+                                    <div>
+                                        <strong class="text-dark small d-block" style="font-size: 0.85rem; line-height: 1.3; font-weight: 600;"><?= htmlspecialchars($message) ?></strong>
+                                        <span class="text-muted small" style="font-size: 0.72rem;">Đẩy lên bởi <strong><?= htmlspecialchars($authorName) ?></strong> lúc <?= $date ?></span>
+                                    </div>
+                                </div>
+                                <a href="<?= $commitUrl ?>" target="_blank" class="btn btn-xs btn-outline-secondary py-1 px-2.5 rounded-pill small d-flex align-items-center gap-1 text-decoration-none" style="font-size: 0.7rem; font-weight: bold;">
+                                    <i class="bi bi-box-arrow-up-right"></i> Xem code
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
         <span class="text-muted small fw-bold me-2"><i class="bi bi-funnel text-secondary"></i> Bộ lọc:</span>
         <select id="filterAssignee" class="form-select form-select-sm w-auto bg-white border border-secondary-subtle text-dark ps-3 pe-4 rounded-pill fw-medium custom-filter-select" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Lọc theo thành viên">
             <option value="all">Tất cả người gán</option>
@@ -159,18 +217,26 @@
                         <span class="fw-bold text-secondary small text-uppercase"><?= $colInfo['label'] ?></span>
                         <span class="text-muted small ms-auto fw-bold count-badge"><?= $count ?></span>
                     </div>
-                    
+
                     <div class="sub-kanban-column d-flex flex-column gap-3 mt-1 p-1 overflow-y-auto" data-status="<?= $statusKey ?>" style="min-height: 480px;">
                         <?php foreach ($colTasks as $task):
                             $priority = strtoupper($task['priority'] ?? 'MEDIUM');
                             if ($priority === 'HIGHEST') {
-                                $priorityBg = '#ffbdad'; $priorityColor = '#bf2600'; $priorityIcon = 'bi-lightning-fill';
+                                $priorityBg = '#ffbdad';
+                                $priorityColor = '#bf2600';
+                                $priorityIcon = 'bi-lightning-fill';
                             } elseif ($priority === 'HIGH') {
-                                $priorityBg = '#ffebe6'; $priorityColor = '#de350b'; $priorityIcon = 'bi-bookmark-fill';
+                                $priorityBg = '#ffebe6';
+                                $priorityColor = '#de350b';
+                                $priorityIcon = 'bi-bookmark-fill';
                             } elseif ($priority === 'MEDIUM') {
-                                $priorityBg = '#fff0b3'; $priorityColor = '#172b4d'; $priorityIcon = 'bi-check-square-fill text-warning';
+                                $priorityBg = '#fff0b3';
+                                $priorityColor = '#172b4d';
+                                $priorityIcon = 'bi-check-square-fill text-warning';
                             } else {
-                                $priorityBg = '#e3fcef'; $priorityColor = '#006644'; $priorityIcon = 'bi-arrow-down text-success';
+                                $priorityBg = '#e3fcef';
+                                $priorityColor = '#006644';
+                                $priorityIcon = 'bi-arrow-down text-success';
                             }
 
                             $assigneeFullName = trim(($task['assignee_first'] ?? '') . ' ' . ($task['assignee_last'] ?? ''));
@@ -200,9 +266,9 @@
                                     <h6 class="task-title fw-bold mb-0 <?= $isDone ? 'text-secondary text-decoration-line-through' : 'text-dark' ?>" style="line-height: 1.4; font-size: 0.95rem;">
                                         <?= htmlspecialchars($task['title'] ?? '') ?>
                                     </h6>
-                                    
+
                                     <div class="dashed-divider"></div>
-                                    
+
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="d-flex align-items-center gap-2">
                                             <?php if ($taskType === 'bug'): ?>
@@ -223,7 +289,7 @@
                                             <img src="<?= $avatarUrl ?>" class="rounded-circle" style="width: 24px; height: 24px;" alt="Avatar">
                                         </div>
                                     </div>
-                                    
+
                                     <div class="d-flex justify-content-between align-items-center px-1 quick-actions-container">
                                         <?php
                                         $actions = [
@@ -236,7 +302,7 @@
                                             if ($actKey !== $statusKey):
                                         ?>
                                                 <span class="text-muted fw-medium quick-action-btn" style="font-size: 0.65rem; cursor: pointer;" onclick="event.stopPropagation(); moveTask(this, '<?= $actKey ?>')">
-                                                    <i class="bi <?= $actVal['icon'] ?>"></i> <?= $actVal['label'] ?>
+                                                    <i class="bi bi-arrow-right"></i> <?= $actVal['label'] ?>
                                                 </span>
                                         <?php
                                             endif;

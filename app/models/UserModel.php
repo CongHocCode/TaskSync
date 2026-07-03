@@ -201,6 +201,14 @@ class UserModel
         return $stmt->fetchColumn();
     }
 
+    // Tìm kiếm thông tin cơ bản của User theo địa chỉ Email
+    public function getByEmail($email)
+    {
+        $stmt = $this->db->pdo->prepare("SELECT id, username, first_name, last_name, avatar_url FROM users WHERE email = ? LIMIT 1");
+        $stmt->execute([$email]);
+        return $stmt->fetch();
+    }
+
     //Để tạm ở UserModel
     // Lấy toàn bộ cấu hình hệ thống đưa về dạng mảng kết hợp
     public function getSystemSettings()

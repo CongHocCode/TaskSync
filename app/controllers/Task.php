@@ -167,7 +167,8 @@ class Task extends Controller
         $projectId = $this->taskModel->getProjectIdByTaskId($id);
 
         // 2. Kiểm tra tư cách thành viên dự án
-        $userRoleInProject = $this->projectModel->getProjectUserRole($projectId, $_SESSION['user']['id']);
+        $userId = $_SESSION['user']['id'];
+        $userRoleInProject = $this->projectModel->getProjectUserRole($projectId, $userId);
         $isAdmin = ($_SESSION['user']['role'] === 'admin');
 
         if (!$userRoleInProject && !$isAdmin) {
@@ -175,7 +176,17 @@ class Task extends Controller
             echo json_encode(['success' => false, 'error' => 'Bạn không có quyền truy cập công việc này.']);
             exit();
         }
-        
+
+        $canEditGithub = false;
+        if ($isAdmin || $userRoleInProject === 'manager') {
+            $canEditGithub = true; // Admin và Manager luôn được sửa
+        } elseif ($userRoleInProject === 'member') {
+            // Member chỉ được sửa nếu là Người thực hiện (Assignee) hoặc Người tạo (Reporter) của Task này
+            $canEditGithub = ($userId == $task['assignee_id'] || $userId == $task['reporter_id']);
+        }
+
+
+
         $task['current_user_role'] = $isAdmin ? 'admin' : $userRoleInProject;
 
         // Lấy danh sách subtasks
@@ -192,6 +203,10 @@ class Task extends Controller
             return ($m['status'] ?? 'active') === 'active';
         });
         $task['project_members'] = array_values($activeMembers);
+
+        // Đóng gói trạng thái gửi về cho Frontend
+        $task['can_edit_github'] = $canEditGithub;
+        $task['pr_status'] = $this->fetchPullRequestStatus($task['github_branch_url'] ?? '');
 
         echo json_encode($task);
         exit;
@@ -252,7 +267,7 @@ class Task extends Controller
         // Phân quyền kéo thả
         $userId = $_SESSION['user']['id'];
         $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
-        
+
         $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
         $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
 
@@ -262,7 +277,7 @@ class Task extends Controller
                 echo json_encode(['success' => false, 'error' => 'Bạn không có quyền thay đổi trạng thái công việc này.']);
                 exit;
             }
-            
+
             if ($userProjectRole === 'member') {
                 $taskDetails = $this->taskModel->getById($taskId);
                 if ($taskDetails['assignee_id'] != $userId) {
@@ -393,5 +408,75 @@ class Task extends Controller
         header('HTTP/1.1 400 Bad Request');
         echo json_encode(['success' => false, 'error' => 'Yêu cầu không hợp lệ']);
         exit();
+    }
+
+    public function updateBranchUrl()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            $taskId = $input['task_id'] ?? null;
+            $url = $input['github_branch_url'] ?? null;
+
+            if ($taskId) {
+                // Phân quyền sửa url
+                $userId = $_SESSION['user']['id'];
+                $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+                $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
+                $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
+
+                if ((!$isAdmin && $userProjectRole !== 'manager') || !$userProjectRole) {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'error' => 'Bạn không có quyền sửa URL!.']);
+                    exit();
+                }
+
+                $success = $this->taskModel->updateBranchUrl($taskId, $url);
+
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $success]);
+                exit();
+            }
+        }
+        header('HTTP/1.1 400 Bad Request');
+        echo json_encode(['success' => false, 'error' => 'Yêu cầu không hợp lệ']);
+        exit();
+    }
+
+    // Gọi API GitHub lấy trạng thái thực tế của Pull Request (Open/Merged/Closed) [210]
+    private function fetchPullRequestStatus($prUrl)
+    {
+        if (empty($prUrl)) return null;
+
+        // Trích xuất: owner, repo name, và số Pull Request
+        preg_match('/github\.com\/([^\/]+)\/([^\/]+)\/pull\/([0-9]+)/', $prUrl, $matches);
+        $owner = $matches[1] ?? null;
+        $repo  = $matches[2] ?? null;
+        $prNum = $matches[3] ?? null;
+
+        if (!$owner || !$repo || !$prNum) return null;
+
+        $url = "https://api.github.com/repos/{$owner}/{$repo}/pulls/{$prNum}";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['User-Agent: TaskSync-App']);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            $prData = json_decode($response, true);
+            return [
+                'state'  => $prData['state'] ?? 'open', // open, closed
+                'merged' => $prData['merged'] ?? false, // true, false
+                'number' => $prNum
+            ];
+        }
+        return null;
     }
 }

@@ -323,4 +323,14 @@ class TaskModel
             'id' => $taskId
         ]);
     }
+
+    public function updateBranchUrl($taskId, $url)
+    {
+        $sql = "UPDATE issues SET github_branch_url = :url, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'url' => $url,
+            'id' => $taskId
+        ]);
+    }
 }

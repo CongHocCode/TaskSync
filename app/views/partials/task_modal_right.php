@@ -3,11 +3,11 @@
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
             <div class="modal-header border-bottom-0 pt-4 px-4 pb-2 position-relative">
                 <div class="text-muted fw-medium small">DỰ ÁN / <a href="#" class="text-dark fw-bold text-decoration-none" id="modalProjectName" style="transition: color 0.2s;" onmouseover="this.style.color='#4f46e5';" onmouseout="this.style.color='inherit';">WEB-V2</a></div>
-                <button type="button" class="btn d-flex align-items-center justify-content-center p-0 rounded-circle border shadow-sm" data-bs-dismiss="modal" 
-                        style="width: 36px; height: 36px; background-color: #fff; border-color: #cbd5e1 !important; transition: all 0.2s; position: absolute; right: 24px; top: 20px; z-index: 1051;"
-                        onmouseover="this.style.backgroundColor='#f1f5f9'; this.style.transform='scale(1.08)';" 
-                        onmouseout="this.style.backgroundColor='#fff'; this.style.transform='scale(1)';"
-                        title="Đóng chi tiết công việc">
+                <button type="button" class="btn d-flex align-items-center justify-content-center p-0 rounded-circle border shadow-sm" data-bs-dismiss="modal"
+                    style="width: 36px; height: 36px; background-color: #fff; border-color: #cbd5e1 !important; transition: all 0.2s; position: absolute; right: 24px; top: 20px; z-index: 1051;"
+                    onmouseover="this.style.backgroundColor='#f1f5f9'; this.style.transform='scale(1.08)';"
+                    onmouseout="this.style.backgroundColor='#fff'; this.style.transform='scale(1)';"
+                    title="Đóng chi tiết công việc">
                     <i class="bi bi-x-lg" style="color: #4b5563; font-size: 1.1rem; -webkit-text-stroke: 0.5px;"></i>
                 </button>
             </div>
@@ -17,7 +17,7 @@
                     <div class="col-lg-8">
                         <div id="modalMotherTaskDisplay" class="mb-2 d-none">
                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 0.75rem;">
-                                <i class="bi bi-diagram-3-fill me-1"></i> Mother Task: 
+                                <i class="bi bi-diagram-3-fill me-1"></i> Mother Task:
                                 <a href="#" id="modalMotherTaskRef" class="text-primary text-decoration-none fw-bold"></a>
                             </span>
                         </div>
@@ -56,7 +56,7 @@
                         <hr class="border-secondary-subtle my-4 opacity-50">
                         <div class="mb-4">
                             <label class="text-muted fw-bold small mb-3 ps-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">BÌNH LUẬN TRAO ĐỔI</label>
-                            
+
                             <!-- Danh sách bình luận -->
                             <div id="modalCommentsList" class="mb-3" style="max-height: 320px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 12px;">
                                 <!-- Được nạp động từ JS -->
@@ -130,7 +130,9 @@
 
                             <div class="mb-4">
                                 <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">GITHUB BRANCH / URL</label>
-                                <input type="text" class="form-control seamless-input font-monospace text-dark" style="background-color: #fff; border: 1px solid #cbd5e1 !important;" placeholder="https://github.com/.../pull/1">
+                                <!--  Badge trạng thái của PR -->
+                                <div id="prStatusBadgeContainer"></div>
+                                <input type="text" id="githubBranchUrl" class="form-control seamless-input font-monospace text-dark" style="background-color: #fff; border: 1px solid #cbd5e1 !important;" placeholder="https://github.com/.../pull/1">
                             </div>
 
                             <hr class="border-secondary-subtle my-4 opacity-50">
