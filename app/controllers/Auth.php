@@ -51,7 +51,7 @@ class Auth extends Controller
                 'username'     => $user['username'],
                 'role'         => $user['role'],
                 'display_name' => $user['first_name'] . ' ' . $user['last_name'],
-                'avatar'       => $user['avatar_url'] ?? 'default-avatar.png'
+                'avatar_url'   => $user['avatar_url'] ?? 'default-avatar.png',
             ];
             redirect('workspace');
         } else {

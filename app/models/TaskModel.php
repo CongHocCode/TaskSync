@@ -19,11 +19,14 @@ class TaskModel
                        CONCAT(u2.first_name, ' ', u2.last_name) AS reporter_full_name,
                        u2.username AS reporter_username,
                        p.key AS project_key,
-                       p.name AS project_name
+                       p.name AS project_name,
+                       pi.issue_key AS parent_issue_key,
+                       pi.title AS parent_title
                 FROM issues i
                 LEFT JOIN users u1 ON i.assignee_id = u1.id
                 LEFT JOIN users u2 ON i.reporter_id = u2.id
                 LEFT JOIN projects p ON i.project_id = p.id
+                LEFT JOIN issues pi ON i.parent_issue_id = pi.id
                 WHERE i.id = :id 
                 LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -72,12 +75,13 @@ class TaskModel
             $issueKey = $project['key'] . '-' . $project['issue_counter'];
 
             // 3. Thực hiện lưu Task mới vào bảng issues
-            $sqlInsert = "INSERT INTO issues (project_id, issue_key, title, description, type, status, priority, reporter_id, assignee_id, due_date, created_at) 
-                      VALUES (:project_id, :issue_key, :title, :description, :type, 'todo', :priority, :reporter_id, :assignee_id, :due_date, NOW())";
+            $sqlInsert = "INSERT INTO issues (project_id, parent_issue_id, issue_key, title, description, type, status, priority, reporter_id, assignee_id, due_date, created_at) 
+                      VALUES (:project_id, :parent_issue_id, :issue_key, :title, :description, :type, 'todo', :priority, :reporter_id, :assignee_id, :due_date, NOW())";
 
             $stmtInsert = $this->db->prepare($sqlInsert);
             $stmtInsert->execute([
                 'project_id' => $data['project_id'],
+                'parent_issue_id' => $data['parent_issue_id'] ?? null,
                 'issue_key'  => $issueKey,
                 'title'      => $data['title'],
                 'description' => $data['description'],
@@ -94,6 +98,7 @@ class TaskModel
         } catch (Exception $e) {
             // Có lỗi xảy ra, hoàn tác lại toàn bộ để tránh sai lệch dữ liệu
             $this->db->rollBack();
+            file_put_contents('C:\xampp\htdocs\TaskSync\debug.log', date('Y-m-d H:i:s') . " - CreateIssue Error: " . $e->getMessage() . "\n", FILE_APPEND);
             return false;
         }
     }
@@ -131,35 +136,29 @@ class TaskModel
     }
 
     // Lấy ID dự án của một Task cụ thể
-    public function getProjectIdByTaskId($taskId) {
+    public function getProjectIdByTaskId($taskId)
+    {
         $sql = "SELECT project_id FROM issues WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $taskId]);
         return $stmt->fetchColumn(); // Trả về con số ID dự án
     }
 
-    // Lấy tần suất xử lý công việc của các thành viên (Số lượng task được giao)
-    public function getTaskFrequency()
+    // Lấy tổng số task
+    public function getTotalTasksCount()
     {
-        $sql = "SELECT u.username AS member_name, COUNT(i.id) AS task_count
-                FROM users u
-                LEFT JOIN issues i ON u.id = i.assignee_id
-                GROUP BY u.id, u.username
-                ORDER BY task_count DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->db->query("SELECT COUNT(*) FROM issues");
+        return $stmt->fetchColumn();
     }
 
-    // Lấy thống kê số lượng người dùng đăng ký theo ngày
-    public function getNewUsersStats()
+    // Lấy số task theo người thực hiện
+    public function getSystemTaskFrequency()
     {
-        $sql = "SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS reg_date, COUNT(*) AS user_count
-                FROM users
-                GROUP BY reg_date
-                ORDER BY reg_date ASC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+        $sql = "SELECT CONCAT(u.first_name, ' ', u.last_name) as member_name, COUNT(i.id) as task_count 
+                FROM issues i 
+                JOIN users u ON i.assignee_id = u.id 
+                GROUP BY i.assignee_id";
+        $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -188,9 +187,10 @@ class TaskModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy TẤT CẢ công việc của user (kể cả done - dùng cho trang My Tasks đầy đủ)
-    public function getAllIssuesByUserId($userId)
+    // Lấy TẤT CẢ công việc của user (kể cả done - có tích hợp Tìm kiếm động)
+    public function getAllIssuesByUserId($userId, $search = '')
     {
+        // Khai báo phần khung truy vấn cơ bản
         $sql = "SELECT i.*, 
                        p.key AS project_key,
                        p.name AS project_name,
@@ -201,8 +201,18 @@ class TaskModel
                 FROM issues i
                 LEFT JOIN projects p ON i.project_id = p.id
                 LEFT JOIN users u2 ON i.reporter_id = u2.id
-                WHERE i.assignee_id = :user_id
-                ORDER BY CASE i.status
+                WHERE i.assignee_id = :user_id";
+
+        $params = ['user_id' => $userId];
+
+        // Nếu có từ khóa tìm kiếm, tự động nối thêm điều kiện lọc trong SQL [210]
+        if (!empty($search)) {
+            $sql .= " AND (i.title LIKE :search OR i.issue_key LIKE :search OR i.description LIKE :search)";
+            $params['search'] = "%$search%";
+        }
+
+        // Ghép nối mệnh đề sắp xếp ưu tiên nâng cao
+        $sql .= " ORDER BY CASE i.status
                             WHEN 'in_progress' THEN 1
                             WHEN 'in_review' THEN 2
                             WHEN 'todo' THEN 3
@@ -217,8 +227,9 @@ class TaskModel
                             ELSE 5 
                          END,
                          i.due_date ASC, i.created_at DESC";
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['user_id' => $userId]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -228,6 +239,17 @@ class TaskModel
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'assignee_id' => $assigneeId,
+            'id' => $taskId
+        ]);
+    }
+
+    // Cập nhật hạn hoàn thành của task
+    public function updateDueDate($taskId, $dueDate)
+    {
+        $sql = "UPDATE issues SET due_date = :due_date, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'due_date' => $dueDate ?: null,
             'id' => $taskId
         ]);
     }
@@ -280,5 +302,16 @@ class TaskModel
     public function getLastInsertedId()
     {
         return $this->db->lastInsertId();
+    }
+
+    // Cập nhật loại công việc (type)
+    public function updateType($taskId, $type)
+    {
+        $sql = "UPDATE issues SET type = :type, updated_at = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'type' => $type,
+            'id' => $taskId
+        ]);
     }
 }

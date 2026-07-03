@@ -66,16 +66,16 @@
             color: #6b7280;
         }
         .issue-item {
-    transition: all 0.2s ease-in-out; 
-    cursor: pointer; 
-}
+            transition: all 0.2s ease-in-out; 
+            cursor: pointer; 
+        }
 
-.issue-item:hover {
-    background: #f1f1f5 !important; 
-    border-color: rgba(11, 18, 32, 0.15) !important; 
-    transform: translateY(-2px); 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-}
+        .issue-item:hover {
+            background: #f1f1f5 !important; 
+            border-color: rgba(11, 18, 32, 0.15) !important; 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+        }
     </style>
     <div class="row g-4">
         <!-- Cột trái: My Assigned Issues -->
@@ -83,7 +83,7 @@
             <div class="app-card h-100 mb-0" style="background: #fff; border: 1px solid rgba(11, 18, 32, 0.06); box-shadow: 0 12px 30px rgba(11, 18, 32, 0.06);">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h3 style="color: #1a1632 !important; font-weight: 700 !important; margin: 0; font-size: 1.2rem;">My Assigned Issues (<?= count($data['assigned_issues'] ?? []) ?>)</h3>
-                    <a href="<?= BASE_URL ?>/task/myTasks" class="text-decoration-none" style="color: #7c3aed; font-weight: 700; font-size: 0.9rem; transition: color 0.2s;">Xem tất cả</a>
+                    <a href="<?= BASE_URL ?>/workspace/myTasks" class="text-decoration-none" style="color: #7c3aed; font-weight: 700; font-size: 0.9rem; transition: color 0.2s;">Xem tất cả</a>
                 </div>
                 <p style="color: #6b7280; font-size: 0.85rem; margin-top: -8px; margin-bottom: 1.5rem;">Các công việc đang được gán cho tài khoản cá nhân</p>
                 <div class="issues-list">

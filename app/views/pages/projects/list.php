@@ -146,7 +146,7 @@
                                 }
 
                                 $createdAt = date('Y-m-d', strtotime($task['created_at']));
-                                $dueDate = !empty($task['due_date']) ? date('Y-m-d', strtotime($task['due_date'])) : '';
+                                $dueDate = !empty($task['due_date']) ? date('d/m/Y H:i', strtotime($task['due_date'])) : '';
                             ?>
                                 <tr class="task-row" data-id="<?= $task['id'] ?>" data-assignee="<?= htmlspecialchars($task['assignee_username'] ?? '') ?>">
                                     <td class="py-3 px-4">

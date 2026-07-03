@@ -15,3 +15,5 @@ Thumbs.db
 
 README.local.md
 app/core/config.php
+
+public/uploads/

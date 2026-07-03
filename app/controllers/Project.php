@@ -29,18 +29,6 @@ class Project extends Controller
         $this->view('pages/projects/index', $data);
     }
 
-    // Dự án của người dùng hiện tại
-    public function myProjects()
-    {
-        $userId = $_SESSION['user']['id']; // Lấy ID của user đang đăng nhập từ Session
-
-        $data['page_title'] = "Dự án của tôi";
-        // Gọi model lấy danh sách dự án mà user này tham gia
-        $data['projects'] = $this->projectModel->getProjectsByUserId($userId);
-
-        $this->view('pages/workspace/my_projects', $data);
-    }
-
     // Hàm tạo dự án mới (Cả hiển thị form và xử lý lưu data)
     public function create()
     {
@@ -337,6 +325,13 @@ class Project extends Controller
         // Lấy thống kê sức khỏe dự án
         $projectStats = $projectModel->getProjectStats($projectId);
 
+        // Lưu đường dẫn quay lại dựa trên nguồn truy cập (từ quản lý dự án admin hay dự án của tôi)
+        if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'admin/projects') !== false) {
+            $_SESSION['settings_back_url'] = 'admin/projects';
+        } else {
+            $_SESSION['settings_back_url'] = 'project/myProjects';
+        }
+
         // Nạp view Cấu hình dự án
         $this->view('pages/projects/settings', [
             'page_title' => $project['name'] . ' - Cấu hình',
@@ -377,10 +372,14 @@ class Project extends Controller
             } else {
                 $_SESSION['flash_error'] = "Cập nhật dự án thất bại. Có thể mã viết tắt (Key) đã tồn tại.";
             }
-            redirect('project/myProjects');
+            $redirectUrl = $_SESSION['settings_back_url'] ?? 'project/myProjects';
+            unset($_SESSION['settings_back_url']);
+            redirect($redirectUrl);
             exit();
         }
-        redirect('project/myProjects');
+        $redirectUrl = $_SESSION['settings_back_url'] ?? 'project/myProjects';
+        unset($_SESSION['settings_back_url']);
+        redirect($redirectUrl);
     }
 
     // Xóa dự án
@@ -411,9 +410,13 @@ class Project extends Controller
             } else {
                 $_SESSION['flash_error'] = "Xóa dự án thất bại. Vui lòng thử lại.";
             }
-            redirect('project/myProjects');
+            $redirectUrl = $_SESSION['settings_back_url'] ?? 'project/myProjects';
+            unset($_SESSION['settings_back_url']);
+            redirect($redirectUrl);
             exit();
         }
-        redirect('project/myProjects');
+        $redirectUrl = $_SESSION['settings_back_url'] ?? 'project/myProjects';
+        unset($_SESSION['settings_back_url']);
+        redirect($redirectUrl);
     }
 }

@@ -1,7 +1,14 @@
 <?php
 $isAdmin = isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin';
 $user = $_SESSION['user'] ?? null;
-$displayName = $user['display_name'] ?? 'User';
+
+$displayName = $user['display_name'] ?? ($user['username'] ?? 'User');
+$avatarFile = $user['avatar_url'] ?? '';
+
+// Lấy đường dẫn ảnh đại diện động
+$sidebarAvatarUrl = (!empty($avatarFile) && $avatarFile !== 'default-avatar.png')
+    ? BASE_URL . '/uploads/avatars/' . $avatarFile
+    : "https://ui-avatars.com/api/?name=" . urlencode($displayName) . "&background=7c3aed&color=fff";
 
 // Nạp ProjectModel để lấy danh sách lời mời chờ duyệt cho quả chuông
 $pendingInvites = [];
@@ -12,6 +19,7 @@ if (isset($_SESSION['user']['id'])) {
 }
 $inviteCount = count($pendingInvites);
 ?>
+
 <header class="app-header">
     <div class="header-brand">
         <button class="app-btn app-btn-ghost d-lg-none me-2" id="mobile-sidebar-toggle" type="button" style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(11, 18, 32, 0.1);" aria-label="Menu">
@@ -26,27 +34,28 @@ $inviteCount = count($pendingInvites);
                 </div>
             </div>
         <?php else: ?>
-            <!-- Cho member, đặt ô tìm kiếm ở bên trái -->
-            <div class="search-wrapper">
-                <input type="text" class="app-input" placeholder="Tìm kiếm mã hoặc từ khóa task..." aria-label="Tìm kiếm" />
-                <button class="app-btn app-btn-ghost" type="button" aria-label="Tìm kiếm">
+            <!-- Form Tìm kiếm thực tế trỏ về route My Tasks -->
+            <form action="<?= BASE_URL ?>/workspace/myTasks" method="GET" class="search-wrapper">
+                <input type="text" name="q" class="app-input text-white" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" placeholder="Tìm kiếm mã hoặc từ khóa task..." aria-label="Tìm kiếm" />
+                <button class="app-btn app-btn-ghost" type="submit" aria-label="Tìm kiếm">
                     <i class="bi bi-search"></i>
                 </button>
-            </div>
+            </form>
         <?php endif; ?>
     </div>
+    
     <div class="header-actions">
         <?php if ($isAdmin): ?>
-            <!-- Cho admin, ô tìm kiếm ở bên phải -->
-            <div class="search-wrapper">
-                <input type="text" class="app-input" placeholder="Tìm kiếm mã hoặc từ khóa task..." aria-label="Tìm kiếm" />
-                <button class="app-btn app-btn-ghost" type="button" aria-label="Tìm kiếm">
+            <!-- Cho admin, đã đổi thành Form Tìm kiếm thực tế trỏ về route My Tasks -->
+            <form action="<?= BASE_URL ?>/workspace/myTasks" method="GET" class="search-wrapper">
+                <input type="text" name="q" class="app-input text-white" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" placeholder="Tìm kiếm mã hoặc từ khóa task..." aria-label="Tìm kiếm" />
+                <button class="app-btn app-btn-ghost" type="submit" aria-label="Tìm kiếm">
                     <i class="bi bi-search"></i>
                 </button>
-            </div>
+            </form>
         <?php endif; ?>
 
-        <!--THÔNG BÁO -->
+        <!-- THÔNG BÁO QUẢ CHUÔNG -->
         <div class="dropdown me-3">
             <button class="btn btn-link text-white position-relative p-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="box-shadow: none;">
                 <i class="bi bi-bell fs-5"></i>
@@ -86,12 +95,10 @@ $inviteCount = count($pendingInvites);
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 mt-1">
-                                    <!-- Nút Từ chối -->
-                                    <a href="<?= BASE_URL ?>/project/declineInvite/<?= $invite['project_id'] ?>" class="btn btn-xs btn-outline-danger py-1 px-2.5 rounded-pill small" style="font-size: 0.72rem; font-weight: bold;">
+                                    <a href="<?= BASE_URL ?>/project/declineInvite/<?= $invite['project_id'] ?>" class="btn btn-sm btn-outline-danger py-1 px-2.5 rounded-pill small" style="font-size: 0.72rem; font-weight: bold;">
                                         <i class="bi bi-x-lg"></i> Từ chối
                                     </a>
-                                    <!-- Nút Đồng ý -->
-                                    <a href="<?= BASE_URL ?>/project/acceptInvite/<?= $invite['project_id'] ?>" class="btn btn-xs btn-success py-1 px-2.5 rounded-pill small text-white" style="font-size: 0.72rem; font-weight: bold;">
+                                    <a href="<?= BASE_URL ?>/project/acceptInvite/<?= $invite['project_id'] ?>" class="btn btn-sm btn-success py-1 px-2.5 rounded-pill small text-white" style="font-size: 0.72rem; font-weight: bold;">
                                         <i class="bi bi-check-lg"></i> Chấp nhận
                                     </a>
                                 </div>
@@ -102,25 +109,47 @@ $inviteCount = count($pendingInvites);
             </ul>
         </div>
 
-        <div class="user-chip">
-            <img src="https://ui-avatars.com/api/?name=<?= urlencode($displayName) ?>&background=7c3aed&color=fff" alt="Avatar" class="avatar-sm">
+        <!-- DROPDOWN MENU CHỨA CÁC CHỨC NĂNG NHANH  -->
+        <div class="user-chip dropdown p-0 me-3" style="background: transparent; border: none;">
+            <button class="btn btn-link p-0 d-flex align-items-center text-decoration-none dropdown-toggle" 
+                    type="button" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false" 
+                    style="box-shadow: none;">
+                <img src="<?= $sidebarAvatarUrl ?>" alt="Avatar" class="user-avatar" style="object-fit: cover; width: 34px; height: 34px; border-radius: 50%;">
+            </button>
+            
+            <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2 py-2 text-dark" style="border-radius: 12px; width: 220px; font-size: 0.85rem;">
+                <li class="px-3 py-2 border-bottom">
+                    <span class="fw-bold text-dark d-block" style="font-size: 0.88rem;"><?= htmlspecialchars($displayName) ?></span>
+                    <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;"><?= htmlspecialchars($user['email'] ?? 'member@tasksync.com') ?></small>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="<?= BASE_URL ?>/user/profile">
+                        <i class="bi bi-person-gear text-secondary"></i> Cài đặt tài khoản
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item py-2 fw-bold text-danger d-flex align-items-center gap-2" href="<?= BASE_URL ?>/auth/logout">
+                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
         </div>
 
         <!-- Nút chuyển chế độ cho admin-->
         <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'):
             $normalizedView = isset($view) ? str_replace('\\', '/', $view) : '';
-            // Thỏa mãn cả trường hợp nằm trong thư mục admin/ hoặc file đặt tại dashboard/admin
             $isAdminPage = (strpos($normalizedView, 'admin/') !== false || strpos($normalizedView, 'dashboard/admin') !== false);
         ?>
             <?php if ($isAdminPage): ?>
-                <!-- ĐANG Ở ADMIN: Bấm nút này sẽ trỏ về URL: /workspace (Gọi Workspace Controller -> index) -->
                 <a href="<?= BASE_URL ?>/workspace"
                     class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold d-flex align-items-center gap-1.5 shadow-sm"
                     style="font-size: 0.8rem; border-color: rgba(255,255,255,0.35);">
                     <i class="bi bi-person-workspace text-warning"></i> Không gian làm việc
                 </a>
             <?php else: ?>
-                <!-- ĐANG Ở WORKSPACE: Bấm nút này sẽ trỏ về URL: /admin/dashboard (Gọi Admin Controller -> dashboard) -->
                 <a href="<?= BASE_URL ?>/admin/dashboard"
                     class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold d-flex align-items-center gap-1.5 shadow-sm"
                     style="font-size: 0.8rem; border-color: rgba(255,255,255,0.35);">

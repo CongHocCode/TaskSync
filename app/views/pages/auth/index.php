@@ -1,3 +1,15 @@
+<?php
+// Khởi tạo kết nối CSDL nhanh để đọc cấu hình Đăng ký tự do (Chống lỗi phụ thuộc Controller) [210]
+$db = new Database();
+$pdo = $db->pdo;
+
+try {
+    $stmt = $pdo->query("SELECT `value` FROM system_settings WHERE `key` = 'allow_registration' LIMIT 1");
+    $allowRegistration = $stmt ? $stmt->fetchColumn() : 'on';
+} catch (Exception $e) {
+    $allowRegistration = 'on'; // Dự phòng mặc định nếu chưa chạy SQL seed
+}
+?>
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -452,81 +464,86 @@
                         </button>
                     </form>
 
-                    <div class="auth-footer-links">
-                        Chưa có tài khoản? <a onclick="toggleAuth(true)">Đăng ký ngay</a>
-                    </div>
+                    <!-- Nút Đăng ký chỉ hiện nếu trạng thái allowRegistration là 'on' -->
+                    <?php if ($allowRegistration === 'on'): ?>
+                        <div class="auth-footer-links">
+                            Chưa có tài khoản? <a onclick="toggleAuth(true)">Đăng ký ngay</a>
+                        </div>
+                    <?php endif; ?>
 
-                    <!-- PHẦN QUICK ACCOUNTS ĐĂNG NHẬP NHANH CHO DEV -->
+                    <!-- Các thẻ đăng nhập nhanh -->
                     <div class="quick-accounts-section">
                         <div class="quick-accounts-title">Thử nghiệm nhanh hệ thống (Quick Accounts)</div>
                         <div class="quick-grid">
                             <button class="quick-btn" onclick="fillQuickAccount('admin', '123456')">
                                 <i class="bi bi-shield-lock-fill"></i>
                                 <span class="quick-role">Admin</span>
-                                <span class="quick-name">Át Min</span>
+                                <span class="quick-name">Nguyễn Át Min</span>
                             </button>
-                            <button class="quick-btn" onclick="fillQuickAccount('manager1', '123456')">
+                            <button class="quick-btn" onclick="fillQuickAccount('hung_le', '123456')">
                                 <i class="bi bi-person-workspace"></i>
                                 <span class="quick-role">PM</span>
-                                <span class="quick-name">Alex Rivera</span>
+                                <span class="quick-name">Lê Mạnh Hùng</span>
                             </button>
                             <button class="quick-btn" onclick="fillQuickAccount('member1', '123456')">
                                 <i class="bi bi-person-fill"></i>
                                 <span class="quick-role">Member</span>
-                                <span class="quick-name">Sarah Chen</span>
+                                <span class="quick-name">Văn Cường</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- FORM ĐĂNG KÝ -->
-                <div id="register-section" class="hidden">
-                    <div class="auth-header">
-                        <h2>Tạo tài khoản mới</h2>
-                        <p>Bắt đầu thiết lập hệ thống quản lý công việc ngay lập tức</p>
+                <!-- FORM ĐĂNG KÝ (CHỈ HOẠT ĐỘNG KHI ĐƯỢC BẬT CẤU HÌNH) -->
+                <?php if ($allowRegistration === 'on'): ?>
+                    <div id="register-section" class="hidden">
+                        <div class="auth-header">
+                            <h2>Tạo tài khoản mới</h2>
+                            <p>Bắt đầu thiết lập hệ thống quản lý công việc ngay lập tức</p>
+                        </div>
+
+                        <form action="<?= BASE_URL ?>/auth/register" method="POST">
+                            <div class="name-row">
+                                <div class="form-group name-col">
+                                    <label for="last_name">HỌ</label>
+                                    <input type="text" id="last_name" name="last_name" class="auth-input" placeholder="E.g., Nguyen" required>
+                                </div>
+                                <div class="form-group name-col">
+                                    <label for="first_name">TÊN</label>
+                                    <input type="text" id="first_name" name="first_name" class="auth-input" placeholder="E.g., Van A" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg-email">EMAIL</label>
+                                <input type="email" id="reg-email" name="email" class="auth-input" placeholder="E.g., email@example.com" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg-username">USERNAME</label>
+                                <input type="text" id="reg-username" name="username" class="auth-input" placeholder="E.g., username" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg-password">MẬT KHẨU</label>
+                                <div style="position: relative; display: flex; align-items: center;">
+                                    <input type="password" id="reg-password" name="password" class="auth-input" placeholder="••••••••" required style="padding-right: 2.75rem;">
+                                    <button type="button" id="toggle-reg-password-btn" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 4px; outline: none;" aria-label="Hiện/Ẩn mật khẩu">
+                                        <i class="bi bi-eye" id="toggle-reg-password-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-submit">
+                                <i class="bi bi-person-plus-fill"></i> <span>Đăng ký thành viên</span>
+                            </button>
+                        </form>
+
+                        <div class="auth-footer-links">
+                            Đã có tài khoản? <a onclick="toggleAuth(false)">Đăng nhập</a>
+                        </div>
                     </div>
-
-                    <form action="<?= BASE_URL ?>/auth/register" method="POST">
-                        <div class="name-row">
-                            <div class="form-group name-col">
-                                <label for="last_name">HỌ</label>
-                                <input type="text" id="last_name" name="last_name" class="auth-input" placeholder="E.g., Nguyen" required>
-                            </div>
-                            <div class="form-group name-col">
-                                <label for="first_name">TÊN</label>
-                                <input type="text" id="first_name" name="first_name" class="auth-input" placeholder="E.g., Van A" required>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="reg-email">EMAIL</label>
-                            <input type="email" id="reg-email" name="email" class="auth-input" placeholder="E.g., email@example.com" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="reg-username">USERNAME</label>
-                            <input type="text" id="reg-username" name="username" class="auth-input" placeholder="E.g., username" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="reg-password">MẬT KHẨU</label>
-                            <div style="position: relative; display: flex; align-items: center;">
-                                <input type="password" id="reg-password" name="password" class="auth-input" placeholder="••••••••" required style="padding-right: 2.75rem;">
-                                <button type="button" id="toggle-reg-password-btn" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 4px; outline: none;" aria-label="Hiện/Ẩn mật khẩu">
-                                    <i class="bi bi-eye" id="toggle-reg-password-icon"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn-submit">
-                            <i class="bi bi-person-plus-fill"></i> <span>Đăng ký thành viên</span>
-                        </button>
-                    </form>
-
-                    <div class="auth-footer-links">
-                        Đã có tài khoản? <a onclick="toggleAuth(false)">Đăng nhập</a>
-                    </div>
-                </div>
+                <?php endif; ?>
 
             </div>
         </div>
@@ -538,11 +555,11 @@
             const loginSec = document.getElementById('login-section');
             const registerSec = document.getElementById('register-section');
 
-            if (showRegister) {
+            if (showRegister && registerSec) {
                 loginSec.classList.add('hidden');
                 registerSec.classList.remove('hidden');
-            } else {
-                registerSec.classList.add('hidden');
+            } else if (loginSec) {
+                if (registerSec) registerSec.classList.add('hidden');
                 loginSec.classList.remove('hidden');
             }
         }
