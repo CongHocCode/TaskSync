@@ -148,12 +148,12 @@
                                 $createdAt = date('Y-m-d', strtotime($task['created_at']));
                                 $dueDate = !empty($task['due_date']) ? date('d/m/Y H:i', strtotime($task['due_date'])) : '';
                             ?>
-                                <tr class="task-row" data-id="<?= $task['id'] ?>" data-assignee="<?= htmlspecialchars($task['assignee_username'] ?? '') ?>">
+                                <tr class="task-row" data-id="<?= $task['id'] ?>" data-assignee="<?= htmlspecialchars($task['assignee_username'] ?? '') ?>" onclick="window.openTaskDetailModal(<?= $task['id'] ?>)">
                                     <td class="py-3 px-4">
                                         <span class="work-badge"><?= htmlspecialchars($task['issue_key']) ?></span>
                                     </td>
                                     <td class="py-3 px-3">
-                                        <span class="task-title-link fw-semibold" onclick="window.openTaskDetailModal(<?= $task['id'] ?>)">
+                                        <span class="task-title-link fw-semibold">
                                             <?= htmlspecialchars($task['title']) ?>
                                         </span>
                                     </td>
@@ -228,18 +228,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Cho phép click vào toàn bộ dòng để xem chi tiết (trừ khi click vào link hoặc hình ảnh)
-    const taskRows = document.querySelectorAll('.task-row');
-    taskRows.forEach(row => {
-        row.addEventListener('click', function (e) {
-            // Nếu click trúng link thì bỏ qua (tránh kích hoạt 2 lần)
-            if (e.target.closest('.task-title-link')) return;
-            
-            const taskId = this.getAttribute('data-id');
+    // Lắng nghe sự kiện click trên toàn bộ bảng công việc
+    const taskTableBody = document.querySelector('.table-hover tbody');
+    if (taskTableBody) {
+        taskTableBody.addEventListener('click', function (e) {
+            // Tìm ngược lên thẻ tr gần nhất có class .task-row
+            const row = e.target.closest('.task-row');
+            if (!row) return;
+
+            // Lấy ID chuẩn xác từ thuộc tính data-id của hàng
+            const taskId = row.getAttribute('data-id');
             if (taskId && window.openTaskDetailModal) {
-                window.openTaskDetailModal(taskId);
+                window.openTaskDetailModal(parseInt(taskId, 10));
             }
         });
-    });
+    }
 });
 </script>

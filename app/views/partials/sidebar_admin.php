@@ -103,8 +103,8 @@ $adminAvatarUrl = (!empty($avatarFile) && $avatarFile !== 'default-avatar.png')
 
     <div class="sidebar-brand">
         <!-- Logo của Admin:chữ A (Admin) -->
-        <div class="sidebar-logo" style="background: rgba(241, 101, 101, 0.15); color: var(--danger);">A</div>
-        <div>
+        <div class="sidebar-logo" style="background: rgba(241, 101, 101, 0.15); color: var(--danger); cursor: pointer;" onclick="window.location.href='<?= BASE_URL ?>/admin/dashboard'">A</div>
+        <div style="cursor: pointer;" onclick="window.location.href='<?= BASE_URL ?>/admin/dashboard'">
             <h1>Admin Console</h1>
         </div>
         <button class="sidebar-collapse" aria-label="Thu gọn sidebar">
@@ -170,6 +170,29 @@ $adminAvatarUrl = (!empty($avatarFile) && $avatarFile !== 'default-avatar.png')
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // ===== TỰ ĐỘNG ĐỔI MÀU NÚT THEO TRANG HIỆN TẠI =====
+        const currentUrl = window.location.href.split('?')[0].split('#')[0];
+        const sidebarLinks = document.querySelectorAll('.app-sidebar .sidebar-link');
+        let matchedAny = false;
+
+        sidebarLinks.forEach(link => {
+            // Xóa sạch trạng thái active được gán cứng ban đầu
+            link.classList.remove('active');
+            
+            // So sánh URL sạch của thẻ với URL thực tế trên trình duyệt
+            if (link.href && currentUrl === link.href.split('?')[0].split('#')[0]) {
+                link.classList.add('active');
+                matchedAny = true;
+            }
+        });
+
+        // Nếu không trùng khớp bất kì URL nào, mặc định kích hoạt nút đầu tiên (Thống kê hệ thống)
+        if (!matchedAny && sidebarLinks.length > 0) {
+            const firstLink = document.querySelector('.app-sidebar .sidebar-nav a');
+            if (firstLink) firstLink.classList.add('active');
+        }
+
+        // ===== XỬ LÝ THU PHÓNG VÀ KÉO GIÃN SIDEBAR =====
         const toggleBtn = document.querySelector(".sidebar-collapse");
         const sidebar = document.querySelector(".app-sidebar");
         const resizer = document.querySelector(".sidebar-resizer");

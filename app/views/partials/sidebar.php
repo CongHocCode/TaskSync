@@ -1,9 +1,14 @@
 <?php
 // Khởi tạo Model để tính toán dự án kích hoạt
 require_once __DIR__ . '/../../models/ProjectModel.php';
+require_once __DIR__ . '/../../models/TaskModel.php';
 $projectModel = new ProjectModel();
+$taskModel = new TaskModel();
 $userSession = $_SESSION['user'] ?? [];
 $userId = $userSession['id'] ?? null;
+
+$myTaskCount = $userId ? $taskModel->getTaskCountByUserId($userId) : 0;
+$myProjectCount = $userId ? $projectModel->getProjectCountByUserId($userId) : 0;
 
 // Lấy ảnh đại diện và thông tin của user
 $displayName = $userSession['display_name'] ?? ($userSession['username'] ?? 'User');
@@ -174,8 +179,8 @@ if ($activeProject) {
     <div class="sidebar-resizer"></div>
 
     <div class="sidebar-brand">
-        <div class="sidebar-logo">M</div>
-        <div>
+        <div class="sidebar-logo" style="cursor: pointer;" onclick="window.location.href='<?= BASE_URL ?>/workspace'">M</div>
+        <div style="cursor: pointer;" onclick="window.location.href='<?= BASE_URL ?>/workspace'">
             <h1>Workspace</h1>
             <p style="font-size: 0.65rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">TaskSync</p>
         </div>
@@ -210,12 +215,12 @@ if ($activeProject) {
             <a href="<?= BASE_URL ?>/workspace/myTasks" class="sidebar-link">
                 <i class="bi bi-check-circle"></i>
                 <span>Task của tôi</span>
-                <span class="badge">2</span>
+                <span class="badge"><?= $myTaskCount ?></span>
             </a>
             <a href="<?= BASE_URL ?>/workspace/myProjects" class="sidebar-link">
                 <i class="bi bi-folder"></i>
                 <span>Dự án của tôi</span>
-                <span class="badge">3</span>
+                <span class="badge"><?= $myProjectCount ?></span>
             </a>
         </nav>
     </div>
@@ -511,4 +516,123 @@ if ($activeProject) {
             }
         }
     });
+    //tự động chuyển màu nút khi qua trang
+    document.addEventListener("DOMContentLoaded", function() {
+    // ===== TỰ ĐỘNG ĐỔI MÀU NÚT THEO URL HIỆN TẠI =====
+    const currentUrl = window.location.href.split('?')[0].split('#')[0]; // Lấy URL sạch (loại bỏ query string/anchor)
+    const sidebarLinks = document.querySelectorAll('.app-sidebar .sidebar-link');
+    
+    let matchedAny = false;
+
+    sidebarLinks.forEach(link => {
+        // Xóa sạch trạng thái active mặc định của tất cả các nút
+        link.classList.remove('active');
+        
+        // Nếu URL của thẻ thẻ <a> khớp với URL thanh địa chỉ trình duyệt
+        if (link.href && currentUrl === link.href.split('?')[0].split('#')[0]) {
+            link.classList.add('active');
+            matchedAny = true;
+        }
+    });
+
+    // Trường hợp dự phòng: Nếu không khớp chính xác đường dẫn nào, mặc định kích hoạt nút đầu tiên (Dashboard)
+    if (!matchedAny && sidebarLinks.length > 0) {
+        const firstLink = document.querySelector('.app-sidebar .sidebar-nav a');
+        if (firstLink) firstLink.classList.add('active');
+    }
+
+    // ===== VALIDATE DUE DATE =====
+    const createIssueModal = document.getElementById('createIssueModal');
+    if (createIssueModal) {
+        const dueDateInput = document.getElementById('due_date_input');
+        const createIssueForm = createIssueModal.querySelector('form');
+
+        createIssueModal.addEventListener('show.bs.modal', function(e) {
+            if (dueDateInput) {
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const minVal = now.getFullYear() + '-' +
+                    pad(now.getMonth() + 1) + '-' +
+                    pad(now.getDate()) + 'T' +
+                    pad(now.getHours()) + ':' +
+                    pad(now.getMinutes());
+                dueDateInput.setAttribute('min', minVal);
+                dueDateInput.value = '';
+                dueDateInput.classList.remove('is-invalid');
+            }
+        });
+
+        createIssueModal.addEventListener('hidden.bs.modal', function() {
+            const parentInput = document.getElementById('parentIssueIdInput');
+            const motherTaskInfo = document.getElementById('motherTaskInfo');
+            if (parentInput) parentInput.value = '';
+            if (motherTaskInfo) motherTaskInfo.classList.add('d-none');
+        });
+
+        if (createIssueForm) {
+            createIssueForm.addEventListener('submit', function(e) {
+                if (dueDateInput && dueDateInput.value) {
+                    const selectedDate = new Date(dueDateInput.value);
+                    const now = new Date();
+                    if (selectedDate <= now) {
+                        e.preventDefault();
+                        dueDateInput.classList.add('is-invalid');
+                        dueDateInput.focus();
+                        return false;
+                    } else {
+                        dueDateInput.classList.remove('is-invalid');
+                    }
+                }
+            });
+
+            if (dueDateInput) {
+                dueDateInput.addEventListener('change', function() {
+                    dueDateInput.classList.remove('is-invalid');
+                });
+            }
+        }
+    }
+
+    // ===== SIDEBAR CONTROLS =====
+    const toggleBtn = document.querySelector(".sidebar-collapse");
+    const sidebar = document.querySelector(".app-sidebar");
+    const resizer = document.querySelector(".sidebar-resizer");
+
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener("click", function(e) {
+            if (window.innerWidth > 992) {
+                e.preventDefault();
+                sidebar.classList.toggle("collapsed");
+                sidebar.style.width = '';
+            }
+        });
+    }
+
+    if (resizer && sidebar) {
+        resizer.addEventListener("mousedown", function(e) {
+            e.preventDefault();
+            resizer.classList.add("active");
+            document.addEventListener("mousemove", resize);
+            document.addEventListener("mouseup", stopResize);
+        });
+
+        function resize(e) {
+            let newWidth = e.clientX;
+            if (newWidth >= 75 && newWidth <= 500) {
+                sidebar.style.width = newWidth + "px";
+                if (newWidth < 140) {
+                    sidebar.classList.add("collapsed");
+                } else {
+                    sidebar.classList.remove("collapsed");
+                }
+            }
+        }
+
+        function stopResize() {
+            resizer.classList.remove("active");
+            document.removeEventListener("mousemove", resize);
+            document.removeEventListener("mouseup", stopResize);
+        }
+    }
+});
 </script>

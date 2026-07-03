@@ -187,6 +187,15 @@ class TaskModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getTaskCountByUserId($userId)
+    {
+        $sql = "SELECT COUNT(*) as total FROM issues WHERE assignee_id = :assignee_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['assignee_id' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($result['total'] ?? 0);
+    }
+  
     // Lấy TẤT CẢ công việc của user (kể cả done - có tích hợp Tìm kiếm động)
     public function getAllIssuesByUserId($userId, $search = '')
     {

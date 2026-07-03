@@ -423,6 +423,18 @@ class ProjectModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getProjectCountByUserId($userId)
+    {
+        $sql = "SELECT COUNT(*) as total 
+                FROM projects p 
+                JOIN project_members pm ON p.id = pm.project_id 
+                WHERE pm.user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($result['total'] ?? 0);
+    }
+    
     // Đếm tổng số lượng dự án tìm được để tính toán số trang cho Admin
     public function getProjectsCountForSearch($search = '')
     {

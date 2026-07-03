@@ -94,7 +94,7 @@
                         </div>
                     <?php else: ?>
                         <?php foreach ($data['assigned_issues'] as $issue): ?>
-                            <div class="issue-item" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-radius: 14px; margin-bottom: 0.75rem; background: #fbfbfd; border: 1px solid rgba(11, 18, 32, 0.04);">
+                            <div class="issue-item" onclick="window.openTaskDetailModal(<?= $issue['id'] ?>)" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-radius: 14px; margin-bottom: 0.75rem; background: #fbfbfd; border: 1px solid rgba(11, 18, 32, 0.04);">
                                 <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 0;">
                                     <span class="issue-id" style="font-weight: 700; color: #7c3aed; font-size: 0.9rem; min-width: 70px;"><?= htmlspecialchars($issue['issue_key']) ?></span>
                                     <span class="issue-title" style="font-size: 0.9rem; font-weight: 600; color: #1a1632; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;"><?= htmlspecialchars($issue['title']) ?></span>
@@ -159,3 +159,22 @@
         </div>
     </div>
 </div>
+    <?php require_once __DIR__ . '/../../partials/task_modal_right.php'; ?>
+<!-- </div> -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const issuesList = document.querySelector('.issues-list');
+    if (issuesList) {
+        issuesList.addEventListener('click', function (e) {
+            // Đảm bảo tìm ngược lên đúng thẻ cha chứa dữ liệu task
+            const item = e.target.closest('.issue-item');
+            if (!item) return;
+
+            const taskId = item.getAttribute('data-id');
+            if (taskId && window.openTaskDetailModal) {
+                window.openTaskDetailModal(parseInt(taskId, 10));
+            }
+        });
+    }
+});
+</script>
