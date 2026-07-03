@@ -385,7 +385,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((task) => {
         // Điền dữ liệu động vào đúng chuẩn form có sẵn của Quyền
         if (projectHeader) {
-          projectHeader.textContent = `${task.issue_key} / Chi tiết công việc`;
+          projectHeader.innerHTML = `DỰ ÁN / <span class="text-dark fw-bold">${task.issue_key}</span> <span style="cursor: pointer; margin-left: 4px;" onclick="copyToClipboard('${task.issue_key}', this)" title="Sao chép mã công việc"><i class="bi bi-copy" style="font-size: 0.7rem;"></i></span> / Chi tiết công việc`;
         }
 
         const projectNameSpan = document.getElementById("modalProjectName");
@@ -799,6 +799,20 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
     return div;
   }
+
+  window.copyToClipboard = function (text, element) {
+    navigator.clipboard.writeText(text).then(() => {
+      const icon = element.querySelector("i");
+      if (icon) {
+        icon.className = "bi bi-check-lg text-success";
+        setTimeout(() => {
+          icon.className = "bi bi-copy";
+        }, 1500);
+      }
+    }).catch(err => {
+      console.error("Lỗi khi copy: ", err);
+    });
+  };
 
   function escapeHtml(str) {
     if (!str) return "";

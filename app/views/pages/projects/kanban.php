@@ -194,8 +194,11 @@
                                 draggable="true"
                                 role="button">
                                 <div class="card-body p-3">
-                                    <div class="task-code text-muted small fw-bold mb-2 <?= $isDone ? 'text-decoration-line-through' : '' ?>" style="font-size: 0.75rem;">
-                                        <?= htmlspecialchars($task['issue_key'] ?? '') ?>
+                                    <div class="task-code text-muted small fw-bold mb-2 d-flex align-items-center gap-1.5 <?= $isDone ? 'text-decoration-line-through' : '' ?>" style="font-size: 0.75rem;">
+                                        <span><?= htmlspecialchars($task['issue_key'] ?? '') ?></span>
+                                        <span style="cursor: pointer;" onclick="event.stopPropagation(); copyToClipboard('<?= htmlspecialchars($task['issue_key'] ?? '') ?>', this)" title="Sao chép mã công việc">
+                                            <i class="bi bi-copy" style="font-size: 0.65rem;"></i>
+                                        </span>
                                     </div>
                                     <h6 class="task-title fw-bold mb-0 <?= $isDone ? 'text-secondary text-decoration-line-through' : 'text-dark' ?>" style="line-height: 1.4; font-size: 0.95rem;">
                                         <?= htmlspecialchars($task['title'] ?? '') ?>
