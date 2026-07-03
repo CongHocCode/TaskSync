@@ -38,11 +38,11 @@ document.addEventListener("DOMContentLoaded", function () {
           {
             label: "Số lượng Task đang xử lý",
             data: dataValues.length > 0 ? dataValues : [0],
-            backgroundColor: "rgba(67, 24, 255, 0.75)",
-            borderColor: "rgb(67, 24, 255)",
+            backgroundColor: "rgba(99, 102, 241, 0.75)", // Màu Indigo hiện đại
+            borderColor: "rgb(99, 102, 241)",
             borderWidth: 1.5,
             borderRadius: 6,
-            hoverBackgroundColor: "rgba(67, 24, 255, 0.95)",
+            hoverBackgroundColor: "rgba(79, 70, 229, 0.9)",
           },
         ],
       },
@@ -97,15 +97,15 @@ document.addEventListener("DOMContentLoaded", function () {
             label: "Người dùng mới",
             data: dataValues,
             fill: true,
-            backgroundColor: "rgba(1, 181, 116, 0.12)",
-            borderColor: "rgb(1, 181, 116)",
+            backgroundColor: "rgba(168, 85, 247, 0.15)", // Màu Tím mịn màng
+            borderColor: "rgb(168, 85, 247)",
             borderWidth: 3,
-            pointBackgroundColor: "rgb(1, 181, 116)",
+            pointBackgroundColor: "rgb(168, 85, 247)",
             pointBorderColor: "#fff",
             pointBorderWidth: 2,
             pointRadius: 6,
             pointHoverRadius: 8,
-            tension: 0.4, // Bo góc
+            tension: 0.4, // Bo góc mềm mại
           },
         ],
       },
@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
-    // <<<<<<< HEAD
+// <<<<<<< HEAD
     columns.forEach((column) => {
       // Dragover: thay đổi giao diện vùng thả
       column.addEventListener("dragover", function (e) {
@@ -214,30 +214,24 @@ document.addEventListener("DOMContentLoaded", function () {
         status: status,
       }),
     })
-      .then(async (response) => {
-        const data = await response.json().catch(() => null);
-        if (!response.ok) {
-          if (data && data.error) {
-            throw new Error(data.error);
-          }
-          throw new Error("Lỗi kết nối mạng, đang khôi phục giao diện...");
-        }
-        return data;
+      .then((response) => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
       })
       .then((data) => {
-        if (data && data.success) {
+        if (data.success) {
           console.log(
             `[TaskSync] Đã cập nhật thành công Task ${taskId} sang ${status}`,
           );
-        } else if (data && data.error) {
-          throw new Error(data.error);
         } else {
-          throw new Error("Không thể lưu trạng thái mới, vui lòng thử lại.");
+          console.error("[TaskSync] Lỗi cập nhật:", data.error);
+          alert("Không thể lưu trạng thái mới, vui lòng thử lại.");
+          location.reload();
         }
       })
       .catch((error) => {
         console.error("[TaskSync] Fetch error:", error);
-        alert(error.message);
+        alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
         location.reload();
       });
   }
@@ -341,39 +335,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const taskId = card.getAttribute("data-id");
       openTaskDetailModal(taskId, card);
     });
-
-    // Tự động mở modal chi tiết nếu URL chứa ?open_task=ID
-    // (được sử dụng khi chuyển hướng từ trang "Task của tôi")
-    const urlParams = new URLSearchParams(window.location.search);
-    const autoOpenTaskId = urlParams.get("open_task");
-    if (autoOpenTaskId) {
-      // Tìm thẻ card tương ứng trên bảng Kanban để highlight
-      const targetCard = document.querySelector(
-        `.kanban-item-card[data-id="${autoOpenTaskId}"]`
-      );
-
-      // Mở modal sau khi trang đã render xong hoàn toàn
-      setTimeout(() => {
-        openTaskDetailModal(autoOpenTaskId, targetCard || null);
-
-        // Cuộn mượt đến thẻ card nếu tìm thấy
-        if (targetCard) {
-          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
-          targetCard.style.boxShadow = "0 0 0 3px rgba(79, 70, 229, 0.5)";
-          setTimeout(() => {
-            targetCard.style.boxShadow = "";
-          }, 3000);
-        }
-      }, 300);
-
-      // Xóa param khỏi URL để tránh mở lại khi refresh
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-    }
   }
 
   function openTaskDetailModal(taskId, card) {
-
     const modalElement = document.getElementById("taskDetailModal");
     if (!modalElement) return;
 
@@ -386,8 +350,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const descTextarea = modalElement.querySelector(
       ".mb-4 textarea:not(#modalTaskTitle)",
     );
-    const assigneeSelect = document.getElementById("modalAssigneeSelect");
-    const typeSelect = document.getElementById("modalTypeSelect");
+    const assigneeSelect = modalElement.querySelector(
+      "select:not(#modalStatusSelect)",
+    );
     const githubInput =
       modalElement.querySelector(
         'input[type="text"][placeholder*="github" i]',
@@ -398,16 +363,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const subtaskList = modalElement.querySelector(".subtask-list");
     const subtaskBadgeCount = document.getElementById("subtaskBadgeCount");
     const subtaskProgressBar = document.getElementById("subtaskProgressBar");
-    const createdAtInput = document.getElementById("modalCreatedAtInput");
-    const dueDateInput = document.getElementById("modalDueDateInput");
 
     // Reset dữ liệu cũ để tạo hiệu ứng chuyển tiếp mượt mà
     if (titleTextarea) titleTextarea.value = "Đang tải...";
     if (descTextarea) descTextarea.value = "Đang tải mô tả...";
     if (githubInput) githubInput.value = "";
-    if (createdAtInput) createdAtInput.value = "Đang tải...";
-    if (dueDateInput) dueDateInput.value = "";
-    if (typeSelect) typeSelect.value = "task";
     if (subtaskList)
       subtaskList.innerHTML =
         '<div class="text-center py-2"><span class="spinner-border spinner-border-sm text-secondary" role="status"></span></div>';
@@ -425,37 +385,18 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((task) => {
         // Điền dữ liệu động vào đúng chuẩn form có sẵn của Quyền
         if (projectHeader) {
-          projectHeader.innerHTML = `DỰ ÁN / <span class="text-dark fw-bold">${task.issue_key}</span> <span style="cursor: pointer; margin-left: 4px;" onclick="copyToClipboard('${task.issue_key}', this)" title="Sao chép mã công việc"><i class="bi bi-copy" style="font-size: 0.7rem;"></i></span> / Chi tiết công việc`;
+          projectHeader.textContent = `${task.issue_key} / Chi tiết công việc`;
         }
 
-        const projectNameEl = document.getElementById("modalProjectName");
-        if (projectNameEl) {
-          projectNameEl.textContent = task.project_name || "WEB";
-          projectNameEl.href = `${baseUrl}/project/kanban/${task.project_id_ref || task.project_id}`;
-        }
-
-        const motherTaskDisplay = document.getElementById("modalMotherTaskDisplay");
-        const motherTaskRef = document.getElementById("modalMotherTaskRef");
-        if (motherTaskDisplay && motherTaskRef) {
-          if (task.parent_issue_id && task.parent_issue_key) {
-            motherTaskRef.textContent = `#${task.parent_issue_key} - ${task.parent_title}`;
-            motherTaskRef.onclick = (e) => {
-              e.preventDefault();
-              openTaskDetailModal(task.parent_issue_id, null);
-            };
-            motherTaskDisplay.classList.remove("d-none");
-          } else {
-            motherTaskDisplay.classList.add("d-none");
-          }
+        const projectNameSpan = document.getElementById("modalProjectName");
+        if (projectNameSpan) {
+          projectNameSpan.textContent = task.project_name || "WEB";
         }
 
         // Reset input và nạp danh sách bình luận
         const commentInput = document.getElementById("newCommentInput");
         if (commentInput) commentInput.value = "";
-        // Lưu dữ liệu task đang active để dùng cho các chức năng khác (như tạo subtask)
-        window.currentActiveTaskData = task;
 
-        // Đổ dữ liệu bình luận
         const commentsList = document.getElementById("modalCommentsList");
         if (commentsList) {
           commentsList.innerHTML = "";
@@ -472,104 +413,19 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
-        const role = task.current_user_role || 'viewer';
-        const isMember = role === 'member';
-        const isViewer = role === 'viewer';
-        const isReadOnly = isMember || isViewer;
-
-        const deleteBtn = document.getElementById("btnDeleteTask");
-        if (deleteBtn) {
-            if (isReadOnly) {
-                deleteBtn.classList.add("d-none");
-                deleteBtn.classList.remove("d-flex");
-            } else {
-                deleteBtn.classList.remove("d-none");
-                deleteBtn.classList.add("d-flex");
-            }
-        }
-
-        if (titleTextarea) {
-          titleTextarea.value = task.title || "";
-          titleTextarea.disabled = isReadOnly;
-        }
-        if (descTextarea) {
-          descTextarea.value = task.description || "";
-          descTextarea.disabled = isViewer;
-        }
+        if (titleTextarea) titleTextarea.value = task.title || "";
+        if (descTextarea) descTextarea.value = task.description || "";
         if (statusSelect) {
           statusSelect.value = task.status;
           statusSelect.setAttribute("data-task-id", task.id);
-          statusSelect.disabled = isViewer;
-        }
-        if (assigneeSelect && task.project_members) {
-          // Xóa tất cả option cũ ngoại trừ option đầu tiên
-          assigneeSelect.innerHTML = '<option value="">Chưa phân công (Unassigned)</option>';
-          task.project_members.forEach(member => {
-            const fullName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim();
-            const displayName = fullName ? fullName : member.username;
-            const initials = member.first_name && member.last_name
-              ? (member.first_name.charAt(0) + member.last_name.charAt(0)).toUpperCase()
-              : member.username.substring(0, 2).toUpperCase();
-            
-            const option = document.createElement('option');
-            option.value = member.id;
-            option.textContent = `${displayName} (${initials})`;
-            assigneeSelect.appendChild(option);
-          });
         }
         if (assigneeSelect) {
+          // Gán trực tiếp bằng ID (số nguyên) của người dùng được lưu trong Database (ví dụ: 1, 2)
+          // Nếu công việc chưa được gán cho ai, tự động chọn option đầu tiên (Unassigned)
           assigneeSelect.value = task.assignee_id || "";
-          assigneeSelect.disabled = isReadOnly;
-        }
-        if (typeSelect) {
-          typeSelect.value = task.type || "task";
-          typeSelect.disabled = isViewer;
-          
-          Array.from(typeSelect.options).forEach(opt => {
-              if (isMember && (opt.value === 'epic' || opt.value === 'story')) {
-                  opt.disabled = true;
-                  opt.hidden = true;
-              } else {
-                  opt.disabled = false;
-                  opt.hidden = false;
-              }
-          });
         }
         if (githubInput) {
           githubInput.value = task.github_branch_url || "";
-          githubInput.disabled = isReadOnly;
-        }
-        if (createdAtInput) {
-          if (task.created_at) {
-            const date = new Date(task.created_at);
-            if (!isNaN(date.getTime())) {
-              createdAtInput.value = date.toLocaleDateString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-              });
-            } else {
-              createdAtInput.value = task.created_at;
-            }
-          } else {
-            createdAtInput.value = "Chưa rõ";
-          }
-        }
-        if (dueDateInput) {
-          if (task.due_date) {
-            let formattedVal = task.due_date.replace(" ", "T");
-            if (formattedVal.length === 10) {
-              formattedVal += "T00:00";
-            } else if (formattedVal.length > 16) {
-              formattedVal = formattedVal.substring(0, 16);
-            }
-            dueDateInput.value = formattedVal;
-          } else {
-            dueDateInput.value = "";
-          }
-          dueDateInput.disabled = isReadOnly;
         }
 
         // Nạp checklist subtasks
@@ -616,7 +472,6 @@ document.addEventListener("DOMContentLoaded", function () {
             '<div class="text-danger small py-1">Lỗi tải danh sách sub-tasks.</div>';
       });
   }
-  window.openTaskDetailModal = openTaskDetailModal;
 
   // Lắng nghe sự kiện thay đổi Trạng thái (Status) ngay trong Modal
   document.addEventListener("change", function (e) {
@@ -628,53 +483,15 @@ document.addEventListener("DOMContentLoaded", function () {
         `.sub-kanban-column[data-status="${newStatus}"]`,
       );
 
-      // Luôn đồng bộ thay đổi lên máy chủ
-      updateTaskStatus(taskId, newStatus);
-
       if (card && destColumn) {
         // Di chuyển thẻ Card trên Kanban board
         destColumn.appendChild(card);
         updateQuickActionsMenu(card, newStatus);
         toggleDoneStyles(card, newStatus);
         updateColumnCounts();
-      } else {
-        // Cập nhật dòng task ở trang list.php hoặc my_tasks.php
-        const taskRow = document.querySelector(`.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`);
-        if (taskRow) {
-          const statusPill = taskRow.querySelector(".badge-status, .status-pill");
-          if (statusPill) {
-            let bg = '#f1f5f9';
-            let color = '#475569';
-            let label = 'TO DO';
-            
-            if (newStatus === 'done') {
-              bg = '#dcfce7'; color = '#15803d'; label = 'DONE';
-            } else if (newStatus === 'in_progress') {
-              bg = '#e0f2fe'; color = '#0369a1'; label = 'IN PROGRESS';
-            } else if (newStatus === 'in_review') {
-              bg = '#faf5ff'; color = '#7e22ce'; label = 'IN REVIEW';
-            }
-            
-            statusPill.style.backgroundColor = bg;
-            statusPill.style.color = color;
-            statusPill.innerText = label;
-          }
 
-          const titleEl = taskRow.querySelector(".task-title-link, span.fw-semibold");
-          if (titleEl) {
-            if (newStatus === 'done') {
-              titleEl.classList.add("text-decoration-line-through", "text-muted");
-            } else {
-              titleEl.classList.remove("text-decoration-line-through", "text-muted");
-            }
-          }
-
-          if (newStatus === 'done') {
-            taskRow.classList.add("done-task", "opacity-75");
-          } else {
-            taskRow.classList.remove("done-task", "opacity-75");
-          }
-        }
+        // Đồng bộ thay đổi lên máy chủ
+        updateTaskStatus(taskId, newStatus);
       }
     }
   });
@@ -682,7 +499,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 4. LẮNG NGHE SỰ KIỆN THAY ĐỔI NGƯỜI GÁN TRONG MODAL & LƯU DB
   // ==============================================================
   document.addEventListener("change", function (e) {
-    const assigneeSelect = document.getElementById("modalAssigneeSelect") || document.querySelector(
+    const assigneeSelect = document.querySelector(
       "#taskDetailModal select:not(#modalStatusSelect)",
     );
     if (e.target === assigneeSelect) {
@@ -696,166 +513,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (taskId) {
         // Gửi Fetch API lưu thay đổi xuống Database
         updateTaskAssignee(taskId, newAssigneeId, card, e.target);
-      }
-    }
-  });
-
-  // Lắng nghe sự kiện thay đổi Hạn hoàn thành (Due Date) trong Modal
-  document.addEventListener("change", function (e) {
-    if (e.target.id === "modalDueDateInput") {
-      const newDueDate = e.target.value;
-      const statusSelect = document.getElementById("modalStatusSelect");
-      const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
-
-      if (taskId) {
-        fetch(`${baseUrl}/task/updateDueDate`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: JSON.stringify({
-            task_id: taskId,
-            due_date: newDueDate ? newDueDate.replace("T", " ") : null,
-          }),
-        })
-          .then((response) => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-          })
-          .then((data) => {
-            if (data.success) {
-              console.log(
-                `[TaskSync] Cập nhật thành công Hạn hoàn thành cho Task ${taskId}`,
-              );
-
-              // Cập nhật dòng task dưới nền trang List hoặc My Tasks
-              const taskRow = document.querySelector(`.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`);
-              if (taskRow) {
-                const dueEl = taskRow.querySelector("td.text-muted.small:last-child, span.small.due-normal, span.small.due-soon, span.small.due-overdue");
-                if (dueEl) {
-                  if (newDueDate) {
-                    const parts = newDueDate.split("T");
-                    const datePart = parts[0];
-                    const timePart = parts[1] || "";
-                    const dateParts = datePart.split("-");
-                    let formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                    if (timePart) {
-                      formattedDate += ` ${timePart}`;
-                    }
-
-                    if (taskRow.classList.contains("task-item")) {
-                      dueEl.innerHTML = `<i class="bi bi-calendar3 me-1"></i>${formattedDate}`;
-                      
-                      const dueTs = new Date(newDueDate).getTime();
-                      const now = Date.now();
-                      dueEl.className = "small";
-                      if (dueTs < now) {
-                        dueEl.classList.add("due-overdue");
-                      } else if (dueTs - now < 86400000 * 3) {
-                        dueEl.classList.add("due-soon");
-                      } else {
-                        dueEl.classList.add("due-normal");
-                      }
-                    } else {
-                      dueEl.textContent = formattedDate;
-                    }
-                  } else {
-                    dueEl.innerHTML = taskRow.classList.contains("task-item") ? '<i class="bi bi-calendar3 me-1"></i>Không có hạn' : '<span class="text-light-emphasis">-</span>';
-                    if (taskRow.classList.contains("task-item")) {
-                      dueEl.className = "small due-normal";
-                    }
-                  }
-                }
-              }
-            } else {
-              alert("Không thể lưu hạn hoàn thành mới, vui lòng thử lại.");
-            }
-          })
-          .catch((error) => {
-            console.error("[TaskSync] Fetch error:", error);
-            alert("Lỗi kết nối mạng khi cập nhật hạn hoàn thành.");
-          });
-      }
-    }
-  });
-
-  // Lắng nghe sự kiện thay đổi Loại công việc (Type) trong Modal
-  document.addEventListener("change", function (e) {
-    if (e.target.id === "modalTypeSelect") {
-      const newType = e.target.value;
-      const statusSelect = document.getElementById("modalStatusSelect");
-      const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
-
-      if (taskId) {
-        fetch(`${baseUrl}/task/updateType`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: JSON.stringify({
-            task_id: taskId,
-            type: newType,
-          }),
-        })
-          .then((response) => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-          })
-          .then((data) => {
-            if (data.success) {
-              console.log(
-                `[TaskSync] Cập nhật thành công Loại công việc cho Task ${taskId}`,
-              );
-
-              // Cập nhật card trên Kanban Board
-              const card = document.querySelector(`.kanban-item-card[data-id="${taskId}"]`);
-              if (card) {
-                // Cập nhật data attribute của thẻ card để bộ lọc hoạt động chính xác
-                const capitalizedType = newType.charAt(0).toUpperCase() + newType.slice(1);
-                card.setAttribute("data-type", capitalizedType);
-
-                // Cập nhật biểu tượng loại công việc tương ứng
-                const typeIconContainer = card.querySelector(".d-flex.align-items-center.gap-2");
-                if (typeIconContainer) {
-                  // Xóa icon cũ (icon đầu tiên trong container)
-                  const oldIcon = typeIconContainer.querySelector("i.bi-bug-fill, i.bi-bookmark-star-fill, i.bi-lightning-charge-fill, i.bi-check-square-fill");
-                  if (oldIcon) {
-                    oldIcon.remove();
-                  }
-                  
-                  // Tạo icon mới
-                  const newIcon = document.createElement("i");
-                  newIcon.className = "bi opacity-75";
-                  newIcon.style.fontSize = "0.85rem";
-                  
-                  if (newType === "bug") {
-                    newIcon.classList.add("bi-bug-fill", "text-danger");
-                    newIcon.title = "Bug";
-                  } else if (newType === "story") {
-                    newIcon.classList.add("bi-bookmark-star-fill", "text-success");
-                    newIcon.title = "Story";
-                  } else if (newType === "epic") {
-                    newIcon.classList.add("bi-lightning-charge-fill", "text-warning");
-                    newIcon.title = "Epic";
-                  } else {
-                    newIcon.classList.add("bi-check-square-fill", "text-primary");
-                    newIcon.title = "Task";
-                  }
-                  
-                  // Chèn icon mới vào đầu container
-                  typeIconContainer.insertBefore(newIcon, typeIconContainer.firstChild);
-                }
-              }
-            } else {
-              alert("Không thể lưu loại công việc mới, vui lòng thử lại.");
-            }
-          })
-          .catch((error) => {
-            console.error("[TaskSync] Fetch error:", error);
-            alert("Lỗi kết nối mạng khi cập nhật loại công việc.");
-          });
       }
     }
   });
@@ -883,17 +540,10 @@ document.addEventListener("DOMContentLoaded", function () {
             `[TaskSync] Cập nhật thành công Assignee cho Task ${taskId}`,
           );
 
-          // Nếu ở trang "Công việc của tôi", cần reload lại để loại bỏ task và cập nhật stats
-          if (document.querySelector('.my-tasks-page')) {
-            location.reload();
-            return;
-          }
-
           // Cập nhật lại giao diện
-          const rowElement = cardElement || document.querySelector(`.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`);
-          if (rowElement) {
-            const assigneeNameEl = rowElement.querySelector(".task-assignee, .text-dark.small.fw-medium");
-            const avatarImgEl = rowElement.querySelector("img, .avatar-img");
+          if (cardElement) {
+            const assigneeNameEl = cardElement.querySelector(".task-assignee");
+            const avatarImgEl = cardElement.querySelector("img");
 
             // Lấy văn bản đang hiển thị của Option được chọn
             const selectedOptionText =
@@ -903,7 +553,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (assigneeNameEl) {
               assigneeNameEl.textContent = assigneeId
                 ? cleanedName
-                : (rowElement.classList.contains('task-row') ? "Chưa phân công" : "Unassigned");
+                : "Unassigned";
             }
             if (avatarImgEl) {
               const avatarName = assigneeId ? cleanedName : "Unassigned";
@@ -911,7 +561,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Đồng bộ dữ liệu thuộc tính để bộ lọc hoạt động chính xác
-            rowElement.setAttribute(
+            cardElement.setAttribute(
               "data-assignee",
               assigneeId ? cleanedName : "Unassigned",
             );
@@ -970,66 +620,6 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("[TaskSync] Delete Fetch error:", error);
             alert("Lỗi kết nối mạng khi thực hiện xóa.");
           });
-      }
-    }
-  });
-
-  // LẮNG NGHE SỰ KIỆN TẠO SUB-TASK TỪ MODAL CHI TIẾT
-  document.addEventListener("click", function (e) {
-    if (e.target.id === "openCreateSubtaskModalBtn" || e.target.closest("#openCreateSubtaskModalBtn")) {
-      const statusSelect = document.getElementById("modalStatusSelect");
-      const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
-      const titleTextarea = document.getElementById("modalTaskTitle");
-      const taskTitle = titleTextarea ? titleTextarea.value : "Unknown Task";
-      
-      if (taskId) {
-        // Đóng modal chi tiết
-        const detailModalEl = document.getElementById("taskDetailModal");
-        if (detailModalEl) {
-          const detailModal = bootstrap.Modal.getInstance(detailModalEl) || new bootstrap.Modal(detailModalEl);
-          detailModal.hide();
-        }
-        
-        // Chờ modal cũ đóng xong rồi mới mở modal mới để tránh lỗi Bootstrap backdrop
-        setTimeout(() => {
-          const parentInput = document.getElementById("parentIssueIdInput");
-          const motherTaskInfo = document.getElementById("motherTaskInfo");
-          const motherTaskName = document.getElementById("motherTaskName");
-          
-          if (parentInput) parentInput.value = taskId;
-          if (motherTaskInfo) motherTaskInfo.classList.remove("d-none");
-          if (motherTaskName) motherTaskName.innerHTML = `<span class="badge bg-secondary me-2">#${taskId}</span> <strong>${taskTitle}</strong>`;
-          
-          // Điền thông tin project từ task đang active
-          const taskData = window.currentActiveTaskData;
-          if (taskData) {
-            const projInput = document.getElementById("createIssueProjectId");
-            if (projInput) projInput.value = taskData.project_id;
-            
-            const titleText = document.getElementById("createIssueModalTitleText");
-            if (titleText) titleText.innerHTML = `Tạo Sub-task cho dự án: <span class="text-primary">${taskData.project_name || 'Không rõ'}</span>`;
-            
-            const assigneeSelect = document.getElementById("createIssueAssigneeSelect");
-            if (assigneeSelect && taskData.project_members) {
-              assigneeSelect.innerHTML = '<option value="" selected>Chưa phân công (Unassigned)</option>';
-              taskData.project_members.forEach(member => {
-                const fullName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim();
-                const displayName = fullName ? fullName : member.username;
-                const option = document.createElement('option');
-                option.value = member.id;
-                option.textContent = `${displayName} (${member.role || 'member'})`;
-                assigneeSelect.appendChild(option);
-              });
-            }
-          }
-
-          // Mở modal tạo mới
-          const createModalEl = document.getElementById("createIssueModal");
-          if (createModalEl) {
-            const createModal = bootstrap.Modal.getOrCreateInstance(createModalEl);
-            createModal.show();
-          }
-        }, 400); // 400ms delay cho animation đóng modal cũ
       }
     }
   });
@@ -1131,9 +721,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function sendComment() {
     const statusSelect = document.getElementById("modalStatusSelect");
-    const taskId = statusSelect
-      ? statusSelect.getAttribute("data-task-id")
-      : null;
+    const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
     const content = newCommentInput.value.trim();
 
     if (!taskId || !content) return;
@@ -1158,7 +746,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         if (data.success && data.comment) {
           newCommentInput.value = "";
-
+          
           const commentsList = document.getElementById("modalCommentsList");
           if (commentsList) {
             if (commentsList.innerHTML.includes("Chưa có bình luận nào")) {
@@ -1185,15 +773,15 @@ document.addEventListener("DOMContentLoaded", function () {
     div.className = "p-3 rounded-3";
     div.style.backgroundColor = "#f8fafc";
     div.style.border = "1px solid #e2e8f0";
-
+    
     let timeStr = "";
     if (c.created_at) {
       const date = new Date(c.created_at);
       if (!isNaN(date.getTime())) {
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         timeStr = `${hours}:${minutes} ${day}/${month}`;
       } else {
         timeStr = c.created_at.substring(11, 16) || "";
@@ -1201,7 +789,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const name = c.user_full_name ? c.user_full_name.trim() : c.username;
-
+    
     div.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-1">
         <span class="fw-bold text-dark" style="font-size: 0.88rem;">${escapeHtml(name)}</span>
@@ -1211,20 +799,6 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
     return div;
   }
-
-  window.copyToClipboard = function (text, element) {
-    navigator.clipboard.writeText(text).then(() => {
-      const icon = element.querySelector("i");
-      if (icon) {
-        icon.className = "bi bi-check-lg text-success";
-        setTimeout(() => {
-          icon.className = "bi bi-copy";
-        }, 1500);
-      }
-    }).catch(err => {
-      console.error("Lỗi khi copy: ", err);
-    });
-  };
 
   function escapeHtml(str) {
     if (!str) return "";
