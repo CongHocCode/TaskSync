@@ -17,7 +17,7 @@ VALUES
     (
         1,
         'admin',
-        'admin@tasksync.vn',
+        'asdvbn666999@gmail.com',
         '$2y$10$F3oF9BQkQhKrshFXx2F8uu/ZqLgtCJ.zRn8q3t0OdVd8aG1fL0J9i',
         'admin',
         'active',
@@ -103,7 +103,8 @@ INSERT INTO
         `key`,
         description,
         owner_id,
-        issue_counter
+        issue_counter,
+        github_repo_url
     )
 VALUES
     (
@@ -112,7 +113,9 @@ VALUES
         'TS',
         'Hệ thống quản lý công việc nội bộ dạng Jira Clone',
         1,
-        6
+        6,
+        -- Thư viện Bootstrap 5 làm mốc liên kết dự án TASKSYNC [2]
+        'https://github.com/CongHocCode/TaskSync'
     ),
     (
         2,
@@ -120,7 +123,9 @@ VALUES
         'WEB',
         'Dự án tái cấu trúc giao diện responsive chuẩn hiện đại',
         5,
-        4
+        4,
+        -- Thư viện Tailwind CSS làm mốc liên kết cho WEB [38]
+        'https://github.com/tailwindlabs/tailwindcss'
     ),
     (
         3,
@@ -128,7 +133,9 @@ VALUES
         'API',
         'Xây dựng cổng kết nối dịch vụ và phân luồng tải hệ thống',
         1,
-        0
+        0,
+        -- Thư viện ExpressJS nổi tiếng làm mốc liên kết cho API
+        'https://github.com/expressjs/express'
     );
 
 -- 3. PHÂN CHIA VAI TRÒ VÀ TRẠNG THÁI THÀNH VIÊN TRONG CÁC DỰ ÁN (Project Members)
@@ -348,5 +355,3 @@ VALUES
     ('maintenance_mode', 'off'),
     ('allow_registration', 'on'),
     ('max_upload_size', '2');
-
--- MB
