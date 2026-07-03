@@ -313,4 +313,28 @@ class Admin extends Controller
         redirect('admin/users');
         exit;
     }
+
+    // Trang cấu hình hệ thống dành riêng cho Admin (admin/settings)
+    public function settings()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Nhận dữ liệu lưu từ Form cấu hình
+            $this->userModel->updateSystemSetting('system_name', trim($_POST['system_name'] ?? 'TaskSync'));
+            $this->userModel->updateSystemSetting('maintenance_mode', $_POST['maintenance_mode'] ?? 'off');
+            $this->userModel->updateSystemSetting('allow_registration', $_POST['allow_registration'] ?? 'off');
+            $this->userModel->updateSystemSetting('max_upload_size', (int)($_POST['max_upload_size'] ?? 2));
+
+            $_SESSION['flash_success'] = "Cập nhật cấu hình hệ thống thành công!";
+            // Chuyển hướng trực tiếp bằng header() thay vì dùng redirect() bị kẹt cơ chế tự bảo vệ
+            header('Location: ' . BASE_URL . '/admin/settings');
+            exit();
+        }
+
+        $settings = $this->userModel->getSystemSettings();
+
+        $this->view('pages/admin/settings', [
+            'page_title' => 'Cấu hình hệ thống - Admin Console',
+            'settings'   => $settings
+        ]);
+    }
 }

@@ -212,12 +212,12 @@ if ($activeProject) {
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard tổng hợp</span>
             </a>
-            <a href="<?= BASE_URL ?>/task/myTasks" class="sidebar-link">
+            <a href="<?= BASE_URL ?>/workspace/myTasks" class="sidebar-link">
                 <i class="bi bi-check-circle"></i>
                 <span>Task của tôi</span>
                 <span class="badge"><?= $myTaskCount ?></span>
             </a>
-            <a href="<?= BASE_URL ?>/project/myProjects" class="sidebar-link">
+            <a href="<?= BASE_URL ?>/workspace/myProjects" class="sidebar-link">
                 <i class="bi bi-folder"></i>
                 <span>Dự án của tôi</span>
                 <span class="badge"><?= $myProjectCount ?></span>

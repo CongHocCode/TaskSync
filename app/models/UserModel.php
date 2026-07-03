@@ -156,21 +156,22 @@ class UserModel
     }
 
     // Lấy danh sách nhân sự phân trang và tìm kiếm (Giới hạn tối đa $limit dòng)
-    public function getPaginatedAndSearched($search = '', $limit = 10, $offset = 0) {
+    public function getPaginatedAndSearched($search = '', $limit = 10, $offset = 0)
+    {
         $sql = "SELECT * FROM users WHERE 1=1";
         $params = [];
-        
+
         // Nếu có từ khóa tìm kiếm, lọc theo tên, email hoặc username
         if (!empty($search)) {
             $sql .= " AND (username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)";
             $searchParam = "%$search%";
             $params = [$searchParam, $searchParam, $searchParam, $searchParam];
         }
-        
+
         $sql .= " ORDER BY id DESC LIMIT ? OFFSET ?";
-        
+
         $stmt = $this->db->pdo->prepare($sql);
-        
+
         // Bind các tham số dạng Integer cho LIMIT và OFFSET để tránh lỗi ép kiểu của PDO
         $paramIdx = 1;
         foreach ($params as $param) {
@@ -178,24 +179,52 @@ class UserModel
         }
         $stmt->bindValue($paramIdx++, (int)$limit, PDO::PARAM_INT);
         $stmt->bindValue($paramIdx++, (int)$offset, PDO::PARAM_INT);
-        
+
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Đếm tổng số dòng tìm được để tính toán tổng số trang
-    public function getCountForSearch($search = '') {
+    public function getCountForSearch($search = '')
+    {
         $sql = "SELECT COUNT(*) FROM users WHERE 1=1";
         $params = [];
-        
+
         if (!empty($search)) {
             $sql .= " AND (username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)";
             $searchParam = "%$search%";
             $params = [$searchParam, $searchParam, $searchParam, $searchParam];
         }
-        
+
         $stmt = $this->db->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchColumn();
+    }
+
+    //Để tạm ở UserModel
+    // Lấy toàn bộ cấu hình hệ thống đưa về dạng mảng kết hợp
+    public function getSystemSettings()
+    {
+        $stmt = $this->db->pdo->query("SELECT * FROM system_settings");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $settings = [];
+        foreach ($rows as $row) {
+            $settings[$row['key']] = $row['value'];
+        }
+        return $settings;
+    }
+
+    // Cập nhật cấu hình (Sử dụng INSERT ON DUPLICATE KEY UPDATE để tối ưu)
+    public function updateSystemSetting($key, $value)
+    {
+        $sql = "INSERT INTO system_settings (`key`, `value`) 
+                VALUES (:key, :value)
+                ON DUPLICATE KEY UPDATE `value` = :value_update";
+        $stmt = $this->db->pdo->prepare($sql);
+        return $stmt->execute([
+            'key'          => $key,
+            'value'        => $value,
+            'value_update' => $value
+        ]);
     }
 }

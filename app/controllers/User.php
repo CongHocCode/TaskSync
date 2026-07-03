@@ -89,10 +89,13 @@ class User extends Controller
                 exit();
             }
 
-            // Khống chế dung lượng ảnh tối đa (2MB)
-            $maxSize = 2 * 1024 * 1024;
+            // Khống chế dung lượng ảnh tối đa (Lấy từ cài đặt của admin)
+            $settings = $this->userModel->getSystemSettings();
+            $maxMB = (int)($settings['max_upload_size'] ?? 2); // Mặc định là 2MB nếu rỗng
+
+            $maxSize = $maxMB * 1024 * 1024; // Quy đổi ra Bytes
             if ($file['size'] > $maxSize) {
-                $_SESSION['flash_error'] = "Dung lượng ảnh tải lên không được vượt quá 2MB.";
+                $_SESSION['flash_error'] = "Dung lượng ảnh tải lên không được vượt quá " . $maxMB . "MB.";
                 redirect('user/profile');
                 exit();
             }
