@@ -449,7 +449,7 @@ try {
                         <div class="form-group">
                             <div style="display: flex; justify-content: space-between;">
                                 <label for="login-password">MẬT KHẨU</label>
-                                <a href="#" class="forgot-link" style="font-size: 0.82rem;">Quên mật khẩu?</a>
+                                <a href="#" class="forgot-link" style="font-size: 0.82rem;" onclick="openForgotModal(event)">Quên mật khẩu?</a>
                             </div>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="password" id="login-password" name="password" class="auth-input" placeholder="••••••••••••" required style="padding-right: 2.75rem;">
@@ -549,6 +549,23 @@ try {
         </div>
     </div>
 
+    <!-- CUSTOM MODAL THÔNG BÁO BẢO MẬT -->
+    <div id="customForgotModal" class="hidden" style="position: fixed; inset: 0; background: rgba(10, 14, 39, 0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+        <div class="auth-card" style="max-width: 440px; width: 100%; text-align: center; border: 1px solid var(--border); background: #ffffff; padding: 32px; border-radius: 16px; position: relative;">
+            <!-- Nút đóng góc phải -->
+            <button type="button" onclick="closeForgotModal()" style="position: absolute; right: 16px; top: 16px; background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.25rem;"><i class="bi bi-x-lg"></i></button>
+
+            <i class="bi bi-shield-slash-fill" style="font-size: 3rem; color: var(--danger); display: block; margin-bottom: 16px;"></i>
+            <h3 style="font-weight: 700; color: #0b1220; margin-bottom: 8px; font-size: 1.25rem;">Chính sách bảo mật hệ thống</h3>
+            <p style="color: #5b6573; font-size: 0.88rem; line-height: 1.6; margin-bottom: 16px;">Để bảo đảm an toàn thông tin dữ liệu của dự án nội bộ <strong>TaskSync</strong>, tính năng tự khôi phục mật khẩu đã được vô hiệu hóa.</p>
+
+            <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 12px; border-radius: 10px; font-size: 0.82rem; text-align: left; line-height: 1.5; margin-bottom: 20px;">
+                Vui lòng liên hệ trực tiếp với <strong>Bộ phận Quản lý nhân sự (Admin)</strong> tại văn phòng hoặc gửi yêu cầu hỗ trợ đến hòm thư <strong class="text-primary">admin@tasksync.vn</strong> để được cấp lại mật khẩu đăng nhập mới!
+            </div>
+            <button type="button" onclick="closeForgotModal()" class="btn-submit" style="padding: 10px; font-size: 0.9rem; cursor: pointer;">Đã hiểu</button>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT ĐIỀU KHIỂN CHUYỂN ĐỔI FORM -->
     <script>
         function toggleAuth(showRegister) {
@@ -606,6 +623,16 @@ try {
                     toggleRegPasswordIcon.classList.add('bi-eye');
                 }
             });
+        }
+
+        // TIỆN ÍCH ĐÓNG/MỞ MODAL BẢO MẬT BẰNG JS THUẦN
+        function openForgotModal(e) {
+            e.preventDefault(); // Chặn hành vi cuộn trang mặc định của thẻ a
+            document.getElementById('customForgotModal').classList.remove('hidden');
+        }
+
+        function closeForgotModal() {
+            document.getElementById('customForgotModal').classList.add('hidden');
         }
     </script>
 
