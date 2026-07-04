@@ -29,7 +29,7 @@
             <?php endif; ?>
 
             <!-- Form Nhập Liệu -->
-            <form action="/project/create" method="POST">
+            <<form action="<?= BASE_URL ?>/project/create" method="POST">>
                 
                 <!-- 1. Tên Dự án -->
                 <div class="mb-3">

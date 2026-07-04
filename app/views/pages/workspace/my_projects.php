@@ -167,7 +167,7 @@ $projects = $data['projects'] ?? [];
                 </div>
 
                 <!-- Form gửi dữ liệu sang hành động 'create' tương đối -->
-                <form action="create" method="POST">
+                <form action="<?= BASE_URL ?>/project/create" method="POST">
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.9rem;">
