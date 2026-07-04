@@ -410,6 +410,8 @@ class Task extends Controller
         exit();
     }
 
+    // app/controllers/Task.php
+
     public function updateBranchUrl()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -419,18 +421,36 @@ class Task extends Controller
             $url = $input['github_branch_url'] ?? null;
 
             if ($taskId) {
-                // Phân quyền sửa url
                 $userId = $_SESSION['user']['id'];
                 $isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
                 $projectId = $this->taskModel->getProjectIdByTaskId($taskId);
                 $userProjectRole = $this->projectModel->getProjectUserRole($projectId, $userId);
 
-                if ((!$isAdmin && $userProjectRole !== 'manager') || !$userProjectRole) {
+                // Phân quyền
+                $canEdit = false;
+
+                if ($isAdmin) {
+                    $canEdit = true; // Admin hệ thống luôn được sửa
+                } elseif ($userProjectRole === 'manager') {
+                    $canEdit = true; // Manager dự án luôn được sửa
+                } elseif ($userProjectRole === 'member') {
+                    // Lấy chi tiết công việc để kiểm tra Assignee và Reporter
+                    $task = $this->taskModel->getById($taskId);
+                    if ($task) {
+                        // Lập trình viên được sửa nếu họ là Người thực hiện hoặc Người tạo Task này [172]
+                        $canEdit = ($userId == $task['assignee_id'] || $userId == $task['reporter_id']);
+                    }
+                }
+
+                // Nếu hoàn toàn không có quyền -> Trả về lỗi 403 Forbidden
+                if (!$canEdit) {
                     http_response_code(403);
-                    echo json_encode(['success' => false, 'error' => 'Bạn không có quyền sửa URL!.']);
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => 'Bạn không có quyền chỉnh sửa liên kết GitHub cho công việc này.']);
                     exit();
                 }
 
+                // Nếu hợp lệ, tiến hành lưu vào CSDL [172]
                 $success = $this->taskModel->updateBranchUrl($taskId, $url);
 
                 header('Content-Type: application/json');
