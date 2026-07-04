@@ -135,6 +135,9 @@
                                     <a href="<?= BASE_URL ?>/admin/editUser/<?= $u['id'] ?>" class="app-btn app-btn-sm app-btn-ghost" title="Sửa thông tin" style="text-decoration: none;">
                                         <i class="bi bi-pencil-square" style="color: var(--primary);"></i>
                                     </a>
+                                    <button type="button" class="app-btn app-btn-sm app-btn-ghost p-1" title="Cấp lại mật khẩu" data-bs-toggle="modal" data-bs-target="#resetPasswordModal<?= $u['id'] ?>">
+                                        <i class="bi bi-key-fill text-warning" style="font-size: 1.1rem;"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -172,3 +175,48 @@
         </nav>
     <?php endif; ?>
 </div>
+
+<?php if (!empty($data['users'])): ?>
+    <?php foreach ($data['users'] as $u): 
+        $fullName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+        $displayName = !empty($fullName) ? $fullName : $u['username'];
+    ?>
+        <div class="modal fade" id="resetPasswordModal<?= $u['id'] ?>" tabindex="-1" aria-hidden="true" style="color: #0b1220;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                    <!-- Modal Header -->
+                    <div class="modal-header bg-light border-bottom-0 py-3 px-4">
+                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center"><i class="bi bi-key-fill text-warning me-2"></i>Cấp mật khẩu mới cho nhân sự</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <!-- Modal Form -->
+                    <form action="<?= BASE_URL ?>/admin/resetUserPassword" method="POST">
+                        <!-- ID Nhân sự được ẩn để gửi lên cho Controller hứng -->
+                        <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                        
+                        <div class="modal-body py-3 px-4 text-dark text-start">
+                            <!-- Hiển thị thông tin người dùng được cấp -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-secondary">Nhân sự được cấp:</label>
+                                <input type="text" class="form-control border-secondary-subtle text-muted bg-light" value="<?= htmlspecialchars($displayName) ?> (@<?= htmlspecialchars($u['username']) ?>)" disabled>
+                            </div>
+                            
+                            <!-- Nhập mật khẩu mới -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-secondary">Nhập mật khẩu mới <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control border-secondary-subtle text-dark" name="new_password" placeholder="Nhập tối thiểu 6 ký tự..." required minlength="6">
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Footer -->
+                        <div class="modal-footer border-top-0 py-3 px-4 bg-light">
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-warning px-4 py-2 fw-bold text-white" style="background-color: var(--danger); border-color: var(--danger);">Xác nhận cấp mới</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>

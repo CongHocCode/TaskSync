@@ -235,4 +235,10 @@ class UserModel
             'value_update' => $value
         ]);
     }
+
+    public function updatePasswordDirect($userId, $hashedPassword)
+    {
+        $stmt = $this->db->pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+        return $stmt->execute([$hashedPassword, $userId]);
+    }
 }

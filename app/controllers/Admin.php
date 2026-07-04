@@ -337,4 +337,22 @@ class Admin extends Controller
             'settings'   => $settings
         ]);
     }
+
+    public function resetUserPassword()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $userId = $_POST['user_id'] ?? null;
+            $newPassword = $_POST['new_password'] ?? '';
+
+            if ($userId && !empty($newPassword)) {
+                $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+                $this->userModel->updatePasswordDirect($userId, $hashed);
+                $_SESSION['flash_success'] = "Đã cấp mật khẩu mới cho nhân sự thành công!";
+            } else {
+                $_SESSION['flash_error'] = "Thông tin không hợp lệ.";
+            }
+        }
+        redirect('admin/users');
+        exit();
+    }
 }
