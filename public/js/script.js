@@ -336,20 +336,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Tự động mở modal chi tiết nếu URL chứa ?open_task=ID
-    // (được sử dụng khi chuyển hướng từ trang "Task của tôi")
     const urlParams = new URLSearchParams(window.location.search);
     const autoOpenTaskId = urlParams.get("open_task");
     if (autoOpenTaskId) {
-      // Tìm thẻ card tương ứng trên bảng Kanban để highlight
       const targetCard = document.querySelector(
         `.kanban-item-card[data-id="${autoOpenTaskId}"]`,
       );
 
-      // Mở modal sau khi trang đã render xong hoàn toàn
       setTimeout(() => {
         openTaskDetailModal(autoOpenTaskId, targetCard || null);
 
-        // Cuộn mượt đến thẻ card nếu tìm thấy
         if (targetCard) {
           targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
           targetCard.style.boxShadow = "0 0 0 3px rgba(79, 70, 229, 0.5)";
@@ -359,7 +355,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }, 300);
 
-      // Xóa param khỏi URL để tránh mở lại khi refresh
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
     }
@@ -369,10 +364,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalElement = document.getElementById("taskDetailModal");
     if (!modalElement) return;
 
-    // Khóa card đang tương tác vào window
     window.targetKanbanCard = card;
 
-    // Lấy tất cả các selector form đúng chuẩn của Quyền
     const titleTextarea = document.getElementById("modalTaskTitle");
     const statusSelect = document.getElementById("modalStatusSelect");
     const descTextarea = modalElement.querySelector(
@@ -393,9 +386,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const subtaskProgressBar = document.getElementById("subtaskProgressBar");
     const createdAtInput = document.getElementById("modalCreatedAtInput");
     const dueDateInput = document.getElementById("modalDueDateInput");
-    const githubBranchUrl = document.getElementById("githubBranchUrl");
 
-    // Reset dữ liệu cũ để tạo hiệu ứng chuyển tiếp mượt mà
     if (titleTextarea) titleTextarea.value = "Đang tải...";
     if (descTextarea) descTextarea.value = "Đang tải mô tả...";
     if (githubInput) githubInput.value = "";
@@ -405,7 +396,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (subtaskBadgeCount) subtaskBadgeCount.innerText = "0 / 0";
     if (subtaskProgressBar) subtaskProgressBar.style.width = "0%";
 
-    // Thực thi Fetch API lấy JSON chi tiết của task
     fetch(`${baseUrl}/task/detail/${taskId}`, {
       headers: { "X-Requested-With": "XMLHttpRequest" },
     })
@@ -414,7 +404,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return response.json();
       })
       .then((task) => {
-        // Điền dữ liệu động vào đúng chuẩn form có sẵn của Quyền
         if (projectHeader) {
           projectHeader.textContent = `${task.issue_key} / Chi tiết công việc`;
         }
@@ -442,7 +431,6 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
-        // Reset input và nạp danh sách bình luận
         const commentInput = document.getElementById("newCommentInput");
         if (commentInput) commentInput.value = "";
 
@@ -453,7 +441,6 @@ document.addEventListener("DOMContentLoaded", function () {
             task.comments.forEach((c) => {
               commentsList.appendChild(createCommentElement(c));
             });
-            // Cuộn xuống cuối
             setTimeout(() => {
               commentsList.scrollTop = commentsList.scrollHeight;
             }, 100);
@@ -462,11 +449,6 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
-        if (titleTextarea) titleTextarea.value = task.title || "";
-        if (descTextarea) descTextarea.value = task.description || "";
-        if (statusSelect) {
-          statusSelect.value = task.status;
-          statusSelect.setAttribute("data-task-id", task.id);
         const role = task.current_user_role || "viewer";
         const isMember = role === "member";
         const isViewer = role === "viewer";
@@ -497,7 +479,6 @@ document.addEventListener("DOMContentLoaded", function () {
           statusSelect.disabled = isViewer;
         }
         if (assigneeSelect && task.project_members) {
-          // Xóa tất cả option cũ ngoại trừ option đầu tiên
           assigneeSelect.innerHTML =
             '<option value="">Chưa phân công (Unassigned)</option>';
           task.project_members.forEach((member) => {
@@ -521,29 +502,11 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         }
         if (assigneeSelect) {
-          // Gán trực tiếp bằng ID (số nguyên) của người dùng được lưu trong Database (ví dụ: 1, 2)
-          // Nếu công việc chưa được gán cho ai, tự động chọn option đầu tiên (Unassigned)
           assigneeSelect.value = task.assignee_id || "";
           assigneeSelect.disabled = isReadOnly;
         }
-        if (typeSelect) {
-          typeSelect.value = task.type || "task";
-          typeSelect.disabled = isViewer;
-
-          Array.from(typeSelect.options).forEach((opt) => {
-            if (isMember && (opt.value === "epic" || opt.value === "story")) {
-              opt.disabled = true;
-              opt.hidden = true;
-            } else {
-              opt.disabled = false;
-              opt.hidden = false;
-            }
-          });
-        }
         if (githubInput) {
           githubInput.value = task.github_branch_url || "";
-
-          // Khóa hoặc mở khóa dựa trên quyền can_edit_github thực tế của user [4]
           githubInput.disabled = !task.can_edit_github;
         }
 
@@ -580,7 +543,6 @@ document.addEventListener("DOMContentLoaded", function () {
           dueDateInput.disabled = isReadOnly;
         }
 
-        // Nạp checklist subtasks
         let subtasksHtml = "";
         let completedCount = 0;
 
@@ -597,7 +559,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     `;
           });
 
-          // Cập nhật badge và thanh tiến trình
           if (subtaskBadgeCount)
             subtaskBadgeCount.innerText = `${completedCount} / ${task.subtasks.length}`;
           if (subtaskProgressBar)
@@ -622,11 +583,10 @@ document.addEventListener("DOMContentLoaded", function () {
               prContainer.innerHTML = `<span class="badge bg-danger rounded-pill small"><i class="bi bi-git"></i> PR #${pr.number}: CLOSED (Đã đóng)</span>`;
             }
           } else {
-            prContainer.innerHTML = ""; // Ẩn đi nếu không có liên kết PR
+            prContainer.innerHTML = "";
           }
         }
 
-        // Kích hoạt hiển thị Modal Bootstrap 5
         const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
         modalInstance.show();
       })
@@ -641,7 +601,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  // Lắng nghe sự kiện thay đổi Trạng thái (Status) ngay trong Modal
   document.addEventListener("change", function (e) {
     if (e.target.id === "modalStatusSelect") {
       const newStatus = e.target.value;
@@ -651,17 +610,14 @@ document.addEventListener("DOMContentLoaded", function () {
         `.sub-kanban-column[data-status="${newStatus}"]`,
       );
 
+      updateTaskStatus(taskId, newStatus);
+
       if (card && destColumn) {
-        // Di chuyển thẻ Card trên Kanban board
         destColumn.appendChild(card);
         updateQuickActionsMenu(card, newStatus);
         toggleDoneStyles(card, newStatus);
         updateColumnCounts();
-
-        // Đồng bộ thay đổi lên máy chủ
-        updateTaskStatus(taskId, newStatus);
       } else {
-        // Cập nhật dòng task ở trang list.php hoặc my_tasks.php
         const taskRow = document.querySelector(
           `.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`,
         );
@@ -719,9 +675,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
-  // ==============================================================
-  // 4. LẮNG NGHE SỰ KIỆN THAY ĐỔI NGƯỜI GÁN TRONG MODAL & LƯU DB
-  // ==============================================================
   document.addEventListener("change", function (e) {
     const assigneeSelect =
       document.getElementById("modalAssigneeSelect") ||
@@ -735,13 +688,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const card = window.targetKanbanCard;
 
       if (taskId) {
-        // Gửi Fetch API lưu thay đổi xuống Database
         updateTaskAssignee(taskId, newAssigneeId, card, e.target);
       }
     }
   });
 
-  // Hàm gửi API cập nhật Người gán (Assignee ID) lên Server
   function updateTaskAssignee(taskId, assigneeId, cardElement, selectElement) {
     fetch(`${baseUrl}/task/updateAssignee`, {
       method: "POST",
@@ -751,7 +702,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       body: JSON.stringify({
         task_id: taskId,
-        assignee_id: assigneeId || null, // Nếu rỗng thì truyền null (Unassigned)
+        assignee_id: assigneeId || null,
       }),
     })
       .then((response) => {
@@ -764,15 +715,13 @@ document.addEventListener("DOMContentLoaded", function () {
             `[TaskSync] Cập nhật thành công Assignee cho Task ${taskId}`,
           );
 
-          // Cập nhật lại giao diện
           if (cardElement) {
             const assigneeNameEl = cardElement.querySelector(".task-assignee");
             const avatarImgEl = cardElement.querySelector("img");
 
-            // Lấy văn bản đang hiển thị của Option được chọn
             const selectedOptionText =
               selectElement.options[selectElement.selectedIndex].text;
-            const cleanedName = selectedOptionText.split(" (")[0]; // Cắt bỏ phần thông tin vai trò phía sau
+            const cleanedName = selectedOptionText.split(" (")[0];
 
             if (assigneeNameEl) {
               assigneeNameEl.textContent = assigneeId
@@ -784,7 +733,6 @@ document.addEventListener("DOMContentLoaded", function () {
               avatarImgEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=64748b&color=fff`;
             }
 
-            // Đồng bộ dữ liệu thuộc tính để bộ lọc hoạt động chính xác
             cardElement.setAttribute(
               "data-assignee",
               assigneeId ? cleanedName : "Unassigned",
@@ -802,8 +750,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  // LẮNG NGHE SỰ KIỆN CLICK NÚT XÓA TASK TRONG MODAL CHI TIẾT
-  // Lắng nghe sự kiện thay đổi Hạn hoàn thành (Due Date) trong Modal
   document.addEventListener("change", function (e) {
     if (e.target.id === "modalDueDateInput") {
       const newDueDate = e.target.value;
@@ -834,7 +780,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 `[TaskSync] Cập nhật thành công Hạn hoàn thành cho Task ${taskId}`,
               );
 
-              // Cập nhật dòng task dưới nền trang List hoặc My Tasks
               const taskRow = document.querySelector(
                 `.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`,
               );
@@ -891,12 +836,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // LẮNG NGHE SỰ KIỆN THAY ĐỔI GITHUB URL
   document.addEventListener("change", function (e) {
     if (e.target.id === "githubBranchUrl") {
       const newUrl = e.target.value.trim();
 
-      // Khai báo rõ ràng statusSelect và bốc data-task-id động tránh lỗi Undefined Scope
       const statusSelect = document.getElementById("modalStatusSelect");
       const taskId = statusSelect
         ? statusSelect.getAttribute("data-task-id")
@@ -935,7 +878,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // LẮNG NGHE SỰ KIỆN TẠO SUB-TASK TỪ MODAL CHI TIẾT
   document.addEventListener("click", function (e) {
     if (
       e.target.id === "openCreateSubtaskModalBtn" ||
@@ -949,7 +891,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const taskTitle = titleTextarea ? titleTextarea.value : "Unknown Task";
 
       if (taskId) {
-        // Đóng modal chi tiết
         const detailModalEl = document.getElementById("taskDetailModal");
         if (detailModalEl) {
           const detailModal =
@@ -958,7 +899,6 @@ document.addEventListener("DOMContentLoaded", function () {
           detailModal.hide();
         }
 
-        // Chờ modal cũ đóng xong rồi mới mở modal mới để tránh lỗi Bootstrap backdrop
         setTimeout(() => {
           const parentInput = document.getElementById("parentIssueIdInput");
           const motherTaskInfo = document.getElementById("motherTaskInfo");
@@ -969,7 +909,6 @@ document.addEventListener("DOMContentLoaded", function () {
           if (motherTaskName)
             motherTaskName.innerHTML = `<span class="badge bg-secondary me-2">#${taskId}</span> <strong>${taskTitle}</strong>`;
 
-          // Điền thông tin project từ task đang active
           const taskData = window.currentActiveTaskData;
           if (taskData) {
             const projInput = document.getElementById("createIssueProjectId");
@@ -1002,21 +941,17 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           }
 
-          // Mở modal tạo mới
           const createModalEl = document.getElementById("createIssueModal");
           if (createModalEl) {
             const createModal =
               bootstrap.Modal.getOrCreateInstance(createModalEl);
             createModal.show();
           }
-        }, 400); // 400ms delay cho animation đóng modal cũ
+        }, 400);
       }
     }
   });
 
-  // ==============================================================
-  // 5. BỘ LỌC THÔNG TIN (FILTER) TRÊN BẢNG KANBAN
-  // ==============================================================
   const filterAssignee = document.getElementById("filterAssignee");
   const filterPriority = document.getElementById("filterPriority");
   const filterType = document.getElementById("filterType");
@@ -1032,7 +967,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const cardPriority = card.getAttribute("data-priority") || "";
       const cardType = card.getAttribute("data-type") || "";
 
-      // Kiểm tra điều kiện so khớp
       const matchAssignee =
         selectedAssignee === "all" || cardAssignee === selectedAssignee;
       const matchPriority =
@@ -1048,20 +982,15 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // Cập nhật lại số đếm ở đầu mỗi cột sau khi lọc
     updateColumnCounts();
   }
 
-  // Đăng ký sự kiện lắng nghe bộ lọc thay đổi
   if (filterAssignee)
     filterAssignee.addEventListener("change", applyKanbanFilters);
   if (filterPriority)
     filterPriority.addEventListener("change", applyKanbanFilters);
   if (filterType) filterType.addEventListener("change", applyKanbanFilters);
 
-  // ==============================================================
-  // 6. ĐIỀU KHIỂN SIDEBAR DI ĐỘNG (OFF-CANVAS DRAWER)
-  // ==============================================================
   const mobileToggleBtn = document.getElementById("mobile-sidebar-toggle");
   const mobileSidebar = document.querySelector(".app-sidebar");
   const mobileOverlay = document.getElementById("sidebar-overlay");
@@ -1070,29 +999,25 @@ document.addEventListener("DOMContentLoaded", function () {
     mobileToggleBtn.addEventListener("click", function () {
       mobileSidebar.classList.add("show-mobile");
       mobileOverlay.classList.add("show");
-      document.body.style.overflow = "hidden"; // Khóa cuộn trang
+      document.body.style.overflow = "hidden";
     });
 
     mobileOverlay.addEventListener("click", function () {
       mobileSidebar.classList.remove("show-mobile");
       mobileOverlay.classList.remove("show");
-      document.body.style.overflow = ""; // Mở khóa cuộn trang
+      document.body.style.overflow = "";
     });
 
-    // Đóng sidebar khi click nút mũi tên thu gọn bên trong
     const sidebarCloseBtn = mobileSidebar.querySelector(".sidebar-collapse");
     if (sidebarCloseBtn) {
       sidebarCloseBtn.addEventListener("click", function () {
         mobileSidebar.classList.remove("show-mobile");
         mobileOverlay.classList.remove("show");
-        document.body.style.overflow = ""; // Mở khóa cuộn trang nền
+        document.body.style.overflow = "";
       });
     }
   }
 
-  // ==============================================================
-  // 7. XỬ LÝ GỬI VÀ NHẬN BÌNH LUẬN TRONG CHI TIẾT CÔNG VIỆC
-  // ==============================================================
   const submitCommentBtn = document.getElementById("submitCommentBtn");
   const newCommentInput = document.getElementById("newCommentInput");
 
