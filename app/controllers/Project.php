@@ -92,10 +92,15 @@ class Project extends Controller
         $activeMembers = array_filter($members ?? [], function ($m) {
             return ($m['status'] ?? 'active') === 'active';
         });
+
+        // Gọi hàm lấy 5 commit mới nhất từ GitHub của dự án hiện tại
+        $githubCommits = $this->fetchGithubCommits($project['github_repo_url'] ?? '');
+
         $data['page_title'] = "Bảng Kanban - " . ($project['name'] ?? "WEB");
         $data['project'] = $project;
         $data['tasks'] = $tasks;
         $data['members'] = $activeMembers;
+        $data['github_commits'] = $githubCommits;
 
         $this->view('pages/projects/kanban', $data);
     }
@@ -418,5 +423,64 @@ class Project extends Controller
         $redirectUrl = $_SESSION['settings_back_url'] ?? 'project/myProjects';
         unset($_SESSION['settings_back_url']);
         redirect($redirectUrl);
+    }
+
+    // TÍNH NĂNG GITHUB INTEGRATION: LẤY 5 COMMITS MỚI NHẤT
+    private function fetchGithubCommits($repoUrl)
+    {
+        if (empty($repoUrl)) return [];
+
+        // Sử dụng Regex tách lấy "owner" và "repository name" từ URL [210]
+        // Ví dụ: https://github.com/octocat/Hello-World -> owner = octocat, repo = Hello-World
+        preg_match('/github\.com\/([^\/]+)\/([^\/]+)/', $repoUrl, $matches);
+        $owner = $matches[1] ?? null;
+        $repo = $matches[2] ?? null;
+
+        if (!$owner || !$repo) return [];
+
+        // Loại bỏ đuôi ".git" hoặc dấu "/" dư thừa ở cuối tên repo
+        $repo = preg_replace('/\.git$/', '', $repo);
+        $repo = rtrim($repo, '/');
+
+        // Gọi API của GitHub lấy 5 commits gần nhất
+        $url = "https://api.github.com/repos/{$owner}/{$repo}/commits?per_page=5";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // User-Agent Header để tránh bị GitHub trả về lỗi 403
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'User-Agent: TaskSync-App'
+        ]);
+
+        // Giới hạn thời gian kết nối tối đa 3 giây để tránh làm treo trang Kanban nếu GitHub bị lag
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            $commits = json_decode($response, true);
+
+            // Khởi tạo UserModel để so khớp Email
+            $userModel = $this->model('UserModel');
+
+            foreach ($commits as &$commit) {
+                $gitEmail = $commit['commit']['author']['email'] ?? '';
+                if (!empty($gitEmail)) {
+                    // Tìm kiếm chéo xem Email này có trong hệ thống không [3]
+                    $tsUser = $userModel->getByEmail($gitEmail);
+                    if ($tsUser) {
+                        // Nếu khớp, gán đè thông tin User thật vào mảng Commit [4]
+                        $commit['ts_user'] = $tsUser;
+                    }
+                }
+            }
+            return $commits;
+        }
+        return [];
     }
 }
