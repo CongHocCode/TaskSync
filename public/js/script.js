@@ -38,11 +38,11 @@ document.addEventListener("DOMContentLoaded", function () {
           {
             label: "Số lượng Task đang xử lý",
             data: dataValues.length > 0 ? dataValues : [0],
-            backgroundColor: "rgba(67, 24, 255, 0.75)",
-            borderColor: "rgb(67, 24, 255)",
+            backgroundColor: "rgba(99, 102, 241, 0.75)", // Màu Indigo hiện đại
+            borderColor: "rgb(99, 102, 241)",
             borderWidth: 1.5,
             borderRadius: 6,
-            hoverBackgroundColor: "rgba(67, 24, 255, 0.95)",
+            hoverBackgroundColor: "rgba(79, 70, 229, 0.9)",
           },
         ],
       },
@@ -97,15 +97,15 @@ document.addEventListener("DOMContentLoaded", function () {
             label: "Người dùng mới",
             data: dataValues,
             fill: true,
-            backgroundColor: "rgba(1, 181, 116, 0.12)",
-            borderColor: "rgb(1, 181, 116)",
+            backgroundColor: "rgba(168, 85, 247, 0.15)", // Màu Tím mịn màng
+            borderColor: "rgb(168, 85, 247)",
             borderWidth: 3,
-            pointBackgroundColor: "rgb(1, 181, 116)",
+            pointBackgroundColor: "rgb(168, 85, 247)",
             pointBorderColor: "#fff",
             pointBorderWidth: 2,
             pointRadius: 6,
             pointHoverRadius: 8,
-            tension: 0.4, // Bo góc
+            tension: 0.4, // Bo góc mềm mại
           },
         ],
       },
@@ -213,30 +213,24 @@ document.addEventListener("DOMContentLoaded", function () {
         status: status,
       }),
     })
-      .then(async (response) => {
-        const data = await response.json().catch(() => null);
-        if (!response.ok) {
-          if (data && data.error) {
-            throw new Error(data.error);
-          }
-          throw new Error("Lỗi kết nối mạng, đang khôi phục giao diện...");
-        }
-        return data;
+      .then((response) => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
       })
       .then((data) => {
-        if (data && data.success) {
+        if (data.success) {
           console.log(
             `[TaskSync] Đã cập nhật thành công Task ${taskId} sang ${status}`,
           );
-        } else if (data && data.error) {
-          throw new Error(data.error);
         } else {
-          throw new Error("Không thể lưu trạng thái mới, vui lòng thử lại.");
+          console.error("[TaskSync] Lỗi cập nhật:", data.error);
+          alert("Không thể lưu trạng thái mới, vui lòng thử lại.");
+          location.reload();
         }
       })
       .catch((error) => {
         console.error("[TaskSync] Fetch error:", error);
-        alert(error.message);
+        alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
         location.reload();
       });
   }
@@ -384,8 +378,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const descTextarea = modalElement.querySelector(
       ".mb-4 textarea:not(#modalTaskTitle)",
     );
-    const assigneeSelect = document.getElementById("modalAssigneeSelect");
-    const typeSelect = document.getElementById("modalTypeSelect");
+    const assigneeSelect = modalElement.querySelector(
+      "select:not(#modalStatusSelect)",
+    );
     const githubInput =
       modalElement.querySelector(
         'input[type="text"][placeholder*="github" i]',
@@ -404,9 +399,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (titleTextarea) titleTextarea.value = "Đang tải...";
     if (descTextarea) descTextarea.value = "Đang tải mô tả...";
     if (githubInput) githubInput.value = "";
-    if (createdAtInput) createdAtInput.value = "Đang tải...";
-    if (dueDateInput) dueDateInput.value = "";
-    if (typeSelect) typeSelect.value = "task";
     if (subtaskList)
       subtaskList.innerHTML =
         '<div class="text-center py-2"><span class="spinner-border spinner-border-sm text-secondary" role="status"></span></div>';
@@ -453,10 +445,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Reset input và nạp danh sách bình luận
         const commentInput = document.getElementById("newCommentInput");
         if (commentInput) commentInput.value = "";
-        // Lưu dữ liệu task đang active để dùng cho các chức năng khác (như tạo subtask)
-        window.currentActiveTaskData = task;
 
-        // Đổ dữ liệu bình luận
         const commentsList = document.getElementById("modalCommentsList");
         if (commentsList) {
           commentsList.innerHTML = "";
@@ -473,6 +462,11 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
+        if (titleTextarea) titleTextarea.value = task.title || "";
+        if (descTextarea) descTextarea.value = task.description || "";
+        if (statusSelect) {
+          statusSelect.value = task.status;
+          statusSelect.setAttribute("data-task-id", task.id);
         const role = task.current_user_role || "viewer";
         const isMember = role === "member";
         const isViewer = role === "viewer";
@@ -527,6 +521,8 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         }
         if (assigneeSelect) {
+          // Gán trực tiếp bằng ID (số nguyên) của người dùng được lưu trong Database (ví dụ: 1, 2)
+          // Nếu công việc chưa được gán cho ai, tự động chọn option đầu tiên (Unassigned)
           assigneeSelect.value = task.assignee_id || "";
           assigneeSelect.disabled = isReadOnly;
         }
@@ -644,7 +640,6 @@ document.addEventListener("DOMContentLoaded", function () {
             '<div class="text-danger small py-1">Lỗi tải danh sách sub-tasks.</div>';
       });
   }
-  window.openTaskDetailModal = openTaskDetailModal;
 
   // Lắng nghe sự kiện thay đổi Trạng thái (Status) ngay trong Modal
   document.addEventListener("change", function (e) {
@@ -656,15 +651,15 @@ document.addEventListener("DOMContentLoaded", function () {
         `.sub-kanban-column[data-status="${newStatus}"]`,
       );
 
-      // Luôn đồng bộ thay đổi lên máy chủ
-      updateTaskStatus(taskId, newStatus);
-
       if (card && destColumn) {
         // Di chuyển thẻ Card trên Kanban board
         destColumn.appendChild(card);
         updateQuickActionsMenu(card, newStatus);
         toggleDoneStyles(card, newStatus);
         updateColumnCounts();
+
+        // Đồng bộ thay đổi lên máy chủ
+        updateTaskStatus(taskId, newStatus);
       } else {
         // Cập nhật dòng task ở trang list.php hoặc my_tasks.php
         const taskRow = document.querySelector(
@@ -746,6 +741,68 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Hàm gửi API cập nhật Người gán (Assignee ID) lên Server
+  function updateTaskAssignee(taskId, assigneeId, cardElement, selectElement) {
+    fetch(`${baseUrl}/task/updateAssignee`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: JSON.stringify({
+        task_id: taskId,
+        assignee_id: assigneeId || null, // Nếu rỗng thì truyền null (Unassigned)
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          console.log(
+            `[TaskSync] Cập nhật thành công Assignee cho Task ${taskId}`,
+          );
+
+          // Cập nhật lại giao diện
+          if (cardElement) {
+            const assigneeNameEl = cardElement.querySelector(".task-assignee");
+            const avatarImgEl = cardElement.querySelector("img");
+
+            // Lấy văn bản đang hiển thị của Option được chọn
+            const selectedOptionText =
+              selectElement.options[selectElement.selectedIndex].text;
+            const cleanedName = selectedOptionText.split(" (")[0]; // Cắt bỏ phần thông tin vai trò phía sau
+
+            if (assigneeNameEl) {
+              assigneeNameEl.textContent = assigneeId
+                ? cleanedName
+                : "Unassigned";
+            }
+            if (avatarImgEl) {
+              const avatarName = assigneeId ? cleanedName : "Unassigned";
+              avatarImgEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=64748b&color=fff`;
+            }
+
+            // Đồng bộ dữ liệu thuộc tính để bộ lọc hoạt động chính xác
+            cardElement.setAttribute(
+              "data-assignee",
+              assigneeId ? cleanedName : "Unassigned",
+            );
+          }
+        } else {
+          alert("Không thể lưu người thực hiện mới, vui lòng thử lại.");
+          location.reload();
+        }
+      })
+      .catch((error) => {
+        console.error("[TaskSync] Fetch error:", error);
+        alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        location.reload();
+      });
+  }
+
+  // LẮNG NGHE SỰ KIỆN CLICK NÚT XÓA TASK TRONG MODAL CHI TIẾT
   // Lắng nghe sự kiện thay đổi Hạn hoàn thành (Due Date) trong Modal
   document.addEventListener("change", function (e) {
     if (e.target.id === "modalDueDateInput") {
@@ -1054,9 +1111,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function sendComment() {
     const statusSelect = document.getElementById("modalStatusSelect");
-    const taskId = statusSelect
-      ? statusSelect.getAttribute("data-task-id")
-      : null;
+    const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
     const content = newCommentInput.value.trim();
 
     if (!taskId || !content) return;
@@ -1081,7 +1136,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         if (data.success && data.comment) {
           newCommentInput.value = "";
-
+          
           const commentsList = document.getElementById("modalCommentsList");
           if (commentsList) {
             if (commentsList.innerHTML.includes("Chưa có bình luận nào")) {
@@ -1108,15 +1163,15 @@ document.addEventListener("DOMContentLoaded", function () {
     div.className = "p-3 rounded-3";
     div.style.backgroundColor = "#f8fafc";
     div.style.border = "1px solid #e2e8f0";
-
+    
     let timeStr = "";
     if (c.created_at) {
       const date = new Date(c.created_at);
       if (!isNaN(date.getTime())) {
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         timeStr = `${hours}:${minutes} ${day}/${month}`;
       } else {
         timeStr = c.created_at.substring(11, 16) || "";
@@ -1124,7 +1179,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const name = c.user_full_name ? c.user_full_name.trim() : c.username;
-
+    
     div.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-1">
         <span class="fw-bold text-dark" style="font-size: 0.88rem;">${escapeHtml(name)}</span>

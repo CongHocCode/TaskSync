@@ -63,6 +63,12 @@ if ($activeProject) {
 }
 ?>
 <style>
+    /* Khai báo container cho sidebar */
+    .app-sidebar {
+        container-type: inline-size;
+        container-name: sidebar;
+    }
+
     @media (min-width: 992px) {
 
         /* --- TRẠNG THÁI MẶC ĐỊNH (MỞ RỘNG) --- */
@@ -78,6 +84,7 @@ if ($activeProject) {
             transition: width 0.05s ease;
             /* Giảm thời gian để khi kéo chuột mượt hơn, không bị trễ */
             overflow-x: hidden;
+            z-index: 100 !important;
         }
 
         /* Thanh handle ẩn ở mép phải để rê chuột vào kéo */
@@ -100,41 +107,141 @@ if ($activeProject) {
             background: rgba(255, 255, 255, 0.15);
         }
 
-        /* --- TRẠNG THÁI KHI THU GỌN (.collapsed) --- */
-        .app-sidebar.collapsed {
-            width: 75px !important;
-            /* Fix cứng kích thước khi đóng hẳn */
+        /* Nút thu gọn dạng lơ lửng trên viền (Jira-style) */
+        .sidebar-collapse {
+            position: absolute !important;
+            top: 36px !important;
+            right: -12px !important;
+            width: 24px !important;
+            height: 24px !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 50% !important;
+            color: #475569 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            z-index: 12 !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+
+        .sidebar-collapse:hover {
+            background: #4f46e5 !important;
+            color: #ffffff !important;
+            border-color: #4f46e5 !important;
+            transform: scale(1.1) !important;
+        }
+    }
+
+    /* --- TRẠNG THÁI THU NHỎ QUA CONTAINER QUERY (ĐỐI PHÓ VỚI MỌI ĐỘ RỘNG HẸP) --- */
+    @container sidebar (max-width: 220px) {
+        .app-sidebar {
+            padding: 24px 13px !important;
+            gap: 1.25rem !important;
+            overflow: visible !important;
+            overflow-x: visible !important;
+        }
+
+        /* Căn giữa logo */
+        .app-sidebar .sidebar-brand {
+            justify-content: center !important;
+            padding: 0 !important;
+        }
+
+        /* Thu nhỏ logo khi collapsed để tránh bị rìa cắt */
+        .app-sidebar .sidebar-logo {
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 0.95rem !important;
+            border-radius: 10px !important;
         }
 
         /* Ẩn toàn bộ các phần chữ, nhãn tiêu đề khi thu nhỏ */
-        .app-sidebar.collapsed h1,
-        .app-sidebar.collapsed .sidebar-section-label,
-        .app-sidebar.collapsed .sidebar-link span,
-        .app-sidebar.collapsed .sidebar-link .badge,
-        .app-sidebar.collapsed .sidebar-project-toggle span,
-        .app-sidebar.collapsed .sidebar-project-toggle .bi-chevron-down,
-        .app-sidebar.collapsed .user-info,
-        .app-sidebar.collapsed .user-menu-btn,
-        .app-sidebar.collapsed .sidebar-project-nav {
+        .app-sidebar h1,
+        .app-sidebar .brand-text,
+        .app-sidebar .sidebar-section-label,
+        .app-sidebar .sidebar-link span,
+        .app-sidebar .sidebar-link .badge,
+        .app-sidebar .sidebar-project-toggle .project-name-text,
+        .app-sidebar .sidebar-project-toggle .dropdown-chevron,
+        .app-sidebar .user-info,
+        .app-sidebar .user-menu-btn {
             display: none !important;
         }
 
-        /* Xử lý nút "Tạo Issue mới" khi thu nhỏ */
-        .app-sidebar.collapsed .app-btn-create-issue {
+        /* Biến nút Tạo Issue thành hình tròn */
+        .app-sidebar .app-btn-create-issue {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 50% !important;
+            margin: 0.5rem auto !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             font-size: 0 !important;
-            padding: 10px 0;
-            justify-content: center;
         }
 
-        .app-sidebar.collapsed .app-btn-create-issue i {
+        .app-sidebar .app-btn-create-issue i {
             font-size: 1.5rem !important;
-            margin: 0;
+            margin: 0 !important;
+        }
+
+        /* Căn giữa và thu gọn các link menu thành hình tròn icon */
+        .app-sidebar .sidebar-link {
+            justify-content: center !important;
+            padding: 0 !important;
+            border-radius: 50% !important;
+            width: 44px !important;
+            height: 44px !important;
+            margin: 0 auto !important;
+            gap: 0 !important;
+        }
+
+        .app-sidebar .sidebar-link i {
+            font-size: 1.25rem !important;
+            margin: 0 !important;
+        }
+
+        /* Chuyển đổi dropdown dự án thành hình vuông bo tròn nhẹ khi collapsed */
+        .app-sidebar .sidebar-project-toggle {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 12px !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .app-sidebar .sidebar-project-toggle .project-icon-wrapper {
+            margin: 0 !important;
+        }
+
+        /* Định cấu hình dropdown menu dự án khi collapsed */
+        .app-sidebar .sidebar-project .dropdown-menu {
+            width: 260px !important;
+            min-width: 260px !important;
+        }
+
+        /* Phần thông tin user khi thu nhỏ */
+        .app-sidebar .sidebar-user {
+            justify-content: center !important;
+            padding: 10px 0 !important;
+        }
+
+        /* Định vị nút lơ lửng ở vị trí giữa theo chiều dọc khi thu gọn */
+        .app-sidebar .sidebar-collapse {
+            top: 50% !important;
+            transform: translateY(-50%) !important;
         }
 
         /* Xoay ngược mũi tên khi đóng */
-        .app-sidebar.collapsed .sidebar-collapse i {
-            transform: rotate(180deg);
-            display: inline-block;
+        .app-sidebar .sidebar-collapse i {
+            transform: rotate(180deg) !important;
+            display: inline-block !important;
         }
     }
 
@@ -163,6 +270,124 @@ if ($activeProject) {
         text-align: left;
     }
 
+    /* Ngăn chặn các phần tử quan trọng bị co cụm hoặc méo mó hình dạng */
+    .sidebar-logo,
+    .app-btn-create-issue,
+    .sidebar-link,
+    .sidebar-project-toggle,
+    .sidebar-user img,
+    .user-avatar {
+        flex-shrink: 0 !important;
+    }
+
+    /* Ẩn hoàn toàn nút mũi tên thu gọn theo yêu cầu người dùng */
+    .sidebar-collapse {
+        display: none !important;
+    }
+
+    /* Xoay và mượt chuyển động cho mũi tên dropdown dự án */
+    /* Nâng cấp giao diện nút chọn dự án */
+    .sidebar-project-toggle {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        width: 100% !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #f1f5f9 !important;
+        padding: 8px 12px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-align: left !important;
+    }
+
+    .sidebar-project-toggle:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .sidebar-project-toggle[aria-expanded="true"] {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(99, 102, 241, 0.4) !important;
+    }
+
+    /* Khung bọc icon dự án */
+    .project-icon-wrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        color: #818cf8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.25s ease;
+    }
+
+    .sidebar-project-toggle:hover .project-icon-wrapper {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(79, 70, 229, 0.3) 100%);
+        color: #a5b4fc;
+        transform: scale(1.05);
+    }
+
+    .project-icon-wrapper i {
+        font-size: 1.05rem;
+    }
+
+    .sidebar-project-toggle .project-name-text {
+        font-size: 0.9rem;
+        color: #e2e8f0;
+        font-weight: 600;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sidebar-project-toggle .dropdown-chevron {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        transition: transform 0.2s ease;
+    }
+
+    .sidebar-project-toggle[aria-expanded="false"] .dropdown-chevron {
+        transform: rotate(-90deg);
+    }
+
+    /* Ẩn hoàn toàn caret ::after mặc định của Bootstrap */
+    .sidebar-project-toggle::after {
+        display: none !important;
+    }
+
+    /* Nâng cấp giao diện dropdown chọn dự án */
+    .sidebar-project .dropdown-menu {
+        background-color: #1e293b !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px !important;
+        padding: 0.5rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .sidebar-project .dropdown-item {
+        border-radius: 8px !important;
+        padding: 0.6rem 1rem !important;
+        color: #e2e8f0 !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .sidebar-project .dropdown-item:hover {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+    }
+
     /* Giữ khoảng cách cố định cho icon để không bị bóp méo khi thu nhỏ */
     .app-sidebar i {
         min-width: 20px;
@@ -179,8 +404,8 @@ if ($activeProject) {
     <div class="sidebar-resizer"></div>
 
     <div class="sidebar-brand">
-        <div class="sidebar-logo" style="cursor: pointer;" onclick="window.location.href='<?= BASE_URL ?>/workspace'">M</div>
-        <div style="cursor: pointer;" onclick="window.location.href='<?= BASE_URL ?>/workspace'">
+        <div class="sidebar-logo">M</div>
+        <div class="brand-text">
             <h1>Workspace</h1>
             <p style="font-size: 0.65rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">TaskSync</p>
         </div>
@@ -235,7 +460,11 @@ if ($activeProject) {
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 style="background: transparent;">
-                <span><?= $projectNameDisplay ?></span>
+                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                    <i class="bi bi-folder-fill text-primary project-icon" style="font-size: 1.1rem;"></i>
+                    <span><?= $projectNameDisplay ?></span>
+                </div>
+                <i class="bi bi-chevron-down dropdown-chevron"></i>
             </button>
 
             <!-- Menu danh sách chọn dự án khác -->
@@ -499,12 +728,12 @@ if ($activeProject) {
                 let newWidth = e.clientX;
 
                 if (newWidth >= 75 && newWidth <= 500) {
-                    sidebar.style.width = newWidth + "px";
-
-                    if (newWidth < 140) {
+                    if (newWidth < 180) {
                         sidebar.classList.add("collapsed");
+                        sidebar.style.width = "75px";
                     } else {
                         sidebar.classList.remove("collapsed");
+                        sidebar.style.width = newWidth + "px";
                     }
                 }
             }
