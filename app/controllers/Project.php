@@ -43,7 +43,7 @@ class Project extends Controller
             // Kiểm tra lỗi bỏ trống trường bắt buộc
             if (empty($name) || empty($key)) {
                 $_SESSION['flash_error'] = "Vui lòng nhập đầy đủ tên và mã viết tắt dự án.";
-                redirect('project/myProjects');
+                redirect('workspace/myProjects');
                 exit();
             }
 
@@ -52,10 +52,10 @@ class Project extends Controller
 
             if ($success) {
                 $_SESSION['flash_success'] = "Tạo dự án mới thành công!";
-                redirect('project/myProjects');
+                redirect('workspace/myProjects'); 
             } else {
                 $_SESSION['flash_error'] = "Tạo dự án thất bại. Có thể mã viết tắt (Key) đã tồn tại.";
-                redirect('project/myProjects');
+                redirect('workspace/myProjects'); 
             }
             exit();
         }
