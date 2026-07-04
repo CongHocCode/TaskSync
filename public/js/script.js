@@ -213,24 +213,31 @@ document.addEventListener("DOMContentLoaded", function () {
         status: status,
       }),
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error((data && data.error) ? data.error : "Network response was not ok");
+        }
+        return data;
       })
       .then((data) => {
-        if (data.success) {
+        if (data && data.success) {
           console.log(
             `[TaskSync] Đã cập nhật thành công Task ${taskId} sang ${status}`,
           );
-        } else {
+        } else if (data) {
           console.error("[TaskSync] Lỗi cập nhật:", data.error);
-          alert("Không thể lưu trạng thái mới, vui lòng thử lại.");
+          alert(data.error || "Không thể lưu trạng thái mới, vui lòng thử lại.");
           location.reload();
         }
       })
       .catch((error) => {
         console.error("[TaskSync] Fetch error:", error);
-        alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        if (error.message && error.message !== "Network response was not ok") {
+            alert(error.message);
+        } else {
+            alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        }
         location.reload();
       });
   }
@@ -398,7 +405,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (titleTextarea) titleTextarea.value = "Đang tải...";
     if (descTextarea) descTextarea.value = "Đang tải mô tả...";
     if (githubInput) githubInput.value = "";
-    if (createdAtInput) createdAtInput.value = "Đang tải...";
+    if (createdAtInput) createdAtInput.value = "";
     if (dueDateInput) dueDateInput.value = "";
     if (typeSelect) typeSelect.value = "task";
     if (subtaskList)
@@ -549,20 +556,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (createdAtInput) {
           if (task.created_at) {
-            const date = new Date(task.created_at);
-            if (!isNaN(date.getTime())) {
-              createdAtInput.value = date.toLocaleDateString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-            } else {
-              createdAtInput.value = task.created_at;
+            let formattedVal = task.created_at.replace(" ", "T");
+            if (formattedVal.length > 16) {
+              formattedVal = formattedVal.substring(0, 16);
             }
+            createdAtInput.value = formattedVal;
           } else {
-            createdAtInput.value = "Chưa rõ";
+            createdAtInput.value = "";
           }
         }
         if (dueDateInput) {
@@ -754,12 +754,15 @@ document.addEventListener("DOMContentLoaded", function () {
         assignee_id: assigneeId || null, // Nếu rỗng thì truyền null (Unassigned)
       }),
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error((data && data.error) ? data.error : "Network response was not ok");
+        }
+        return data;
       })
       .then((data) => {
-        if (data.success) {
+        if (data && data.success) {
           console.log(
             `[TaskSync] Cập nhật thành công Assignee cho Task ${taskId}`,
           );
@@ -790,14 +793,18 @@ document.addEventListener("DOMContentLoaded", function () {
               assigneeId ? cleanedName : "Unassigned",
             );
           }
-        } else {
-          alert("Không thể lưu người thực hiện mới, vui lòng thử lại.");
+        } else if (data) {
+          alert(data.error || "Không thể lưu người thực hiện mới, vui lòng thử lại.");
           location.reload();
         }
       })
       .catch((error) => {
         console.error("[TaskSync] Fetch error:", error);
-        alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        if (error.message && error.message !== "Network response was not ok") {
+            alert(error.message);
+        } else {
+            alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        }
         location.reload();
       });
   }
@@ -812,6 +819,24 @@ document.addEventListener("DOMContentLoaded", function () {
         : null;
 
       if (taskId) {
+        if (window.currentActiveTaskData && window.currentActiveTaskData.created_at && newDueDate) {
+            const createdDate = new Date(window.currentActiveTaskData.created_at);
+            const selectedDate = new Date(newDueDate);
+            if (selectedDate < createdDate) {
+                alert("Hạn hoàn thành không thể sớm hơn ngày tạo công việc!");
+                let prevVal = window.currentActiveTaskData.due_date;
+                if (prevVal) {
+                    prevVal = prevVal.replace(" ", "T");
+                    if (prevVal.length === 10) prevVal += "T00:00";
+                    else if (prevVal.length > 16) prevVal = prevVal.substring(0, 16);
+                    e.target.value = prevVal;
+                } else {
+                    e.target.value = "";
+                }
+                return;
+            }
+        }
+
         fetch(`${baseUrl}/task/updateDueDate`, {
           method: "POST",
           headers: {
@@ -823,12 +848,15 @@ document.addEventListener("DOMContentLoaded", function () {
             due_date: newDueDate ? newDueDate.replace("T", " ") : null,
           }),
         })
-          .then((response) => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
+          .then(async (response) => {
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+              throw new Error((data && data.error) ? data.error : "Network response was not ok");
+            }
+            return data;
           })
           .then((data) => {
-            if (data.success) {
+            if (data && data.success) {
               console.log(
                 `[TaskSync] Cập nhật thành công Hạn hoàn thành cho Task ${taskId}`,
               );
@@ -878,13 +906,17 @@ document.addEventListener("DOMContentLoaded", function () {
                   }
                 }
               }
-            } else {
-              alert("Không thể lưu hạn hoàn thành mới, vui lòng thử lại.");
+            } else if (data) {
+              alert(data.error || "Không thể lưu hạn hoàn thành mới, vui lòng thử lại.");
             }
           })
           .catch((error) => {
             console.error("[TaskSync] Update due date error:", error);
-            alert("Lỗi kết nối mạng khi cập nhật hạn hoàn thành.");
+            if (error.message && error.message !== "Network response was not ok") {
+                alert(error.message);
+            } else {
+                alert("Lỗi kết nối mạng khi cập nhật hạn hoàn thành.");
+            }
           });
       }
     }
@@ -1123,12 +1155,15 @@ document.addEventListener("DOMContentLoaded", function () {
         content: content,
       }),
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Không thể gửi bình luận");
-        return response.json();
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error((data && data.error) ? data.error : "Không thể gửi bình luận");
+        }
+        return data;
       })
       .then((data) => {
-        if (data.success && data.comment) {
+        if (data && data.success && data.comment) {
           newCommentInput.value = "";
 
           const commentsList = document.getElementById("modalCommentsList");
@@ -1139,13 +1174,17 @@ document.addEventListener("DOMContentLoaded", function () {
             commentsList.appendChild(createCommentElement(data.comment));
             commentsList.scrollTop = commentsList.scrollHeight;
           }
-        } else {
-          alert("Lỗi khi gửi bình luận, vui lòng thử lại.");
+        } else if (data) {
+          alert(data.error || "Lỗi khi gửi bình luận, vui lòng thử lại.");
         }
       })
       .catch((error) => {
         console.error("[TaskSync] Send comment error:", error);
-        alert("Lỗi kết nối mạng khi gửi bình luận.");
+        if (error.message && error.message !== "Không thể gửi bình luận") {
+            alert(error.message);
+        } else {
+            alert("Lỗi kết nối mạng khi gửi bình luận.");
+        }
       })
       .finally(() => {
         submitCommentBtn.disabled = false;

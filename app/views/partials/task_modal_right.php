@@ -120,7 +120,7 @@
 
                             <div class="mb-4">
                                 <label class="text-muted fw-bold mb-1 ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">NGÀY TẠO (CREATED AT)</label>
-                                <input type="text" id="modalCreatedAtInput" class="form-control seamless-input text-dark fw-semibold bg-white border border-secondary-subtle" readonly style="border-color: #cbd5e1 !important; border-radius: 8px;" placeholder="Đang tải...">
+                                <input type="datetime-local" id="modalCreatedAtInput" class="form-control seamless-input text-dark fw-semibold bg-white border border-secondary-subtle" readonly style="border-color: #cbd5e1 !important; border-radius: 8px;">
                             </div>
 
                             <div class="mb-4">
