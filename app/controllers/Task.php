@@ -361,7 +361,7 @@ class Task extends Controller
                 }
 
                 $taskModel = $this->model('TaskModel');
-                
+
                 // Validate that due date is not earlier than created_at
                 $task = $taskModel->getById($taskId);
                 if ($task && !empty($dueDate)) {
@@ -498,11 +498,14 @@ class Task extends Controller
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['User-Agent: TaskSync-App']);
-        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'User-Agent: TaskSync-App',
+            'Authorization: Bearer ' . GITHUB_PAT_TOKEN
+        ]);
+
         // Bỏ qua xác thực chứng chỉ SSL khi chạy ở localhost
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-        
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3); // Tăng nhẹ timeout lên 3s tránh nghẽn mạng local
         curl_setopt($ch, CURLOPT_TIMEOUT, 3);
 
@@ -518,7 +521,7 @@ class Task extends Controller
                 'number' => $prNum
             ];
         }
-        
+
         return null;
     }
 }

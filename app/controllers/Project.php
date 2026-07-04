@@ -52,10 +52,10 @@ class Project extends Controller
 
             if ($success) {
                 $_SESSION['flash_success'] = "Tạo dự án mới thành công!";
-                redirect('workspace/myProjects'); 
+                redirect('workspace/myProjects');
             } else {
                 $_SESSION['flash_error'] = "Tạo dự án thất bại. Có thể mã viết tắt (Key) đã tồn tại.";
-                redirect('workspace/myProjects'); 
+                redirect('workspace/myProjects');
             }
             exit();
         }
@@ -451,8 +451,10 @@ class Project extends Controller
 
         // User-Agent Header để tránh bị GitHub trả về lỗi 403
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'User-Agent: TaskSync-App'
+            'User-Agent: TaskSync-App',
+            'Authorization: Bearer ' . GITHUB_PAT_TOKEN
         ]);
+
 
         // Giới hạn thời gian kết nối tối đa 3 giây để tránh làm treo trang Kanban nếu GitHub bị lag
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
