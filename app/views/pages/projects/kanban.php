@@ -137,7 +137,7 @@
                             $authorName = $commit['commit']['author']['name'] ?? 'Ẩn danh';
                             $authorAvatar = $commit['author']['avatar_url'] ?? '';
 
-                            // 🚀 Nếu so khớp email thành công, lấy thông tin động từ hệ thống TaskSync
+                            // Nếu so khớp email thành công, lấy thông tin động từ hệ thống TaskSync
                             if (!empty($commit['ts_user'])) {
                                 $authorName = trim(($commit['ts_user']['first_name'] ?? '') . ' ' . ($commit['ts_user']['last_name'] ?? '')) ?: $commit['ts_user']['username'];
                                 $authorAvatar = (!empty($commit['ts_user']['avatar_url']) && $commit['ts_user']['avatar_url'] !== 'default-avatar.png')

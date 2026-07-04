@@ -114,7 +114,7 @@ $canManage = $data['is_authorized_to_delete'] ?? false;
             </div>
         </div>
 
-        <!-- 🚀 CỘT PHẢI (35%): CHỈ HIỂN THỊ CHO TÀI KHOẢN CÓ QUYỀN HẠN PHÙ HỢP (MANAGER/ADMIN) -->
+        <!-- CỘT PHẢI (35%): CHỈ HIỂN THỊ CHO TÀI KHOẢN CÓ QUYỀN HẠN PHÙ HỢP (MANAGER/ADMIN) -->
         <?php if ($canManage): ?>
             <div class="col-12 col-xl-4">
                 <div class="d-flex flex-column gap-4">
