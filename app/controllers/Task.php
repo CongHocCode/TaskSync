@@ -480,7 +480,7 @@ class Task extends Controller
         exit();
     }
 
-    // Gọi API GitHub lấy trạng thái thực tế của Pull Request (Open/Merged/Closed) [210]
+    // Gọi API GitHub lấy trạng thái thực tế của Pull Request (Open/Merged/Closed)
     private function fetchPullRequestStatus($prUrl)
     {
         if (empty($prUrl)) return null;
@@ -499,8 +499,12 @@ class Task extends Controller
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['User-Agent: TaskSync-App']);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+        
+        // Bỏ qua xác thực chứng chỉ SSL khi chạy ở localhost
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+        
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3); // Tăng nhẹ timeout lên 3s tránh nghẽn mạng local
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -514,6 +518,7 @@ class Task extends Controller
                 'number' => $prNum
             ];
         }
+        
         return null;
     }
 }
