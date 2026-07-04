@@ -70,7 +70,13 @@ class Task extends Controller
             $dueDate = null;
             if (!empty($dueDateRaw)) {
                 $parsedDate = strtotime($dueDateRaw);
-                if ($parsedDate !== false && $parsedDate > time()) {
+                // Ensure due date is not earlier than the created time (with a tiny skew buffer)
+                if ($parsedDate !== false) {
+                    if ($parsedDate < time() - 3600) {
+                        $_SESSION['flash_error'] = "Hạn hoàn thành không thể sớm hơn thời gian tạo công việc.";
+                        redirect('project/kanban/' . $projectId);
+                        exit();
+                    }
                     $dueDate = date('Y-m-d H:i:s', $parsedDate);
                 }
             }
@@ -355,6 +361,17 @@ class Task extends Controller
                 }
 
                 $taskModel = $this->model('TaskModel');
+                
+                // Validate that due date is not earlier than created_at
+                $task = $taskModel->getById($taskId);
+                if ($task && !empty($dueDate)) {
+                    if (strtotime($dueDate) < strtotime($task['created_at'])) {
+                        http_response_code(400);
+                        echo json_encode(['success' => false, 'error' => 'Hạn hoàn thành không thể sớm hơn ngày tạo.']);
+                        exit();
+                    }
+                }
+
                 $success = $taskModel->updateDueDate($taskId, $dueDate);
 
                 header('Content-Type: application/json');

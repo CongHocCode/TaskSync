@@ -38,11 +38,11 @@ document.addEventListener("DOMContentLoaded", function () {
           {
             label: "Số lượng Task đang xử lý",
             data: dataValues.length > 0 ? dataValues : [0],
-            backgroundColor: "rgba(99, 102, 241, 0.75)", // Màu Indigo hiện đại
-            borderColor: "rgb(99, 102, 241)",
+            backgroundColor: "rgba(67, 24, 255, 0.75)",
+            borderColor: "rgb(67, 24, 255)",
             borderWidth: 1.5,
             borderRadius: 6,
-            hoverBackgroundColor: "rgba(79, 70, 229, 0.9)",
+            hoverBackgroundColor: "rgba(67, 24, 255, 0.95)",
           },
         ],
       },
@@ -97,15 +97,15 @@ document.addEventListener("DOMContentLoaded", function () {
             label: "Người dùng mới",
             data: dataValues,
             fill: true,
-            backgroundColor: "rgba(168, 85, 247, 0.15)", // Màu Tím mịn màng
-            borderColor: "rgb(168, 85, 247)",
+            backgroundColor: "rgba(1, 181, 116, 0.12)",
+            borderColor: "rgb(1, 181, 116)",
             borderWidth: 3,
-            pointBackgroundColor: "rgb(168, 85, 247)",
+            pointBackgroundColor: "rgb(1, 181, 116)",
             pointBorderColor: "#fff",
             pointBorderWidth: 2,
             pointRadius: 6,
             pointHoverRadius: 8,
-            tension: 0.4, // Bo góc mềm mại
+            tension: 0.4, // Bo góc
           },
         ],
       },
@@ -161,6 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
+
     columns.forEach((column) => {
       // Dragover: thay đổi giao diện vùng thả
       column.addEventListener("dragover", function (e) {
@@ -213,24 +214,31 @@ document.addEventListener("DOMContentLoaded", function () {
         status: status,
       }),
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error((data && data.error) ? data.error : "Network response was not ok");
+        }
+        return data;
       })
       .then((data) => {
-        if (data.success) {
+        if (data && data.success) {
           console.log(
             `[TaskSync] Đã cập nhật thành công Task ${taskId} sang ${status}`,
           );
-        } else {
+        } else if (data) {
           console.error("[TaskSync] Lỗi cập nhật:", data.error);
-          alert("Không thể lưu trạng thái mới, vui lòng thử lại.");
+          alert(data.error || "Không thể lưu trạng thái mới, vui lòng thử lại.");
           location.reload();
         }
       })
       .catch((error) => {
         console.error("[TaskSync] Fetch error:", error);
-        alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        if (error.message && error.message !== "Network response was not ok") {
+            alert(error.message);
+        } else {
+            alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        }
         location.reload();
       });
   }
@@ -342,7 +350,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (autoOpenTaskId) {
       // Tìm thẻ card tương ứng trên bảng Kanban để highlight
       const targetCard = document.querySelector(
-        `.kanban-item-card[data-id="${autoOpenTaskId}"]`,
+        `.kanban-item-card[data-id="${autoOpenTaskId}"]`
       );
 
       // Mở modal sau khi trang đã render xong hoàn toàn
@@ -366,6 +374,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function openTaskDetailModal(taskId, card) {
+
     const modalElement = document.getElementById("taskDetailModal");
     if (!modalElement) return;
 
@@ -392,13 +401,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const subtaskProgressBar = document.getElementById("subtaskProgressBar");
     const createdAtInput = document.getElementById("modalCreatedAtInput");
     const dueDateInput = document.getElementById("modalDueDateInput");
-    const githubBranchUrl = document.getElementById("githubBranchUrl");
 
     // Reset dữ liệu cũ để tạo hiệu ứng chuyển tiếp mượt mà
     if (titleTextarea) titleTextarea.value = "Đang tải...";
     if (descTextarea) descTextarea.value = "Đang tải mô tả...";
     if (githubInput) githubInput.value = "";
-    if (createdAtInput) createdAtInput.value = "Đang tải...";
+    if (createdAtInput) createdAtInput.value = "";
     if (dueDateInput) dueDateInput.value = "";
     if (typeSelect) typeSelect.value = "task";
     if (subtaskList)
@@ -427,9 +435,7 @@ document.addEventListener("DOMContentLoaded", function () {
           projectNameEl.href = `${baseUrl}/project/kanban/${task.project_id_ref || task.project_id}`;
         }
 
-        const motherTaskDisplay = document.getElementById(
-          "modalMotherTaskDisplay",
-        );
+        const motherTaskDisplay = document.getElementById("modalMotherTaskDisplay");
         const motherTaskRef = document.getElementById("modalMotherTaskRef");
         if (motherTaskDisplay && motherTaskRef) {
           if (task.parent_issue_id && task.parent_issue_key) {
@@ -467,20 +473,20 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
-        const role = task.current_user_role || "viewer";
-        const isMember = role === "member";
-        const isViewer = role === "viewer";
+        const role = task.current_user_role || 'viewer';
+        const isMember = role === 'member';
+        const isViewer = role === 'viewer';
         const isReadOnly = isMember || isViewer;
 
         const deleteBtn = document.getElementById("btnDeleteTask");
         if (deleteBtn) {
-          if (isReadOnly) {
-            deleteBtn.classList.add("d-none");
-            deleteBtn.classList.remove("d-flex");
-          } else {
-            deleteBtn.classList.remove("d-none");
-            deleteBtn.classList.add("d-flex");
-          }
+            if (isReadOnly) {
+                deleteBtn.classList.add("d-none");
+                deleteBtn.classList.remove("d-flex");
+            } else {
+                deleteBtn.classList.remove("d-none");
+                deleteBtn.classList.add("d-flex");
+            }
         }
 
         if (titleTextarea) {
@@ -498,71 +504,51 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (assigneeSelect && task.project_members) {
           // Xóa tất cả option cũ ngoại trừ option đầu tiên
-          assigneeSelect.innerHTML =
-            '<option value="">Chưa phân công (Unassigned)</option>';
-          task.project_members.forEach((member) => {
-            const fullName = (
-              (member.first_name || "") +
-              " " +
-              (member.last_name || "")
-            ).trim();
+          assigneeSelect.innerHTML = '<option value="">Chưa phân công (Unassigned)</option>';
+          task.project_members.forEach(member => {
+            const fullName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim();
             const displayName = fullName ? fullName : member.username;
-            const initials =
-              member.first_name && member.last_name
-                ? (
-                    member.first_name.charAt(0) + member.last_name.charAt(0)
-                  ).toUpperCase()
-                : member.username.substring(0, 2).toUpperCase();
-
-            const option = document.createElement("option");
+            const initials = member.first_name && member.last_name
+              ? (member.first_name.charAt(0) + member.last_name.charAt(0)).toUpperCase()
+              : member.username.substring(0, 2).toUpperCase();
+            
+            const option = document.createElement('option');
             option.value = member.id;
             option.textContent = `${displayName} (${initials})`;
             assigneeSelect.appendChild(option);
           });
         }
         if (assigneeSelect) {
-          // Gán trực tiếp bằng ID (số nguyên) của người dùng được lưu trong Database (ví dụ: 1, 2)
-          // Nếu công việc chưa được gán cho ai, tự động chọn option đầu tiên (Unassigned)
           assigneeSelect.value = task.assignee_id || "";
           assigneeSelect.disabled = isReadOnly;
         }
         if (typeSelect) {
           typeSelect.value = task.type || "task";
           typeSelect.disabled = isViewer;
-
-          Array.from(typeSelect.options).forEach((opt) => {
-            if (isMember && (opt.value === "epic" || opt.value === "story")) {
-              opt.disabled = true;
-              opt.hidden = true;
-            } else {
-              opt.disabled = false;
-              opt.hidden = false;
-            }
+          
+          Array.from(typeSelect.options).forEach(opt => {
+              if (isMember && (opt.value === 'epic' || opt.value === 'story')) {
+                  opt.disabled = true;
+                  opt.hidden = true;
+              } else {
+                  opt.disabled = false;
+                  opt.hidden = false;
+              }
           });
         }
         if (githubInput) {
           githubInput.value = task.github_branch_url || "";
-
-          // Khóa hoặc mở khóa dựa trên quyền can_edit_github thực tế của user [4]
-          githubInput.disabled = !task.can_edit_github;
+          githubInput.disabled = isReadOnly;
         }
-
         if (createdAtInput) {
           if (task.created_at) {
-            const date = new Date(task.created_at);
-            if (!isNaN(date.getTime())) {
-              createdAtInput.value = date.toLocaleDateString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-            } else {
-              createdAtInput.value = task.created_at;
+            let formattedVal = task.created_at.replace(" ", "T");
+            if (formattedVal.length > 16) {
+              formattedVal = formattedVal.substring(0, 16);
             }
+            createdAtInput.value = formattedVal;
           } else {
-            createdAtInput.value = "Chưa rõ";
+            createdAtInput.value = "";
           }
         }
         if (dueDateInput) {
@@ -610,22 +596,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (subtaskList) subtaskList.innerHTML = subtasksHtml;
 
-        const prContainer = document.getElementById("prStatusBadgeContainer");
-        if (prContainer) {
-          if (task.pr_status) {
-            const pr = task.pr_status;
-            if (pr.merged) {
-              prContainer.innerHTML = `<span class="badge bg-success rounded-pill small"><i class="bi bi-git"></i> PR #${pr.number}: MERGED (Đã gộp code)</span>`;
-            } else if (pr.state === "open") {
-              prContainer.innerHTML = `<span class="badge bg-purple rounded-pill small" style="background-color: #7c3aed; color: #fff;"><i class="bi bi-git"></i> PR #${pr.number}: OPEN (Đang mở)</span>`;
-            } else {
-              prContainer.innerHTML = `<span class="badge bg-danger rounded-pill small"><i class="bi bi-git"></i> PR #${pr.number}: CLOSED (Đã đóng)</span>`;
-            }
-          } else {
-            prContainer.innerHTML = ""; // Ẩn đi nếu không có liên kết PR
-          }
-        }
-
         // Kích hoạt hiển thị Modal Bootstrap 5
         const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
         modalInstance.show();
@@ -640,6 +610,7 @@ document.addEventListener("DOMContentLoaded", function () {
             '<div class="text-danger small py-1">Lỗi tải danh sách sub-tasks.</div>';
       });
   }
+  window.openTaskDetailModal = openTaskDetailModal;
 
   // Lắng nghe sự kiện thay đổi Trạng thái (Status) ngay trong Modal
   document.addEventListener("change", function (e) {
@@ -651,66 +622,48 @@ document.addEventListener("DOMContentLoaded", function () {
         `.sub-kanban-column[data-status="${newStatus}"]`,
       );
 
+      // Luôn đồng bộ thay đổi lên máy chủ
+      updateTaskStatus(taskId, newStatus);
+
       if (card && destColumn) {
         // Di chuyển thẻ Card trên Kanban board
         destColumn.appendChild(card);
         updateQuickActionsMenu(card, newStatus);
         toggleDoneStyles(card, newStatus);
         updateColumnCounts();
-
-        // Đồng bộ thay đổi lên máy chủ
-        updateTaskStatus(taskId, newStatus);
       } else {
         // Cập nhật dòng task ở trang list.php hoặc my_tasks.php
-        const taskRow = document.querySelector(
-          `.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`,
-        );
+        const taskRow = document.querySelector(`.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`);
         if (taskRow) {
-          const statusPill = taskRow.querySelector(
-            ".badge-status, .status-pill",
-          );
+          const statusPill = taskRow.querySelector(".badge-status, .status-pill");
           if (statusPill) {
-            let bg = "#f1f5f9";
-            let color = "#475569";
-            let label = "TO DO";
-
-            if (newStatus === "done") {
-              bg = "#dcfce7";
-              color = "#15803d";
-              label = "DONE";
-            } else if (newStatus === "in_progress") {
-              bg = "#e0f2fe";
-              color = "#0369a1";
-              label = "IN PROGRESS";
-            } else if (newStatus === "in_review") {
-              bg = "#faf5ff";
-              color = "#7e22ce";
-              label = "IN REVIEW";
+            let bg = '#f1f5f9';
+            let color = '#475569';
+            let label = 'TO DO';
+            
+            if (newStatus === 'done') {
+              bg = '#dcfce7'; color = '#15803d'; label = 'DONE';
+            } else if (newStatus === 'in_progress') {
+              bg = '#e0f2fe'; color = '#0369a1'; label = 'IN PROGRESS';
+            } else if (newStatus === 'in_review') {
+              bg = '#faf5ff'; color = '#7e22ce'; label = 'IN REVIEW';
             }
-
+            
             statusPill.style.backgroundColor = bg;
             statusPill.style.color = color;
             statusPill.innerText = label;
           }
 
-          const titleEl = taskRow.querySelector(
-            ".task-title-link, span.fw-semibold",
-          );
+          const titleEl = taskRow.querySelector(".task-title-link, span.fw-semibold");
           if (titleEl) {
-            if (newStatus === "done") {
-              titleEl.classList.add(
-                "text-decoration-line-through",
-                "text-muted",
-              );
+            if (newStatus === 'done') {
+              titleEl.classList.add("text-decoration-line-through", "text-muted");
             } else {
-              titleEl.classList.remove(
-                "text-decoration-line-through",
-                "text-muted",
-              );
+              titleEl.classList.remove("text-decoration-line-through", "text-muted");
             }
           }
 
-          if (newStatus === "done") {
+          if (newStatus === 'done') {
             taskRow.classList.add("done-task", "opacity-75");
           } else {
             taskRow.classList.remove("done-task", "opacity-75");
@@ -723,9 +676,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // 4. LẮNG NGHE SỰ KIỆN THAY ĐỔI NGƯỜI GÁN TRONG MODAL & LƯU DB
   // ==============================================================
   document.addEventListener("change", function (e) {
-    const assigneeSelect =
-      document.getElementById("modalAssigneeSelect") ||
-      document.querySelector("#taskDetailModal select:not(#modalStatusSelect)");
+    const assigneeSelect = document.getElementById("modalAssigneeSelect") || document.querySelector(
+      "#taskDetailModal select:not(#modalStatusSelect)",
+    );
     if (e.target === assigneeSelect) {
       const newAssigneeId = e.target.value;
       const statusSelect = document.getElementById("modalStatusSelect");
@@ -741,75 +694,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Hàm gửi API cập nhật Người gán (Assignee ID) lên Server
-  function updateTaskAssignee(taskId, assigneeId, cardElement, selectElement) {
-    fetch(`${baseUrl}/task/updateAssignee`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: JSON.stringify({
-        task_id: taskId,
-        assignee_id: assigneeId || null, // Nếu rỗng thì truyền null (Unassigned)
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
-      })
-      .then((data) => {
-        if (data.success) {
-          console.log(
-            `[TaskSync] Cập nhật thành công Assignee cho Task ${taskId}`,
-          );
-
-          // Cập nhật lại giao diện
-          if (cardElement) {
-            const assigneeNameEl = cardElement.querySelector(".task-assignee");
-            const avatarImgEl = cardElement.querySelector("img");
-
-            // Lấy văn bản đang hiển thị của Option được chọn
-            const selectedOptionText =
-              selectElement.options[selectElement.selectedIndex].text;
-            const cleanedName = selectedOptionText.split(" (")[0]; // Cắt bỏ phần thông tin vai trò phía sau
-
-            if (assigneeNameEl) {
-              assigneeNameEl.textContent = assigneeId
-                ? cleanedName
-                : "Unassigned";
-            }
-            if (avatarImgEl) {
-              const avatarName = assigneeId ? cleanedName : "Unassigned";
-              avatarImgEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=64748b&color=fff`;
-            }
-
-            // Đồng bộ dữ liệu thuộc tính để bộ lọc hoạt động chính xác
-            cardElement.setAttribute(
-              "data-assignee",
-              assigneeId ? cleanedName : "Unassigned",
-            );
-          }
-        } else {
-          alert("Không thể lưu người thực hiện mới, vui lòng thử lại.");
-          location.reload();
-        }
-      })
-      .catch((error) => {
-        console.error("[TaskSync] Fetch error:", error);
-        alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
-        location.reload();
-      });
-  }
-
   // Lắng nghe sự kiện thay đổi Hạn hoàn thành (Due Date) trong Modal
   document.addEventListener("change", function (e) {
     if (e.target.id === "modalDueDateInput") {
       const newDueDate = e.target.value;
       const statusSelect = document.getElementById("modalStatusSelect");
-      const taskId = statusSelect
-        ? statusSelect.getAttribute("data-task-id")
-        : null;
+      const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
 
       if (taskId) {
         fetch(`${baseUrl}/task/updateDueDate`, {
@@ -834,13 +724,9 @@ document.addEventListener("DOMContentLoaded", function () {
               );
 
               // Cập nhật dòng task dưới nền trang List hoặc My Tasks
-              const taskRow = document.querySelector(
-                `.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`,
-              );
+              const taskRow = document.querySelector(`.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`);
               if (taskRow) {
-                const dueEl = taskRow.querySelector(
-                  "td.text-muted.small:last-child, span.small.due-normal, span.small.due-soon, span.small.due-overdue",
-                );
+                const dueEl = taskRow.querySelector("td.text-muted.small:last-child, span.small.due-normal, span.small.due-soon, span.small.due-overdue");
                 if (dueEl) {
                   if (newDueDate) {
                     const parts = newDueDate.split("T");
@@ -854,7 +740,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     if (taskRow.classList.contains("task-item")) {
                       dueEl.innerHTML = `<i class="bi bi-calendar3 me-1"></i>${formattedDate}`;
-
+                      
                       const dueTs = new Date(newDueDate).getTime();
                       const now = Date.now();
                       dueEl.className = "small";
@@ -869,9 +755,7 @@ document.addEventListener("DOMContentLoaded", function () {
                       dueEl.textContent = formattedDate;
                     }
                   } else {
-                    dueEl.innerHTML = taskRow.classList.contains("task-item")
-                      ? '<i class="bi bi-calendar3 me-1"></i>Không có hạn'
-                      : '<span class="text-light-emphasis">-</span>';
+                    dueEl.innerHTML = taskRow.classList.contains("task-item") ? '<i class="bi bi-calendar3 me-1"></i>Không có hạn' : '<span class="text-light-emphasis">-</span>';
                     if (taskRow.classList.contains("task-item")) {
                       dueEl.className = "small due-normal";
                     }
@@ -883,8 +767,228 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           })
           .catch((error) => {
-            console.error("[TaskSync] Update due date error:", error);
+            console.error("[TaskSync] Fetch error:", error);
             alert("Lỗi kết nối mạng khi cập nhật hạn hoàn thành.");
+          });
+      }
+    }
+  });
+
+  // Lắng nghe sự kiện thay đổi Loại công việc (Type) trong Modal
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "modalTypeSelect") {
+      const newType = e.target.value;
+      const statusSelect = document.getElementById("modalStatusSelect");
+      const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
+
+      if (taskId) {
+        fetch(`${baseUrl}/task/updateType`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({
+            task_id: taskId,
+            type: newType,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) throw new Error("Network response was not ok");
+            return response.json();
+          })
+          .then((data) => {
+            if (data.success) {
+              console.log(
+                `[TaskSync] Cập nhật thành công Loại công việc cho Task ${taskId}`,
+              );
+
+              // Cập nhật card trên Kanban Board
+              const card = document.querySelector(`.kanban-item-card[data-id="${taskId}"]`);
+              if (card) {
+                // Cập nhật data attribute của thẻ card để bộ lọc hoạt động chính xác
+                const capitalizedType = newType.charAt(0).toUpperCase() + newType.slice(1);
+                card.setAttribute("data-type", capitalizedType);
+
+                // Cập nhật biểu tượng loại công việc tương ứng
+                const typeIconContainer = card.querySelector(".d-flex.align-items-center.gap-2");
+                if (typeIconContainer) {
+                  // Xóa icon cũ (icon đầu tiên trong container)
+                  const oldIcon = typeIconContainer.querySelector("i.bi-bug-fill, i.bi-bookmark-star-fill, i.bi-lightning-charge-fill, i.bi-check-square-fill");
+                  if (oldIcon) {
+                    oldIcon.remove();
+                  }
+                  
+                  // Tạo icon mới
+                  const newIcon = document.createElement("i");
+                  newIcon.className = "bi opacity-75";
+                  newIcon.style.fontSize = "0.85rem";
+                  
+                  if (newType === "bug") {
+                    newIcon.classList.add("bi-bug-fill", "text-danger");
+                    newIcon.title = "Bug";
+                  } else if (newType === "story") {
+                    newIcon.classList.add("bi-bookmark-star-fill", "text-success");
+                    newIcon.title = "Story";
+                  } else if (newType === "epic") {
+                    newIcon.classList.add("bi-lightning-charge-fill", "text-warning");
+                    newIcon.title = "Epic";
+                  } else {
+                    newIcon.classList.add("bi-check-square-fill", "text-primary");
+                    newIcon.title = "Task";
+                  }
+                  
+                  // Chèn icon mới vào đầu container
+                  typeIconContainer.insertBefore(newIcon, typeIconContainer.firstChild);
+                }
+              }
+            } else {
+              alert("Không thể lưu loại công việc mới, vui lòng thử lại.");
+            }
+          })
+          .catch((error) => {
+            console.error("[TaskSync] Fetch error:", error);
+            alert("Lỗi kết nối mạng khi cập nhật loại công việc.");
+          });
+      }
+    }
+  });
+
+  // Hàm gửi API cập nhật Người gán (Assignee ID) lên Server
+  function updateTaskAssignee(taskId, assigneeId, cardElement, selectElement) {
+    fetch(`${baseUrl}/task/updateAssignee`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: JSON.stringify({
+        task_id: taskId,
+        assignee_id: assigneeId || null, // Nếu rỗng thì truyền null (Unassigned)
+      }),
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error((data && data.error) ? data.error : "Network response was not ok");
+        }
+        return data;
+      })
+      .then((data) => {
+        if (data && data.success) {
+          console.log(
+            `[TaskSync] Cập nhật thành công Assignee cho Task ${taskId}`,
+          );
+
+          // Nếu ở trang "Công việc của tôi", cần reload lại để loại bỏ task và cập nhật stats
+          if (document.querySelector('.my-tasks-page')) {
+            location.reload();
+            return;
+          }
+
+          // Cập nhật lại giao diện
+          const rowElement = cardElement || document.querySelector(`.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`);
+          if (rowElement) {
+            const assigneeNameEl = rowElement.querySelector(".task-assignee, .text-dark.small.fw-medium");
+            const avatarImgEl = rowElement.querySelector("img, .avatar-img");
+
+            // Lấy văn bản đang hiển thị của Option được chọn
+            const selectedOptionText =
+              selectElement.options[selectElement.selectedIndex].text;
+            const cleanedName = selectedOptionText.split(" (")[0]; // Cắt bỏ phần thông tin vai trò phía sau
+
+            if (assigneeNameEl) {
+              assigneeNameEl.textContent = assigneeId
+                ? cleanedName
+                : (rowElement.classList.contains('task-row') ? "Chưa phân công" : "Unassigned");
+            }
+            if (avatarImgEl) {
+              const avatarName = assigneeId ? cleanedName : "Unassigned";
+              avatarImgEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=64748b&color=fff`;
+            }
+
+            // Đồng bộ dữ liệu thuộc tính để bộ lọc hoạt động chính xác
+            rowElement.setAttribute(
+              "data-assignee",
+              assigneeId ? cleanedName : "Unassigned",
+            );
+          }
+        } else if (data) {
+          alert(data.error || "Không thể lưu người thực hiện mới, vui lòng thử lại.");
+          location.reload();
+        }
+      })
+      .catch((error) => {
+        console.error("[TaskSync] Fetch error:", error);
+        if (error.message && error.message !== "Network response was not ok") {
+            alert(error.message);
+        } else {
+            alert("Lỗi kết nối mạng, đang khôi phục giao diện...");
+        }
+        location.reload();
+      });
+  }
+
+  // LẮNG NGHE SỰ KIỆN CLICK NÚT XÓA TASK TRONG MODAL CHI TIẾT
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "btnDeleteTask" || e.target.closest("#btnDeleteTask")) {
+      const statusSelect = document.getElementById("modalStatusSelect");
+      const taskId = statusSelect
+        ? statusSelect.getAttribute("data-task-id")
+        : null;
+
+      if (taskId) {
+        if (!confirm("Bạn có chắc chắn muốn xóa công việc này không?")) return;
+
+        fetch(`${baseUrl}/task/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({ task_id: taskId }),
+        })
+          .then(async (response) => {
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+              throw new Error((data && data.error) ? data.error : "Network response was not ok");
+            }
+            return data;
+          })
+          .then((data) => {
+            if (data && data.success) {
+              console.log(
+                `[TaskSync] Đã xóa thành công Task ${taskId}`,
+              );
+
+              // Đóng modal chi tiết công việc lại
+              const modalElement = document.getElementById("taskDetailModal");
+              const modalInstance = bootstrap.Modal.getInstance(modalElement);
+              if (modalInstance) modalInstance.hide();
+
+              // Xóa card khỏi Kanban board
+              const card = document.querySelector(`.kanban-item-card[data-id="${taskId}"]`);
+              if (card) {
+                card.remove();
+                updateColumnCounts();
+              }
+
+              // Xóa dòng task khỏi trang list hoặc my_tasks
+              const taskRow = document.querySelector(`.task-row[data-id="${taskId}"], .task-item[data-id="${taskId}"]`);
+              if (taskRow) {
+                taskRow.remove();
+              }
+            } else if (data) {
+              alert(data.error || "Không thể xóa công việc, vui lòng thử lại.");
+            }
+          })
+          .catch((error) => {
+            console.error("[TaskSync] Delete task error:", error);
+            if (error.message && error.message !== "Network response was not ok") {
+                alert(error.message);
+            } else {
+                alert("Lỗi kết nối mạng khi xóa công việc.");
+            }
           });
       }
     }
@@ -946,79 +1050,67 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // LẮNG NGHE SỰ KIỆN TẠO SUB-TASK TỪ MODAL CHI TIẾT
   document.addEventListener("click", function (e) {
-    if (
-      e.target.id === "openCreateSubtaskModalBtn" ||
-      e.target.closest("#openCreateSubtaskModalBtn")
-    ) {
+    if (e.target.id === "openCreateSubtaskModalBtn" || e.target.closest("#openCreateSubtaskModalBtn")) {
       const statusSelect = document.getElementById("modalStatusSelect");
-      const taskId = statusSelect
-        ? statusSelect.getAttribute("data-task-id")
-        : null;
+      const taskId = statusSelect ? statusSelect.getAttribute("data-task-id") : null;
       const titleTextarea = document.getElementById("modalTaskTitle");
       const taskTitle = titleTextarea ? titleTextarea.value : "Unknown Task";
-
+      
       if (taskId) {
+        // Đóng modal chi tiết
         const detailModalEl = document.getElementById("taskDetailModal");
         if (detailModalEl) {
-          const detailModal =
-            bootstrap.Modal.getInstance(detailModalEl) ||
-            new bootstrap.Modal(detailModalEl);
+          const detailModal = bootstrap.Modal.getInstance(detailModalEl) || new bootstrap.Modal(detailModalEl);
           detailModal.hide();
         }
-
+        
+        // Chờ modal cũ đóng xong rồi mới mở modal mới để tránh lỗi Bootstrap backdrop
         setTimeout(() => {
           const parentInput = document.getElementById("parentIssueIdInput");
           const motherTaskInfo = document.getElementById("motherTaskInfo");
           const motherTaskName = document.getElementById("motherTaskName");
-
+          
           if (parentInput) parentInput.value = taskId;
           if (motherTaskInfo) motherTaskInfo.classList.remove("d-none");
-          if (motherTaskName)
-            motherTaskName.innerHTML = `<span class="badge bg-secondary me-2">#${taskId}</span> <strong>${taskTitle}</strong>`;
-
+          if (motherTaskName) motherTaskName.innerHTML = `<span class="badge bg-secondary me-2">#${taskId}</span> <strong>${taskTitle}</strong>`;
+          
+          // Điền thông tin project từ task đang active
           const taskData = window.currentActiveTaskData;
           if (taskData) {
             const projInput = document.getElementById("createIssueProjectId");
             if (projInput) projInput.value = taskData.project_id;
-
-            const titleText = document.getElementById(
-              "createIssueModalTitleText",
-            );
-            if (titleText)
-              titleText.innerHTML = `Tạo Sub-task cho dự án: <span class="text-primary">${taskData.project_name || "Không rõ"}</span>`;
-
-            const assigneeSelect = document.getElementById(
-              "createIssueAssigneeSelect",
-            );
+            
+            const titleText = document.getElementById("createIssueModalTitleText");
+            if (titleText) titleText.innerHTML = `Tạo Sub-task cho dự án: <span class="text-primary">${taskData.project_name || 'Không rõ'}</span>`;
+            
+            const assigneeSelect = document.getElementById("createIssueAssigneeSelect");
             if (assigneeSelect && taskData.project_members) {
-              assigneeSelect.innerHTML =
-                '<option value="" selected>Chưa phân công (Unassigned)</option>';
-              taskData.project_members.forEach((member) => {
-                const fullName = (
-                  (member.first_name || "") +
-                  " " +
-                  (member.last_name || "")
-                ).trim();
+              assigneeSelect.innerHTML = '<option value="" selected>Chưa phân công (Unassigned)</option>';
+              taskData.project_members.forEach(member => {
+                const fullName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim();
                 const displayName = fullName ? fullName : member.username;
-                const option = document.createElement("option");
+                const option = document.createElement('option');
                 option.value = member.id;
-                option.textContent = `${displayName} (${member.role || "member"})`;
+                option.textContent = `${displayName} (${member.role || 'member'})`;
                 assigneeSelect.appendChild(option);
               });
             }
           }
 
+          // Mở modal tạo mới
           const createModalEl = document.getElementById("createIssueModal");
           if (createModalEl) {
-            const createModal =
-              bootstrap.Modal.getOrCreateInstance(createModalEl);
+            const createModal = bootstrap.Modal.getOrCreateInstance(createModalEl);
             createModal.show();
           }
-        }, 400);
+        }, 400); // 400ms delay cho animation đóng modal cũ
       }
     }
   });
 
+  // ==============================================================
+  // 5. BỘ LỌC THÔNG TIN (FILTER) TRÊN BẢNG KANBAN
+  // ==============================================================
   const filterAssignee = document.getElementById("filterAssignee");
   const filterPriority = document.getElementById("filterPriority");
   const filterType = document.getElementById("filterType");
@@ -1034,6 +1126,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const cardPriority = card.getAttribute("data-priority") || "";
       const cardType = card.getAttribute("data-type") || "";
 
+      // Kiểm tra điều kiện so khớp
       const matchAssignee =
         selectedAssignee === "all" || cardAssignee === selectedAssignee;
       const matchPriority =
@@ -1049,15 +1142,20 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
+    // Cập nhật lại số đếm ở đầu mỗi cột sau khi lọc
     updateColumnCounts();
   }
 
+  // Đăng ký sự kiện lắng nghe bộ lọc thay đổi
   if (filterAssignee)
     filterAssignee.addEventListener("change", applyKanbanFilters);
   if (filterPriority)
     filterPriority.addEventListener("change", applyKanbanFilters);
   if (filterType) filterType.addEventListener("change", applyKanbanFilters);
 
+  // ==============================================================
+  // 6. ĐIỀU KHIỂN SIDEBAR DI ĐỘNG (OFF-CANVAS DRAWER)
+  // ==============================================================
   const mobileToggleBtn = document.getElementById("mobile-sidebar-toggle");
   const mobileSidebar = document.querySelector(".app-sidebar");
   const mobileOverlay = document.getElementById("sidebar-overlay");
@@ -1066,25 +1164,29 @@ document.addEventListener("DOMContentLoaded", function () {
     mobileToggleBtn.addEventListener("click", function () {
       mobileSidebar.classList.add("show-mobile");
       mobileOverlay.classList.add("show");
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = "hidden"; // Khóa cuộn trang
     });
 
     mobileOverlay.addEventListener("click", function () {
       mobileSidebar.classList.remove("show-mobile");
       mobileOverlay.classList.remove("show");
-      document.body.style.overflow = "";
+      document.body.style.overflow = ""; // Mở khóa cuộn trang
     });
 
+    // Đóng sidebar khi click nút mũi tên thu gọn bên trong
     const sidebarCloseBtn = mobileSidebar.querySelector(".sidebar-collapse");
     if (sidebarCloseBtn) {
       sidebarCloseBtn.addEventListener("click", function () {
         mobileSidebar.classList.remove("show-mobile");
         mobileOverlay.classList.remove("show");
-        document.body.style.overflow = "";
+        document.body.style.overflow = ""; // Mở khóa cuộn trang nền
       });
     }
   }
 
+  // ==============================================================
+  // 7. XỬ LÝ GỬI VÀ NHẬN BÌNH LUẬN TRONG CHI TIẾT CÔNG VIỆC
+  // ==============================================================
   const submitCommentBtn = document.getElementById("submitCommentBtn");
   const newCommentInput = document.getElementById("newCommentInput");
 
@@ -1123,12 +1225,15 @@ document.addEventListener("DOMContentLoaded", function () {
         content: content,
       }),
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Không thể gửi bình luận");
-        return response.json();
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error((data && data.error) ? data.error : "Không thể gửi bình luận");
+        }
+        return data;
       })
       .then((data) => {
-        if (data.success && data.comment) {
+        if (data && data.success && data.comment) {
           newCommentInput.value = "";
 
           const commentsList = document.getElementById("modalCommentsList");
@@ -1139,13 +1244,17 @@ document.addEventListener("DOMContentLoaded", function () {
             commentsList.appendChild(createCommentElement(data.comment));
             commentsList.scrollTop = commentsList.scrollHeight;
           }
-        } else {
-          alert("Lỗi khi gửi bình luận, vui lòng thử lại.");
+        } else if (data) {
+          alert(data.error || "Lỗi khi gửi bình luận, vui lòng thử lại.");
         }
       })
       .catch((error) => {
         console.error("[TaskSync] Send comment error:", error);
-        alert("Lỗi kết nối mạng khi gửi bình luận.");
+        if (error.message && error.message !== "Không thể gửi bình luận") {
+            alert(error.message);
+        } else {
+            alert("Lỗi kết nối mạng khi gửi bình luận.");
+        }
       })
       .finally(() => {
         submitCommentBtn.disabled = false;
@@ -1194,3 +1303,4 @@ document.addEventListener("DOMContentLoaded", function () {
       .replace(/'/g, "&#039;");
   }
 });
+

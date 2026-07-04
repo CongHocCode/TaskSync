@@ -803,7 +803,8 @@ if ($activeProject) {
                 if (dueDateInput && dueDateInput.value) {
                     const selectedDate = new Date(dueDateInput.value);
                     const now = new Date();
-                    if (selectedDate <= now) {
+                    now.setSeconds(0, 0);
+                    if (selectedDate < now) {
                         e.preventDefault();
                         dueDateInput.classList.add('is-invalid');
                         dueDateInput.focus();
